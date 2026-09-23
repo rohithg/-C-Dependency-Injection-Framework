@@ -2,7 +2,8 @@
 
 Because this Cloud Agent can only write to **one** GitHub repo, everything is published on:
 
-**Repo branch:** https://github.com/rohithg/-C-Dependency-Injection-Framework/tree/gh-pages
+**Repo:** https://github.com/rohithg/-C-Dependency-Injection-Framework  
+**Branch:** `gh-pages`
 
 ## Enable the live site (one click — required once)
 
@@ -14,10 +15,16 @@ Because this Cloud Agent can only write to **one** GitHub repo, everything is pu
 
 | What | URL |
 |------|-----|
-| ★ LinkedIn standout (One Number for Revenue) | https://rohithg.github.io/-C-Dependency-Injection-Framework/ |
+| ★ Featured demo (One Number for Revenue) | https://rohithg.github.io/-C-Dependency-Injection-Framework/ |
 | Portfolio | https://rohithg.github.io/-C-Dependency-Injection-Framework/portfolio/ |
-| All projects | https://rohithg.github.io/-C-Dependency-Injection-Framework/projects/ |
+| All project sources | https://rohithg.github.io/-C-Dependency-Injection-Framework/projects/ |
+| Snowflake retail DW | …/projects/Snowflake-Retail-Data-Warehouse/ |
+| Power BI semantic layer | …/projects/powerbi-semantic-layer/ |
+| dbt analytics engineering | …/projects/dbt-analytics-engineering/ |
+| Healthcare dimensional model | …/projects/healthcare-dimensional-model/ |
 
-LinkedIn post copy: [docs/LINKEDIN_POST.md on gh-pages](https://github.com/rohithg/-C-Dependency-Injection-Framework/blob/gh-pages/docs/LINKEDIN_POST.md)
+Source pack on feature branch: `bi-github-pack/`
 
-Pin the repo on your GitHub profile and add the **One Number for Revenue** URL under LinkedIn **Featured**.
+## LinkedIn
+
+**Not posted.** Showcase copy is ready in `docs/LINKEDIN_POST.md` when you want it.
