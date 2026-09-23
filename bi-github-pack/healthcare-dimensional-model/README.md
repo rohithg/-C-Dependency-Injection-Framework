@@ -1,5 +1,10 @@
 # Healthcare Dimensional Model
 
+[![Healthcare BI](https://img.shields.io/badge/Healthcare-dimensional%20model-0d3d3a)](#)
+[![dbt tests](https://img.shields.io/badge/dbt-data%20quality-FF694B?logo=dbt&logoColor=white)](dbt/)
+[![Synthetic data](https://img.shields.io/badge/data-SYNTHETIC%20ONLY-d64545)](SYNTHETIC_DATA_NOTICE.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 **Rohith Gangapuram** · Analytics Engineering / Healthcare BI portfolio project
 
 > **Synthetic demo only.** All patient, provider, facility, encounter, and claims data in this repository are fabricated. No real PHI, no real member IDs, and no production EHR extracts appear anywhere in this project.

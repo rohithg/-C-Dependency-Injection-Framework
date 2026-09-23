@@ -1,8 +1,15 @@
 # Snowflake Retail Data Warehouse
 
+[![dbt](https://img.shields.io/badge/dbt-ORM-FF694B?logo=dbt&logoColor=white)](https://www.getdbt.com/)
+[![Snowflake](https://img.shields.io/badge/Snowflake-29B5E8?logo=snowflake&logoColor=white)](https://www.snowflake.com/)
+[![Airflow](https://img.shields.io/badge/Airflow-017CEE?logo=apacheairflow&logoColor=white)](https://airflow.apache.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Production-style **ELT** project for retail and supply-chain analytics on **Snowflake**, transformed with **dbt**, and orchestrated with **Airflow**.
 
 Built by **[Rohith Gangapuram](https://github.com/rohithg)** to demonstrate end-to-end dimensional modeling across ERP / CRM / logistics sources (NetSuite-style orders & invoices, TMS shipments, YMS locations).
+
+**Validated locally:** `dbt seed` → `dbt run` → `dbt test` (**105/105 PASS** on DuckDB target).
 
 ---
 

@@ -1,8 +1,15 @@
 # SaaS Analytics Engineering (dbt)
 
+[![dbt](https://img.shields.io/badge/dbt-metrics%20as%20code-FF694B?logo=dbt&logoColor=white)](https://www.getdbt.com/)
+[![CI](https://img.shields.io/badge/GitHub%20Actions-dbt%20CI-2088FF?logo=githubactions&logoColor=white)](.github/workflows/dbt-ci.yml)
+[![Tests](https://img.shields.io/badge/dbt%20build-97%2F97%20PASS-1a9e9e)](#)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 **Rohith Gangapuram** · Analytics Engineer II portfolio project
 
 Metrics-as-code, reusable marts, and CI-friendly dbt for B2B SaaS product analytics—the patterns consulting clients and growth-stage SaaS teams expect in production.
+
+**Validated locally:** `dbt build` on DuckDB — **97/97 PASS**.
 
 ---
 

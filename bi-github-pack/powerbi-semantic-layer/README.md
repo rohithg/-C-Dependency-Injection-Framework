@@ -1,8 +1,14 @@
 # Power BI Semantic Layer — Governed Metrics & Enterprise Modeling
 
+[![Power BI](https://img.shields.io/badge/Power%20BI-F2C811?logo=powerbi&logoColor=black)](https://powerbi.microsoft.com/)
+[![DAX](https://img.shields.io/badge/DAX-advanced-1a9e9e)](dax/measures/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 **Rohith Gangapuram** · BI Architect / Analytics Engineer
 
 Portfolio artifact demonstrating how a single governed semantic layer replaces conflicting spreadsheet metrics with certified DAX measures, documented grain, and role-based security.
+
+> Pair with the interactive **[Executive Revenue Command Center](https://github.com/rohithg/linkedin-executive-dashboard)** for the LinkedIn-facing demo of the same story.
 
 ---
 

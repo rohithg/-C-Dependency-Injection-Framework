@@ -345,12 +345,20 @@ a {
   transform: none;
 }
 
-.project-index {
-  font-family: var(--font-display);
-  font-size: 1.1rem;
+.project-badge {
+  margin: 0 0 0.35rem;
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--teal);
-  padding-top: 0.2rem;
 }
+
+.project-featured .project-body h3 {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+}
+
 
 .project-body h3 {
   margin: 0 0 0.6rem;
