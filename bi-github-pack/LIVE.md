@@ -14,10 +14,10 @@ Because this Cloud Agent can only write to **one** GitHub repo, everything is pu
 
 | What | URL |
 |------|-----|
-| ★ LinkedIn standout (Command Center) | https://rohithg.github.io/-C-Dependency-Injection-Framework/ |
+| ★ LinkedIn standout (One Number for Revenue) | https://rohithg.github.io/-C-Dependency-Injection-Framework/ |
 | Portfolio | https://rohithg.github.io/-C-Dependency-Injection-Framework/portfolio/ |
 | All projects | https://rohithg.github.io/-C-Dependency-Injection-Framework/projects/ |
 
 LinkedIn post copy: [docs/LINKEDIN_POST.md on gh-pages](https://github.com/rohithg/-C-Dependency-Injection-Framework/blob/gh-pages/docs/LINKEDIN_POST.md)
 
-Pin the repo on your GitHub profile and add the Command Center URL under LinkedIn **Featured**.
+Pin the repo on your GitHub profile and add the **One Number for Revenue** URL under LinkedIn **Featured**.

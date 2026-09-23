@@ -8,7 +8,7 @@ To publish each project as its own repo:
 1. GitHub → Settings → Applications → Cursor → Repository access → **All repositories**
    (or select: `rohith-portfolio`, `Snowflake-Retail-Data-Warehouse`, `IMP`, plus any new repos below)
 2. Create these public repos (empty, no README) if they do not exist:
-   - `linkedin-executive-dashboard` ← **LinkedIn showcase (pin this)**
+   - `linkedin-executive-dashboard` ← **One Number for Revenue — career showcase (pin this)**
    - `powerbi-semantic-layer`
    - `healthcare-dimensional-model`
    - `dbt-analytics-engineering`

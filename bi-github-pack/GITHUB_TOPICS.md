@@ -1,7 +1,7 @@
 # Suggested GitHub topics (add in each repo → About → Topics)
 
-## linkedin-executive-dashboard
-`business-intelligence` `power-bi` `semantic-layer` `data-visualization` `analytics` `dashboard` `portfolio` `executive-reporting`
+## linkedin-executive-dashboard (One Number for Revenue)
+`business-intelligence` `bi-architect` `power-bi` `semantic-layer` `dbt` `metric-governance` `analytics-engineer` `portfolio`
 
 ## rohith-portfolio
 `portfolio` `business-intelligence` `analytics-engineer` `personal-website`

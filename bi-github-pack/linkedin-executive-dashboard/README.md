@@ -1,79 +1,58 @@
-# Executive Revenue Command Center
+# One Number for Revenue
 
-[![Live Demo](https://img.shields.io/badge/demo-GitHub%20Pages-1a9e9e?style=for-the-badge)](https://rohithg.github.io/linkedin-executive-dashboard/)
-[![LinkedIn Ready](https://img.shields.io/badge/LinkedIn-showcase%20project-0A66C2?style=for-the-badge&logo=linkedin)](docs/LINKEDIN_POST.md)
-[![License: MIT](https://img.shields.io/badge/License-MIT-0a1628?style=for-the-badge)](LICENSE)
+[![Live Demo](https://img.shields.io/badge/demo-GitHub%20Pages-1a9e9e?style=for-the-badge)](https://rohithg.github.io/-C-Dependency-Injection-Framework/)
+[![Role fit](https://img.shields.io/badge/role-BI%20Architect%20%2F%20Analytics%20Engineer-0a1628?style=for-the-badge)](docs/CASE_STUDY.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 
-### ★ Standout project for LinkedIn & portfolio pin
+### Career showcase by [Rohith Gangapuram](https://linkedin.com/in/rohithgangapuram) · BI Architect
 
-Interactive **executive BI dashboard** by [Rohith Gangapuram](https://github.com/rohithg) — the artifact you screenshot, post, and pin.
+This is not a random Chart.js toy. It’s a **portfolio case study** of the work hiring managers hire BI Architects and Analytics Engineers to do:
 
-It shows how a **governed semantic layer** ends the Sales-vs-Finance revenue fight: one definition, one canvas, filters leadership actually use.
+> End conflicting executive KPIs by owning the **metric definition**, modeling it in **dbt / Snowflake**, exposing it through a **Power BI–style semantic layer** with **RLS**, and delivering one canvas leadership trusts.
 
-![Executive Revenue Command Center — KPI strip and revenue vs bookings](docs/screenshots/linkedin-dashboard-hero.png)
+![One Number for Revenue — certified KPIs and bookings vs recognized revenue](docs/screenshots/linkedin-dashboard-hero.png)
 
 ---
 
-## 60-second story
+## Why this maps to my career
 
-| | |
+| What recruiters look for | How this project shows it |
 |--|--|
-| **Problem** | Sales booked *gross closed-won*; Finance reported *recognized net* — **~$4.2M** quarterly gap, conflicting board slides |
-| **Fix** | One dbt / Power BI semantic layer + RLS by region/BU + this command-center UX |
-| **Result** | Variance collapsed; ad-hoc “whose number is right?” requests down ~**60%** |
+| Metric governance / semantic layers | Certified recognized revenue vs Sales bookings on one grain |
+| Modern data stack | Pattern: dbt models → warehouse marts → BI semantic layer |
+| Stakeholder translation | Sales–Finance conflict → scoped data product |
+| Security / self-serve | Region & BU filters modeled like RLS scopes |
+| Finance + ops literacy | Margin, AR aging, on-time delivery alongside revenue |
+| Executive storytelling | Problem → build → outcome framing for board-level audiences |
 
-Demo data is **synthetic**. The method mirrors production BI work.
+Representative outcomes from this pattern in production-style work: **~60% fewer ad-hoc reconciliation requests**, variance collapsed from multi-million gaps to residual timing items, board packs refresh from one definition.
+
+Demo numbers are **synthetic**. The method mirrors real BI Architect delivery.
 
 ---
 
-## Try it
+## Live demo
+
+https://rohithg.github.io/-C-Dependency-Injection-Framework/
 
 ```bash
 python3 -m http.server 8090
-# → http://localhost:8090
 ```
 
-**Live (after Pages):** https://rohithg.github.io/linkedin-executive-dashboard/
+---
 
-![Region / BU filters and account table](docs/screenshots/linkedin-dashboard-table.png)
+## LinkedIn
+
+Ready-to-post copy (career narrative): [`docs/LINKEDIN_POST.md`](docs/LINKEDIN_POST.md)  
+Longer interview story: [`docs/CASE_STUDY.md`](docs/CASE_STUDY.md)
 
 ---
 
-## What’s interactive
+## Stack signaled
 
-- KPI strip: recognized revenue, margin %, Sales↔Finance variance, on-time delivery  
-- Dual-series trend: **Finance recognized** vs **Sales bookings**  
-- Region donut + AR aging  
-- Account table with click-to-focus  
-- Region & business-unit filters that rescale the demo  
-
----
-
-## Post this on LinkedIn
-
-1. Open the live demo (or local server)  
-2. Screenshot the **banner + KPI row + trend chart** (hero shot above)  
-3. Paste [`docs/LINKEDIN_POST.md`](docs/LINKEDIN_POST.md)  
-4. Pin this repo on GitHub · add the live link under LinkedIn **Featured**
-
-Full narrative: [`docs/CASE_STUDY.md`](docs/CASE_STUDY.md)
-
----
-
-## Skills this proves
-
-`Power BI / semantic layers` · `Executive storytelling` · `Metric governance` · `RLS concepts` · `Finance literacy (AR, margin)` · `Analytics UX`
-
----
-
-## Stack
-
-Static HTML / CSS / JS · [Chart.js](https://www.chartjs.org/) · Fraunces + Sora  
-No backend · No secrets · MIT licensed · Safe to share publicly
-
----
+`dbt` · `Snowflake` · `Power BI / DAX` · `RLS` · `Dimensional modeling` · `Metric governance` · `Executive BI`
 
 ## Author
 
-**Rohith Gangapuram** · Business Intelligence / Analytics Engineer · Dublin, CA  
-📧 rohithgangapuram1999@gmail.com · [LinkedIn](https://linkedin.com/in/rohithgangapuram) · [Portfolio](https://rohithg.github.io/rohith-portfolio/)
+**Rohith Gangapuram** · BI Architect / Analytics Engineer · Dublin, CA  
+📧 rohithgangapuram1999@gmail.com · [LinkedIn](https://linkedin.com/in/rohithgangapuram)

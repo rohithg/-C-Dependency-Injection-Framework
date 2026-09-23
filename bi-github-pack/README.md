@@ -1,8 +1,8 @@
 # Rohith Gangapuram — BI GitHub Showcase
 
-> **Live site:** enable Pages once → [Command Center](https://rohithg.github.io/-C-Dependency-Injection-Framework/) · see [LIVE.md](LIVE.md)
+> **Live site:** enable Pages once → [One Number for Revenue](https://rohithg.github.io/-C-Dependency-Injection-Framework/) · see [LIVE.md](LIVE.md)
 
-Curated open-source projects for **BI Engineer · Analytics Engineer · Data Engineer** roles.
+Curated open-source projects for **BI Architect · Analytics Engineer · BI Engineer** roles.
 
 **Author:** [Rohith Gangapuram](https://github.com/rohithg) · Dublin, CA · [LinkedIn](https://linkedin.com/in/rohithgangapuram)
 
@@ -10,11 +10,11 @@ Curated open-source projects for **BI Engineer · Analytics Engineer · Data Eng
 
 ## ★ Pin this first (LinkedIn standout)
 
-### [linkedin-executive-dashboard](linkedin-executive-dashboard/) — Executive Revenue Command Center
+### [linkedin-executive-dashboard](linkedin-executive-dashboard/) — One Number for Revenue
 
-Interactive exec dashboard + copy-paste LinkedIn post. Sales vs Finance semantic-layer story with live filters.
+Career case study: how a BI Architect ends Sales–Finance KPI conflict with a governed dbt + Power BI semantic layer. Interactive demo + LinkedIn post + interview talk track.
 
-![Command Center](linkedin-executive-dashboard/docs/screenshots/linkedin-dashboard-hero.png)
+![One Number for Revenue](linkedin-executive-dashboard/docs/screenshots/linkedin-dashboard-hero.png)
 
 → After publish: pin the repo · Featured link on LinkedIn · post [`LINKEDIN_POST.md`](linkedin-executive-dashboard/docs/LINKEDIN_POST.md)
 
@@ -24,7 +24,7 @@ Interactive exec dashboard + copy-paste LinkedIn post. Sales vs Finance semantic
 
 | Priority | Repo | One-liner |
 |:--:|--|--|
-| 1 | **linkedin-executive-dashboard** | LinkedIn / Featured standout |
+| 1 | **linkedin-executive-dashboard** | BI Architect career showcase |
 | 2 | rohith-portfolio | Personal BI portfolio site |
 | 3 | Snowflake-Retail-Data-Warehouse | dbt + Snowflake + Airflow star schema |
 | 4 | powerbi-semantic-layer | DAX, glossary, RLS, governance |
@@ -35,7 +35,7 @@ Interactive exec dashboard + copy-paste LinkedIn post. Sales vs Finance semantic
 
 ## Project catalog
 
-1. **[linkedin-executive-dashboard](linkedin-executive-dashboard/)** — LinkedIn showcase (interactive)
+1. **[linkedin-executive-dashboard](linkedin-executive-dashboard/)** — One Number for Revenue (career showcase)
 2. **[rohith-portfolio](rohith-portfolio/)** — Personal site
 3. **[Snowflake-Retail-Data-Warehouse](Snowflake-Retail-Data-Warehouse/)** — Retail/supply-chain ELT
 4. **[powerbi-semantic-layer](powerbi-semantic-layer/)** — Governed metrics & DAX
