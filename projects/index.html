@@ -4,30 +4,62 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>BI Projects — Rohith Gangapuram</title>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@700&family=Sora:wght@300;500&display=swap" rel="stylesheet" />
+  <meta name="description" content="Open-source BI Architect / Analytics Engineering portfolio projects by Rohith Gangapuram." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <style>
-    :root { --ink:#0a1628; --teal:#1a9e9e; --mist:#eef3f7; }
-    body { margin:0; font-family:Sora,system-ui,sans-serif; background:linear-gradient(180deg,#f7fafc,var(--mist)); color:var(--ink); }
-    main { width:min(720px,calc(100% - 2rem)); margin:0 auto; padding:3rem 0; }
-    h1 { font-family:Fraunces,Georgia,serif; }
-    a { color:var(--teal); }
-    ol { line-height:1.9; padding-left:1.2rem; }
-    .note { color:#5a6d82; font-weight:300; }
+    :root { --ink:#0a1628; --teal:#1a9e9e; --mist:#eef3f7; --muted:#5a6d82; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:"Sora",system-ui,sans-serif; color:var(--ink);
+      background: radial-gradient(900px 420px at 0% 0%, rgba(62,207,207,.14), transparent 55%),
+                  linear-gradient(180deg,#f7fafc,var(--mist)); min-height:100vh; }
+    .wrap { width:min(900px, calc(100% - 2rem)); margin:0 auto; padding:2.5rem 0 3rem; }
+    h1 { font-family:"Fraunces",Georgia,serif; font-size:clamp(1.8rem,4vw,2.4rem); margin:0 0 .4rem; }
+    .lede { color:var(--muted); font-weight:300; line-height:1.55; margin:0 0 1.75rem; }
+    ol { list-style:none; margin:0; padding:0; display:grid; gap:.85rem; }
+    li { background:#fff; border:1px solid rgba(10,22,40,.1); border-radius:.45rem; padding:1.1rem 1.25rem; }
+    li a { color:var(--ink); text-decoration:none; font-family:"Fraunces",Georgia,serif; font-size:1.15rem; }
+    li a:hover { color:var(--teal); }
+    li p { margin:.35rem 0 0; color:var(--muted); font-size:.9rem; font-weight:300; line-height:1.5; }
+    .back { display:inline-block; margin-bottom:1.25rem; color:var(--teal); font-size:.9rem; }
   </style>
 </head>
 <body>
-  <main>
-    <p><a href="../">← Revenue Command Center</a> · <a href="../portfolio/">Portfolio</a></p>
-    <h1>BI / Analytics Engineering projects</h1>
-    <p class="note">Full source for each project (browse the folders below).</p>
+  <div class="wrap">
+    <a class="back" href="../">← One Number for Revenue (featured demo)</a>
+    <h1>BI project pack</h1>
+    <p class="lede">Full source for each portfolio project. Browse folders below.</p>
     <ol>
-      <li><a href="../">Executive Revenue Command Center</a> — LinkedIn standout</li>
-      <li><a href="../portfolio/">Personal portfolio site</a></li>
-      <li><a href="./Snowflake-Retail-Data-Warehouse/">Snowflake Retail Data Warehouse</a> (dbt + Airflow)</li>
-      <li><a href="./powerbi-semantic-layer/">Power BI Semantic Layer</a></li>
-      <li><a href="./dbt-analytics-engineering/">dbt Analytics Engineering</a></li>
-      <li><a href="./healthcare-dimensional-model/">Healthcare Dimensional Model</a></li>
+      <li>
+        <a href="../">One Number for Revenue</a>
+        <p>BI Architect career case study — governed semantic layer, Sales vs Finance alignment.</p>
+      </li>
+      <li>
+        <a href="linkedin-executive-dashboard/">linkedin-executive-dashboard/</a>
+        <p>Source for the featured demo (HTML/CSS/JS + post draft — not posted yet).</p>
+      </li>
+      <li>
+        <a href="../portfolio/">rohith-portfolio/</a>
+        <p>Personal BI portfolio site.</p>
+      </li>
+      <li>
+        <a href="Snowflake-Retail-Data-Warehouse/">Snowflake-Retail-Data-Warehouse/</a>
+        <p>dbt + Snowflake + Airflow star-schema retail / supply-chain warehouse.</p>
+      </li>
+      <li>
+        <a href="powerbi-semantic-layer/">powerbi-semantic-layer/</a>
+        <p>Governed DAX measures, glossary, RLS, workspace governance.</p>
+      </li>
+      <li>
+        <a href="dbt-analytics-engineering/">dbt-analytics-engineering/</a>
+        <p>SaaS metrics-as-code — ARR, NRR, churn.</p>
+      </li>
+      <li>
+        <a href="healthcare-dimensional-model/">healthcare-dimensional-model/</a>
+        <p>EHR/claims dimensional model with data-quality patterns.</p>
+      </li>
     </ol>
-  </main>
+  </div>
 </body>
 </html>

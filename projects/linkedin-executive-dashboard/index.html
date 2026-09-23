@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>One Number for Revenue — Governed Semantic Layer | Rohith Gangapuram</title>
+  <meta name="description" content="Career case study by BI Architect Rohith Gangapuram: how a governed dbt + Power BI semantic layer ends Sales–Finance KPI conflict." />
+  <meta name="author" content="Rohith Gangapuram" />
+  <meta property="og:title" content="One Number for Revenue — BI Architect case study" />
+  <meta property="og:description" content="Governed semantic layer · Sales vs Finance alignment · dbt · Snowflake · Power BI · RLS. Portfolio work by Rohith Gangapuram." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="docs/screenshots/linkedin-dashboard-hero.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="theme-color" content="#0a1628" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+  <script src="js/data.js" defer></script>
+  <script src="js/dashboard.js" defer></script>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <div>
+          <p class="brand-kicker">BI Architect case study · synthetic demo</p>
+          <h1>One Number for Revenue</h1>
+        </div>
+      </div>
+      <div class="controls">
+        <label class="control">
+          <span>Region (RLS scope)</span>
+          <select id="regionFilter" aria-label="Filter by region">
+            <option value="all">All regions</option>
+            <option value="West">West</option>
+            <option value="East">East</option>
+            <option value="Central">Central</option>
+            <option value="South">South</option>
+          </select>
+        </label>
+        <label class="control">
+          <span>Business unit</span>
+          <select id="buFilter" aria-label="Filter by business unit">
+            <option value="all">All units</option>
+            <option value="Retail">Retail</option>
+            <option value="Wholesale">Wholesale</option>
+            <option value="Ecom">E-commerce</option>
+          </select>
+        </label>
+        <div class="live-pill" title="Demo of a governed semantic layer pattern">
+          <span class="pulse"></span>
+          Certified metrics · Q3
+        </div>
+      </div>
+    </header>
+
+    <section class="career-strip" aria-label="Career context">
+      <p>
+        Built to demonstrate the work of a <strong>BI Architect / Analytics Engineer</strong>:
+        metric governance, dimensional models, Power BI semantic layers, and executive trust —
+        the same pattern behind aligning Sales &amp; Finance for multi-BU organizations.
+      </p>
+      <ul class="stack-tags" aria-label="Stack">
+        <li>dbt</li>
+        <li>Snowflake</li>
+        <li>Power BI / DAX</li>
+        <li>RLS</li>
+        <li>Star schema</li>
+        <li>AR &amp; margin</li>
+      </ul>
+    </section>
+
+    <section class="story-banner" aria-label="Case narrative">
+      <p>
+        <strong>Business problem:</strong> Sales closed on <em>bookings</em>; Finance closed on
+        <em>recognized net revenue</em> — ~$4.2M quarterly gap, two board packs, no single source of truth.
+        <strong>What I built:</strong> a governed semantic layer (dbt models → certified Power BI measures + RLS by region/BU)
+        and this executive canvas so leadership consumes one definition.
+        <strong>Career outcome pattern:</strong> ad-hoc “whose number is right?” requests down ~60%; board prep becomes a filtered refresh, not a reconciliation war.
+      </p>
+    </section>
+
+    <section class="kpi-row" aria-label="Key performance indicators">
+      <article class="kpi">
+        <p class="kpi-label">Certified recognized revenue</p>
+        <p class="kpi-value" id="kpiRevenue">—</p>
+        <p class="kpi-delta up" id="kpiRevenueDelta">—</p>
+      </article>
+      <article class="kpi">
+        <p class="kpi-label">Gross margin % (Finance)</p>
+        <p class="kpi-value" id="kpiMargin">—</p>
+        <p class="kpi-delta up" id="kpiMarginDelta">—</p>
+      </article>
+      <article class="kpi">
+        <p class="kpi-label">Sales ↔ Finance variance</p>
+        <p class="kpi-value" id="kpiVariance">—</p>
+        <p class="kpi-delta down" id="kpiVarianceDelta">—</p>
+      </article>
+      <article class="kpi">
+        <p class="kpi-label">On-time delivery (Ops)</p>
+        <p class="kpi-value" id="kpiOtd">—</p>
+        <p class="kpi-delta up" id="kpiOtdDelta">—</p>
+      </article>
+    </section>
+
+    <section class="grid">
+      <article class="panel panel-wide">
+        <header class="panel-head">
+          <h2>Bookings vs recognized revenue — same grain, two measures</h2>
+          <p>Teal = certified <strong>recognized net revenue</strong> (Finance). Amber = <strong>closed-won bookings</strong> (Sales). The gap is explained by definition, not disputed as “bad data.”</p>
+        </header>
+        <div class="chart-wrap">
+          <canvas id="trendChart" height="120"></canvas>
+        </div>
+      </article>
+
+      <article class="panel">
+        <header class="panel-head">
+          <h2>Revenue by region</h2>
+          <p>Same certified measure the board pack uses — scoped like RLS.</p>
+        </header>
+        <div class="chart-wrap chart-square">
+          <canvas id="regionChart"></canvas>
+        </div>
+      </article>
+
+      <article class="panel">
+        <header class="panel-head">
+          <h2>AR aging</h2>
+          <p>Finance-ready receivables buckets from the semantic layer.</p>
+        </header>
+        <div class="chart-wrap chart-square">
+          <canvas id="agingChart"></canvas>
+        </div>
+      </article>
+
+      <article class="panel panel-wide">
+        <header class="panel-head">
+          <h2>Top accounts — self-serve, not another Excel extract</h2>
+          <p>What stakeholders get after metric ownership is clear: filter, trust, decide.</p>
+        </header>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Account</th>
+                <th>Region</th>
+                <th>BU</th>
+                <th class="num">Certified revenue</th>
+                <th class="num">Margin %</th>
+                <th class="num">AR open</th>
+              </tr>
+            </thead>
+            <tbody id="accountTable"></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <section class="hiring-note" aria-label="Hiring signal">
+      <h2>What this proves in interviews</h2>
+      <ol>
+        <li><strong>Metric governance</strong> — I don’t just build charts; I own definitions, grain, and owners.</li>
+        <li><strong>Modern stack fluency</strong> — dbt + warehouse modeling feeding a Power BI semantic layer with RLS.</li>
+        <li><strong>Executive partnership</strong> — translate Sales/Finance conflict into a scoped data product leadership adopts.</li>
+        <li><strong>Operational literacy</strong> — revenue, margin, AR aging, and delivery in one trusted canvas.</li>
+      </ol>
+    </section>
+
+    <footer class="foot">
+      <p>
+        <strong>Rohith Gangapuram</strong> · BI Architect / Analytics Engineer · Dublin, CA ·
+        <a href="https://linkedin.com/in/rohithgangapuram" target="_blank" rel="noopener">LinkedIn</a> ·
+        <a href="https://github.com/rohithg/-C-Dependency-Injection-Framework/tree/gh-pages" target="_blank" rel="noopener">Source</a> ·
+        <a href="portfolio/">Portfolio</a> ·
+        Synthetic demo — pattern mirrors production semantic-layer work · not client confidential
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

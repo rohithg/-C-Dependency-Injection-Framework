@@ -8,7 +8,7 @@
 
 Portfolio artifact demonstrating how a single governed semantic layer replaces conflicting spreadsheet metrics with certified DAX measures, documented grain, and role-based security.
 
-> Pair with the interactive **[Executive Revenue Command Center](https://github.com/rohithg/linkedin-executive-dashboard)** for the LinkedIn-facing demo of the same story.
+> Pair with the interactive **[One Number for Revenue](https://rohithg.github.io/-C-Dependency-Injection-Framework/)** career case study for the LinkedIn-facing demo of the same story.
 
 ---
 
