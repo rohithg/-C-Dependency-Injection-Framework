@@ -345,6 +345,13 @@ a {
   transform: none;
 }
 
+.project-index {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--teal);
+  padding-top: 0.2rem;
+}
+
 .project-badge {
   margin: 0 0 0.35rem;
   display: inline-block;
