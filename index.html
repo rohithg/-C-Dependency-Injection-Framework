@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Executive Revenue Command Center — Rohith Gangapuram</title>
-  <meta name="description" content="Interactive executive BI dashboard: one governed revenue definition across Sales and Finance. Built by Rohith Gangapuram." />
+  <title>One Number for Revenue — Governed Semantic Layer | Rohith Gangapuram</title>
+  <meta name="description" content="Career case study by BI Architect Rohith Gangapuram: how a governed dbt + Power BI semantic layer ends Sales–Finance KPI conflict." />
   <meta name="author" content="Rohith Gangapuram" />
-  <meta property="og:title" content="Executive Revenue Command Center" />
-  <meta property="og:description" content="Sales vs Finance — one governed semantic layer. Interactive exec BI dashboard by Rohith Gangapuram." />
+  <meta property="og:title" content="One Number for Revenue — BI Architect case study" />
+  <meta property="og:description" content="Governed semantic layer · Sales vs Finance alignment · dbt · Snowflake · Power BI · RLS. Portfolio work by Rohith Gangapuram." />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="docs/screenshots/linkedin-dashboard-hero.png" />
   <meta name="twitter:card" content="summary_large_image" />
@@ -26,13 +26,13 @@
       <div class="brand">
         <span class="brand-mark" aria-hidden="true"></span>
         <div>
-          <p class="brand-kicker">Governed semantic layer</p>
-          <h1>Executive Revenue Command Center</h1>
+          <p class="brand-kicker">BI Architect case study · synthetic demo</p>
+          <h1>One Number for Revenue</h1>
         </div>
       </div>
       <div class="controls">
         <label class="control">
-          <span>Region</span>
+          <span>Region (RLS scope)</span>
           <select id="regionFilter" aria-label="Filter by region">
             <option value="all">All regions</option>
             <option value="West">West</option>
@@ -50,30 +50,47 @@
             <option value="Ecom">E-commerce</option>
           </select>
         </label>
-        <div class="live-pill" title="Demo data refreshed in-browser">
+        <div class="live-pill" title="Demo of a governed semantic layer pattern">
           <span class="pulse"></span>
-          Live demo · Q3 2025
+          Certified metrics · Q3
         </div>
       </div>
     </header>
 
+    <section class="career-strip" aria-label="Career context">
+      <p>
+        Built to demonstrate the work of a <strong>BI Architect / Analytics Engineer</strong>:
+        metric governance, dimensional models, Power BI semantic layers, and executive trust —
+        the same pattern behind aligning Sales &amp; Finance for multi-BU organizations.
+      </p>
+      <ul class="stack-tags" aria-label="Stack">
+        <li>dbt</li>
+        <li>Snowflake</li>
+        <li>Power BI / DAX</li>
+        <li>RLS</li>
+        <li>Star schema</li>
+        <li>AR &amp; margin</li>
+      </ul>
+    </section>
+
     <section class="story-banner" aria-label="Case narrative">
       <p>
-        <strong>Problem:</strong> Sales booked <em>gross pipeline</em>; Finance reported <em>recognized net revenue</em> —
-        a $4.2M quarterly gap and conflicting board slides.
-        <strong>Fix:</strong> one dbt/Power BI semantic layer, one ARR definition, RLS by region/BU.
-        <strong>Result:</strong> ad-hoc reporting requests down ~60%; Finance and Sales now share this view.
+        <strong>Business problem:</strong> Sales closed on <em>bookings</em>; Finance closed on
+        <em>recognized net revenue</em> — ~$4.2M quarterly gap, two board packs, no single source of truth.
+        <strong>What I built:</strong> a governed semantic layer (dbt models → certified Power BI measures + RLS by region/BU)
+        and this executive canvas so leadership consumes one definition.
+        <strong>Career outcome pattern:</strong> ad-hoc “whose number is right?” requests down ~60%; board prep becomes a filtered refresh, not a reconciliation war.
       </p>
     </section>
 
     <section class="kpi-row" aria-label="Key performance indicators">
       <article class="kpi">
-        <p class="kpi-label">Recognized revenue (MTD)</p>
+        <p class="kpi-label">Certified recognized revenue</p>
         <p class="kpi-value" id="kpiRevenue">—</p>
         <p class="kpi-delta up" id="kpiRevenueDelta">—</p>
       </article>
       <article class="kpi">
-        <p class="kpi-label">Gross margin %</p>
+        <p class="kpi-label">Gross margin % (Finance)</p>
         <p class="kpi-value" id="kpiMargin">—</p>
         <p class="kpi-delta up" id="kpiMarginDelta">—</p>
       </article>
@@ -83,7 +100,7 @@
         <p class="kpi-delta down" id="kpiVarianceDelta">—</p>
       </article>
       <article class="kpi">
-        <p class="kpi-label">On-time delivery</p>
+        <p class="kpi-label">On-time delivery (Ops)</p>
         <p class="kpi-value" id="kpiOtd">—</p>
         <p class="kpi-delta up" id="kpiOtdDelta">—</p>
       </article>
@@ -92,8 +109,8 @@
     <section class="grid">
       <article class="panel panel-wide">
         <header class="panel-head">
-          <h2>Revenue vs bookings (aligned definitions)</h2>
-          <p>Blue = recognized net revenue (Finance). Amber = closed-won bookings (Sales). Gap closed via semantic layer.</p>
+          <h2>Bookings vs recognized revenue — same grain, two measures</h2>
+          <p>Teal = certified <strong>recognized net revenue</strong> (Finance). Amber = <strong>closed-won bookings</strong> (Sales). The gap is explained by definition, not disputed as “bad data.”</p>
         </header>
         <div class="chart-wrap">
           <canvas id="trendChart" height="120"></canvas>
@@ -103,7 +120,7 @@
       <article class="panel">
         <header class="panel-head">
           <h2>Revenue by region</h2>
-          <p>Same grain and filters as the board pack.</p>
+          <p>Same certified measure the board pack uses — scoped like RLS.</p>
         </header>
         <div class="chart-wrap chart-square">
           <canvas id="regionChart"></canvas>
@@ -113,7 +130,7 @@
       <article class="panel">
         <header class="panel-head">
           <h2>AR aging</h2>
-          <p>Bucketed outstanding receivables.</p>
+          <p>Finance-ready receivables buckets from the semantic layer.</p>
         </header>
         <div class="chart-wrap chart-square">
           <canvas id="agingChart"></canvas>
@@ -122,8 +139,8 @@
 
       <article class="panel panel-wide">
         <header class="panel-head">
-          <h2>Top accounts by recognized revenue</h2>
-          <p>Click a row to highlight that account’s contribution in the trend (demo).</p>
+          <h2>Top accounts — self-serve, not another Excel extract</h2>
+          <p>What stakeholders get after metric ownership is clear: filter, trust, decide.</p>
         </header>
         <div class="table-wrap">
           <table>
@@ -132,7 +149,7 @@
                 <th>Account</th>
                 <th>Region</th>
                 <th>BU</th>
-                <th class="num">Revenue</th>
+                <th class="num">Certified revenue</th>
                 <th class="num">Margin %</th>
                 <th class="num">AR open</th>
               </tr>
@@ -143,13 +160,23 @@
       </article>
     </section>
 
+    <section class="hiring-note" aria-label="Hiring signal">
+      <h2>What this proves in interviews</h2>
+      <ol>
+        <li><strong>Metric governance</strong> — I don’t just build charts; I own definitions, grain, and owners.</li>
+        <li><strong>Modern stack fluency</strong> — dbt + warehouse modeling feeding a Power BI semantic layer with RLS.</li>
+        <li><strong>Executive partnership</strong> — translate Sales/Finance conflict into a scoped data product leadership adopts.</li>
+        <li><strong>Operational literacy</strong> — revenue, margin, AR aging, and delivery in one trusted canvas.</li>
+      </ol>
+    </section>
+
     <footer class="foot">
       <p>
-        Built by <strong>Rohith Gangapuram</strong> · BI / Analytics Engineer ·
-        <a href="https://github.com/rohithg/-C-Dependency-Injection-Framework/tree/gh-pages" target="_blank" rel="noopener">GitHub repo</a> ·
-        <a href="https://github.com/rohithg/-C-Dependency-Injection-Framework/tree/gh-pages/blob/main/docs/LINKEDIN_POST.md" target="_blank" rel="noopener">LinkedIn post copy</a> ·
+        <strong>Rohith Gangapuram</strong> · BI Architect / Analytics Engineer · Dublin, CA ·
         <a href="https://linkedin.com/in/rohithgangapuram" target="_blank" rel="noopener">LinkedIn</a> ·
-        Demo data only — not client confidential
+        <a href="https://github.com/rohithg/-C-Dependency-Injection-Framework/tree/gh-pages" target="_blank" rel="noopener">Source</a> ·
+        <a href="portfolio/">Portfolio</a> ·
+        Synthetic demo — pattern mirrors production semantic-layer work · not client confidential
       </p>
     </footer>
   </div>

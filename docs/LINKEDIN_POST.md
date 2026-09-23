@@ -1,49 +1,44 @@
-# LinkedIn post — copy & paste
+# LinkedIn post — career showcase
 
-Suggested format: **screenshot first** (KPI row + “Revenue vs bookings” chart), then this text. Tag tools you want to surface.
+Use a screenshot of the **career strip + story banner + KPI row + trend chart**.
+
+**Live demo:** https://rohithg.github.io/-C-Dependency-Injection-Framework/
 
 ---
 
-## Option A — Story-led (recommended)
+## Recommended post
 
-Most teams don’t have a data problem — they have a **definition** problem.
+Most “data problems” I see in BI are actually **definition problems**.
 
-Sales closed the quarter celebrating bookings.  
+Sales closed a quarter on bookings.  
 Finance closed the same quarter on recognized net revenue.  
-Same company. **$4.2M apart.** Two board slides. Zero trust.
+Same company. Roughly **$4.2M apart**. Two board decks. Zero trust.
 
-I rebuilt the executive view around a **governed semantic layer** (dbt + Power BI):
+As a **BI Architect**, this is the work I own end-to-end:
 
-→ One revenue definition (grain, timing, discounts, returns)  
-→ RLS by region / business unit  
-→ One “Revenue Command Center” for leadership  
+1. Align grain and timing (what “revenue” means)  
+2. Model it as reusable data products (**dbt** on a warehouse like **Snowflake**)  
+3. Expose certified measures in a **Power BI semantic layer** with **RLS** by region / BU  
+4. Give leadership one canvas — not another Excel reconciliation  
 
-**Result:** Sales↔Finance variance collapsed, and ad-hoc “whose number is right?” requests dropped ~**60%**.
+I published an interactive case study of that pattern (**synthetic data**, real method):
 
-I open-sourced an interactive demo of that pattern (synthetic data):  
-🔗 https://rohithg.github.io/-C-Dependency-Injection-Framework/
-
-If you’re hiring for **BI / Analytics Engineering** and care about metric trust as much as dashboards, I’d love to connect.
-
-#BusinessIntelligence #AnalyticsEngineering #PowerBI #dbt #Snowflake #DataAnalytics #SemanticLayer
-
----
-
-## Option B — Short / carousel caption
-
-Built an **Executive Revenue Command Center** to show what happens when Sales and Finance finally share one metric definition.
-
-Interactive filters · AR aging · margin · bookings vs recognized revenue  
-Open-source demo 👇  
+👉 **One Number for Revenue**  
 https://rohithg.github.io/-C-Dependency-Injection-Framework/
 
-#PowerBI #dbt #BIEngineer #AnalyticsEngineer
+You’ll see certified recognized revenue vs bookings, margin, AR aging, and scoped filters the way stakeholders actually consume metrics.
+
+If you’re hiring for **BI Engineer / Analytics Engineer / BI Architect** roles and care about metric trust as much as dashboards, I’d love to connect.
+
+#BusinessIntelligence #AnalyticsEngineering #BIArchitect #PowerBI #dbt #Snowflake #SemanticLayer #DataGovernance
 
 ---
 
-## Screenshot tips
+## Short version
 
-1. Use a clean browser window (hide bookmarks bar).
-2. Capture the **story banner + KPI row + trend chart** in one frame — that’s the LinkedIn hook.
-3. Optional second image: account table filtered to one region.
-4. Alt text: “Executive BI dashboard comparing recognized revenue vs Sales bookings with KPIs for margin, variance, and on-time delivery.”
+I’m a BI Architect. My job isn’t “more dashboards” — it’s **one trusted number**.
+
+Open-sourced a case study of Sales–Finance alignment via a governed semantic layer (dbt → Power BI / RLS):  
+https://rohithg.github.io/-C-Dependency-Injection-Framework/
+
+#PowerBI #dbt #AnalyticsEngineer #BIEngineer

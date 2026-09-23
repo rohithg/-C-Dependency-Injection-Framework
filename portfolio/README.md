@@ -5,7 +5,7 @@
 
 Personal portfolio for **Rohith Gangapuram**, Business Intelligence / Analytics Engineer.
 
-**Standout project featured on the site:** [Executive Revenue Command Center](https://github.com/rohithg/linkedin-executive-dashboard) (LinkedIn-ready).
+**Standout project featured on the site:** [One Number for Revenue](https://rohithg.github.io/-C-Dependency-Injection-Framework/) — BI Architect career case study.
 
 ## Run locally
 

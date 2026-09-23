@@ -1,31 +1,47 @@
-# Case study — Sales vs Finance revenue alignment
+# Case study — One Number for Revenue
 
-## Context
+**Candidate:** Rohith Gangapuram · BI Architect / Analytics Engineer · Dublin, CA  
+**Audience:** Hiring managers for BI Engineer, Analytics Engineer, Power BI / semantic-layer roles
 
-At a multi-BU supply-chain / wholesale organization, Sales and Finance each produced executive revenue numbers from different extracts. Leadership spent QBR time reconciling slides instead of making decisions.
+---
 
-## What “good” looked like
+## The career problem this proves I can solve
 
-| Stakeholder | Needed |
-|-------------|--------|
+In multi-BU commercial organizations, Sales, Finance, and Ops often ship leadership different “revenue” numbers. The spreadsheet war isn’t a visualization gap — it’s missing **metric ownership**, **grain**, and a governed path from warehouse to BI.
+
+That is core BI Architect work.
+
+## What “good” looks like
+
+| Stakeholder | Needs |
+|--|--|
 | CFO / Controller | Recognized net revenue, margin, AR risk |
-| CRO / Sales ops | Closed-won bookings and pipeline conversion |
-| BU presidents | Filtered truth for their region / unit only |
-| Analytics team | One semantic layer to maintain, not 12 Excel models |
+| CRO / Sales ops | Bookings / closed-won with clear conversion to recognition |
+| BU presidents | Filtered truth for their region/unit only (RLS) |
+| Analytics team | One semantic layer to maintain — not 12 Excel models |
 
-## Solution pattern
+## Solution pattern (what I deliver)
 
-1. **Align grain** — order line + recognition date (not invoice print date alone).
-2. **Codify measures** — `Recognized Revenue`, `Closed-Won Bookings`, `Gross Margin %`, `AR Aging` in a shared model.
-3. **Enforce access** — RLS by region and business unit.
-4. **Deliver one canvas** — this command center (or Power BI twin) for exec readouts.
+1. **Align definitions** — order-line grain, recognition timing, discounts/returns.  
+2. **Model as data products** — dbt staging → marts on Snowflake (or equivalent).  
+3. **Certify measures** — Power BI semantic layer / DAX with owners and glossary.  
+4. **Enforce access** — RLS by region and business unit.  
+5. **Ship one canvas** — this executive view (or its Power BI twin) for QBR / board prep.
 
-## Impact (representative)
+## Outcomes this pattern drives
 
-- Sales↔Finance quarterly variance: **$4.2M → ~$0.3M** residual (timing items only)
-- Ad-hoc reporting / reconciliation requests: **~60% reduction**
-- Board pack prep: hours → a filtered refresh of one governed view
+- Multi-million Sales↔Finance quarterly gaps reduced to residual timing items  
+- ~**60%** fewer ad-hoc “whose number is right?” requests (representative)  
+- Board pack prep: hours of reconciliation → filtered refresh of certified metrics  
 
-## How to talk about this in interviews
+## How I talk about this in interviews
 
-Use the demo live: flip region filters, point at the bookings vs recognized series, and walk AR aging. Recruiters remember the *story* more than the tool logos.
+Open the live demo. Flip region filters. Point at bookings vs recognized series. Walk AR aging. Explain what is **certified** vs **operational**. That’s the difference between a dashboard builder and a BI Architect.
+
+## Related portfolio pieces
+
+- Power BI semantic layer (DAX, glossary, RLS, governance)  
+- Snowflake retail data warehouse (dbt + Airflow star schema)  
+- dbt analytics engineering (metrics-as-code)
+
+Live demo: https://rohithg.github.io/-C-Dependency-Injection-Framework/
