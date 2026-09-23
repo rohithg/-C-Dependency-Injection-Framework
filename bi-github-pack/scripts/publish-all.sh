@@ -30,6 +30,9 @@ publish "dbt-analytics-engineering" "dbt-analytics-engineering" \
   "Analytics engineering for B2B SaaS — metrics-as-code (ARR, churn, NRR) with dbt CI."
 publish "rohith-portfolio" "rohith-portfolio" \
   "Personal portfolio showcasing BI / Analytics Engineering expertise."
+publish "linkedin-executive-dashboard" "linkedin-executive-dashboard" \
+  "LinkedIn-ready executive BI dashboard — Sales vs Finance semantic layer story with interactive KPIs."
 
-echo "Enable GitHub Pages for rohith-portfolio: Settings → Pages → Deploy from main / root"
-echo "Done. Portfolio URL: https://rohithg.github.io/rohith-portfolio/"
+echo "Enable GitHub Pages for rohith-portfolio and linkedin-executive-dashboard (main / root)"
+echo "Portfolio: https://rohithg.github.io/rohith-portfolio/"
+echo "LinkedIn demo: https://rohithg.github.io/linkedin-executive-dashboard/"

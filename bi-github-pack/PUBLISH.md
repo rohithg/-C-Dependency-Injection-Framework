@@ -8,6 +8,7 @@ To publish each project as its own repo:
 1. GitHub → Settings → Applications → Cursor → Repository access → **All repositories**
    (or select: `rohith-portfolio`, `Snowflake-Retail-Data-Warehouse`, `IMP`, plus any new repos below)
 2. Create these public repos (empty, no README) if they do not exist:
+   - `linkedin-executive-dashboard` ← **LinkedIn showcase (pin this)**
    - `powerbi-semantic-layer`
    - `healthcare-dimensional-model`
    - `dbt-analytics-engineering`
@@ -27,6 +28,7 @@ Requires `gh auth login` with repo scope.
 | Folder | GitHub repo |
 |--------|-------------|
 | `rohith-portfolio/` | `rohithg/rohith-portfolio` → enable Pages (main / root) |
+| `linkedin-executive-dashboard/` | `rohithg/linkedin-executive-dashboard` → enable Pages + pin on profile |
 | `Snowflake-Retail-Data-Warehouse/` | `rohithg/Snowflake-Retail-Data-Warehouse` |
 | `powerbi-semantic-layer/` | `rohithg/powerbi-semantic-layer` (or `IMP`) |
 | `healthcare-dimensional-model/` | `rohithg/healthcare-dimensional-model` |
