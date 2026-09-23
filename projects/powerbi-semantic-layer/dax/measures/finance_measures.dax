@@ -1,0 +1,239 @@
+// =============================================================================
+// Finance Measures — AR/AP aging, margin bridges
+// Table folder: Measures\Finance
+// Depends on: FactAR, FactAP, FactSales, DimDate, DimCustomer, DimVendor
+// As-of pattern: aging uses MAX(DimDate[Date]) inside the visual's date context
+// =============================================================================
+
+// --- Margin (re-exposed for Finance workspace; same definitions as Sales) ----
+
+// Prefer thin wrappers so Finance reports bind to Measures\Finance display folder
+GP Margin % (Finance) =
+[Gross Profit Margin %]
+
+Contribution Margin % (Finance) =
+[Contribution Margin %]
+
+// --- AR open & aging ---------------------------------------------------------
+// FactAR grain: one row per open (or historical open) receivable item.
+// AmountOpen is the remaining balance. DueDate drives aging.
+// Days past due = as-of − DueDate (negative / zero => Current).
+
+AR As-Of Date =
+MAX ( DimDate[Date] )
+
+AR Open Balance =
+VAR _asOf = [AR As-Of Date]
+RETURN
+    CALCULATE (
+        SUM ( FactAR[AmountOpen] ),
+        FactAR[OpenFlag] = TRUE (),
+        FactAR[InvoiceDate] <= _asOf,
+        // Keep items still open as of _asOf (CloseDate blank or after as-of)
+        FILTER (
+            ALL ( FactAR[CloseDate] ),
+            ISBLANK ( FactAR[CloseDate] ) || FactAR[CloseDate] > _asOf
+        ),
+        REMOVEFILTERS ( DimDate )
+    )
+
+AR Days Past Due :=
+// Helper column pattern preferred in model:
+// FactAR[DaysPastDue] = INT ( _asOf - FactAR[DueDate] )
+// Below: measure-time bucket without relying on a calculated column snapshot.
+
+AR Aging Current =
+VAR _asOf = [AR As-Of Date]
+RETURN
+    CALCULATE (
+        [AR Open Balance],
+        FILTER (
+            ADDCOLUMNS (
+                SUMMARIZE ( FactAR, FactAR[ARItemKey], FactAR[DueDate] ),
+                "@DPD", INT ( _asOf - FactAR[DueDate] )
+            ),
+            [@DPD] <= 30
+        )
+    )
+
+// Cleaner production pattern: precompute bucket on the fact (recommended).
+// FactAR[AgingBucket] = Current | 31-60 | 61-90 | 90+
+// Measures below assume that column exists (see model/star-schema.md).
+
+AR Aging Current (Bucket) =
+CALCULATE (
+    [AR Open Balance],
+    FactAR[AgingBucket] = "Current"
+)
+
+AR Aging 31-60 =
+CALCULATE (
+    [AR Open Balance],
+    FactAR[AgingBucket] = "31-60"
+)
+
+AR Aging 61-90 =
+CALCULATE (
+    [AR Open Balance],
+    FactAR[AgingBucket] = "61-90"
+)
+
+AR Aging 90+ =
+CALCULATE (
+    [AR Open Balance],
+    FactAR[AgingBucket] = "90+"
+)
+
+// Validation: buckets must reconcile to open balance
+AR Aging Check =
+VAR _sum =
+    [AR Aging Current (Bucket)]
+        + [AR Aging 31-60]
+        + [AR Aging 61-90]
+        + [AR Aging 90+]
+RETURN
+    _sum - [AR Open Balance]   // expect 0
+
+// Dynamic bucket assignment when AgingBucket is refreshed nightly for "today"
+// but report needs arbitrary as-of (month-end close):
+AR Open by Dynamic Bucket =
+VAR _asOf = [AR As-Of Date]
+VAR _items =
+    ADDCOLUMNS (
+        CALCULATETABLE (
+            SUMMARIZE (
+                FactAR,
+                FactAR[ARItemKey],
+                FactAR[DueDate],
+                FactAR[AmountOpen]
+            ),
+            FactAR[OpenFlag] = TRUE (),
+            FactAR[InvoiceDate] <= _asOf,
+            FILTER (
+                ALL ( FactAR[CloseDate] ),
+                ISBLANK ( FactAR[CloseDate] ) || FactAR[CloseDate] > _asOf
+            ),
+            REMOVEFILTERS ( DimDate )
+        ),
+        "@Bucket",
+            VAR _dpd = INT ( _asOf - FactAR[DueDate] )
+            RETURN
+                SWITCH (
+                    TRUE (),
+                    _dpd <= 30, "Current",
+                    _dpd <= 60, "31-60",
+                    _dpd <= 90, "61-90",
+                    "90+"
+                )
+    )
+RETURN
+    SUMX ( _items, FactAR[AmountOpen] )
+
+AR Aging 61-90 (Dynamic) =
+VAR _asOf = [AR As-Of Date]
+VAR _items =
+    FILTER (
+        ADDCOLUMNS (
+            CALCULATETABLE (
+                SUMMARIZE (
+                    FactAR,
+                    FactAR[ARItemKey],
+                    FactAR[DueDate],
+                    FactAR[AmountOpen]
+                ),
+                FactAR[OpenFlag] = TRUE (),
+                FactAR[InvoiceDate] <= _asOf,
+                FILTER (
+                    ALL ( FactAR[CloseDate] ),
+                    ISBLANK ( FactAR[CloseDate] ) || FactAR[CloseDate] > _asOf
+                ),
+                REMOVEFILTERS ( DimDate )
+            ),
+            "@DPD", INT ( _asOf - FactAR[DueDate] )
+        ),
+        [@DPD] > 60 && [@DPD] <= 90
+    )
+RETURN
+    SUMX ( _items, FactAR[AmountOpen] )
+
+// --- DSO ---------------------------------------------------------------------
+
+Credit Sales =
+CALCULATE (
+    [Net Sales],
+    FactSales[SaleType] = "Credit"
+)
+
+Days in Period =
+DISTINCTCOUNT ( DimDate[Date] )
+
+DSO =
+DIVIDE ( [AR Open Balance], [Credit Sales], BLANK () ) * [Days in Period]
+
+// Trailing 90-day credit sales variant (more stable)
+Credit Sales R90 =
+CALCULATE (
+    [Credit Sales],
+    DATESINPERIOD ( DimDate[Date], MAX ( DimDate[Date] ), -90, DAY )
+)
+
+DSO (R90) =
+DIVIDE ( [AR Open Balance], [Credit Sales R90], BLANK () ) * 90
+
+// --- AP open & aging (mirror) ------------------------------------------------
+
+AP As-Of Date =
+MAX ( DimDate[Date] )
+
+AP Open Balance =
+VAR _asOf = [AP As-Of Date]
+RETURN
+    CALCULATE (
+        SUM ( FactAP[AmountOpen] ),
+        FactAP[OpenFlag] = TRUE (),
+        FactAP[InvoiceDate] <= _asOf,
+        FILTER (
+            ALL ( FactAP[CloseDate] ),
+            ISBLANK ( FactAP[CloseDate] ) || FactAP[CloseDate] > _asOf
+        ),
+        REMOVEFILTERS ( DimDate )
+    )
+
+AP Aging Current (Bucket) =
+CALCULATE ( [AP Open Balance], FactAP[AgingBucket] = "Current" )
+
+AP Aging 31-60 =
+CALCULATE ( [AP Open Balance], FactAP[AgingBucket] = "31-60" )
+
+AP Aging 61-90 =
+CALCULATE ( [AP Open Balance], FactAP[AgingBucket] = "61-90" )
+
+AP Aging 90+ =
+CALCULATE ( [AP Open Balance], FactAP[AgingBucket] = "90+" )
+
+Purchases =
+SUM ( FactAP[InvoiceAmount] )
+
+DPO =
+DIVIDE ( [AP Open Balance], [Purchases], BLANK () ) * [Days in Period]
+
+// --- Simple P&L bridge helpers -----------------------------------------------
+
+OpEx =
+CALCULATE (
+    SUM ( FactGL[Amount] ),
+    DimAccount[AccountClass] = "Operating Expense",
+    FactGL[AmountSign] = "Debit-positive"
+)
+
+// Management EBITDA — illustrative bridge; add-backs must match FP&A policy
+EBITDA (Mgmt) =
+VAR _gp = [Gross Profit]
+VAR _opex = [OpEx]
+VAR _addBacks =
+    CALCULATE (
+        SUM ( FactGL[Amount] ),
+        DimAccount[EBITDAAddBack] = TRUE ()
+    )
+RETURN
+    _gp - _opex + _addBacks

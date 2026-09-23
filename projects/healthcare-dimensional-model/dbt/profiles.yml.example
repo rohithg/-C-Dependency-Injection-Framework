@@ -1,0 +1,15 @@
+# Example profiles.yml fragment — copy into ~/.dbt/profiles.yml
+# SYNTHETIC / DEV ONLY — do not point at production PHI warehouses.
+
+healthcare_dimensional_model:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: localhost
+      user: demo_user
+      password: "{{ env_var('HC_DEMO_DB_PASSWORD') }}"
+      port: 5432
+      dbname: healthcare_demo
+      schema: healthcare_demo
+      threads: 4

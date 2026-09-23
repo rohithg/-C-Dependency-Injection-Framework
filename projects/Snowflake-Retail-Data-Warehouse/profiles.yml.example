@@ -1,0 +1,26 @@
+# Copy this file to ~/.dbt/profiles.yml (or set DBT_PROFILES_DIR) and fill in credentials.
+# Primary target: Snowflake. Optional DuckDB target for local demos without a cloud warehouse.
+
+snowflake_retail_dw:
+  target: snowflake
+  outputs:
+    snowflake:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: "{{ env_var('SNOWFLAKE_USER') }}"
+      # Prefer key-pair or SSO in production; password shown for local bootstrap only
+      password: "{{ env_var('SNOWFLAKE_PASSWORD') }}"
+      role: "{{ env_var('SNOWFLAKE_ROLE', 'TRANSFORMER') }}"
+      database: "{{ env_var('SNOWFLAKE_DATABASE', 'RETAIL_DW') }}"
+      warehouse: "{{ env_var('SNOWFLAKE_WAREHOUSE', 'TRANSFORM_WH') }}"
+      schema: analytics
+      threads: 8
+      client_session_keep_alive: true
+      query_tag: dbt_retail_dw
+
+    # Local / CI alternate — models avoid Snowflake-only syntax where practical
+    duckdb:
+      type: duckdb
+      path: target/retail_dw.duckdb
+      schema: main
+      threads: 4
