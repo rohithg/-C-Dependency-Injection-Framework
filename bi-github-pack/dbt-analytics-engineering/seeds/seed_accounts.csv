@@ -1,0 +1,21 @@
+account_id,account_name,industry,segment,region,created_at,is_internal
+acc_001,Acme Corp,Technology,enterprise,NAMER,2024-01-15 10:00:00,false
+acc_002,Brightside Health,Healthcare,mid_market,NAMER,2024-02-01 14:30:00,false
+acc_003,Cascade Logistics,Logistics,mid_market,EMEA,2024-02-20 09:15:00,false
+acc_004,Delta Fintech,Financial Services,enterprise,NAMER,2024-03-05 11:00:00,false
+acc_005,Evergreen Retail,Retail,smb,APAC,2024-03-18 08:45:00,false
+acc_006,Forge Manufacturing,Manufacturing,mid_market,EMEA,2024-04-02 16:20:00,false
+acc_007,Glacier Media,Media,smb,NAMER,2024-04-22 12:00:00,false
+acc_008,Harbor Legal,Professional Services,enterprise,NAMER,2024-05-10 09:30:00,false
+acc_009,Iris Analytics,Technology,smb,APAC,2024-05-28 15:00:00,false
+acc_010,Juniper Edu,Education,mid_market,EMEA,2024-06-12 10:45:00,false
+acc_011,Kestrel Insurance,Financial Services,enterprise,NAMER,2024-07-01 13:00:00,false
+acc_012,Lumen Biotech,Healthcare,mid_market,NAMER,2024-07-20 11:30:00,false
+acc_013,Maple Foods,Retail,smb,APAC,2024-08-05 08:00:00,false
+acc_014,Northwind Traders,Logistics,enterprise,EMEA,2024-08-25 14:15:00,false
+acc_015,Orbit SaaS Demo,Technology,smb,NAMER,2024-01-01 00:00:00,true
+acc_016,Pinnacle Consulting,Professional Services,mid_market,NAMER,2024-09-10 09:00:00,false
+acc_017,Quartz Energy,Energy,enterprise,EMEA,2024-09-28 16:45:00,false
+acc_018,Riverbank Bank,Financial Services,mid_market,NAMER,2024-10-15 10:20:00,false
+acc_019,Summit HR,Professional Services,smb,APAC,2024-11-02 12:30:00,false
+acc_020,Tidewater Marine,Logistics,smb,NAMER,2024-11-20 08:15:00,false

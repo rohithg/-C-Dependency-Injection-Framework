@@ -1,0 +1,31 @@
+from_table,from_column,to_table,to_column,cardinality,cross_filter,active,notes
+FactSales,InvoiceDateKey,DimDate,DateKey,Many:1,Single,TRUE,Default sales date
+FactSales,ShipDateKey,DimDate,DateKey,Many:1,Single,FALSE,USERELATIONSHIP for ship-date metrics
+FactSales,CustomerKey,DimCustomer,CustomerKey,Many:1,Single,TRUE,
+FactSales,ProductKey,DimProduct,ProductKey,Many:1,Single,TRUE,
+FactSales,SalesRepKey,DimSalesRep,SalesRepKey,Many:1,Single,TRUE,
+FactOrders,BookDateKey,DimDate,DateKey,Many:1,Single,TRUE,
+FactOrders,CustomerKey,DimCustomer,CustomerKey,Many:1,Single,TRUE,
+FactOrders,ProductKey,DimProduct,ProductKey,Many:1,Single,TRUE,
+FactOpportunity,CloseDateKey,DimDate,DateKey,Many:1,Single,TRUE,
+FactOpportunity,SalesRepKey,DimSalesRep,SalesRepKey,Many:1,Single,TRUE,
+FactAR,InvoiceDateKey,DimDate,DateKey,Many:1,Single,TRUE,Aging uses DueDate in measures
+FactAR,CustomerKey,DimCustomer,CustomerKey,Many:1,Single,TRUE,
+FactAP,InvoiceDateKey,DimDate,DateKey,Many:1,Single,TRUE,
+FactAP,VendorKey,DimVendor,VendorKey,Many:1,Single,TRUE,
+FactOps,ShipDateKey,DimDate,DateKey,Many:1,Single,TRUE,
+FactOps,ProductKey,DimProduct,ProductKey,Many:1,Single,TRUE,
+FactOps,CustomerKey,DimCustomer,CustomerKey,Many:1,Single,TRUE,
+FactTransport,TripDateKey,DimDate,DateKey,Many:1,Single,TRUE,
+FactTransport,CarrierKey,DimCarrier,CarrierKey,Many:1,Single,TRUE,
+FactTransport,RegionKey,DimRegion,RegionKey,Many:1,Single,TRUE,Direct region for fleet RLS
+FactInventory,SnapshotDateKey,DimDate,DateKey,Many:1,Single,TRUE,
+FactInventory,ProductKey,DimProduct,ProductKey,Many:1,Single,TRUE,
+FactGL,PostingDateKey,DimDate,DateKey,Many:1,Single,TRUE,
+FactGL,AccountKey,DimAccount,AccountKey,Many:1,Single,TRUE,
+FactGL,BusinessUnitKey,DimBusinessUnit,BusinessUnitKey,Many:1,Single,TRUE,
+FactQuota,MonthDateKey,DimDate,DateKey,Many:1,Single,TRUE,
+FactQuota,SalesRepKey,DimSalesRep,SalesRepKey,Many:1,Single,TRUE,
+DimCustomer,RegionKey,DimRegion,RegionKey,Many:1,Single,TRUE,RLS path for sales
+DimProduct,BusinessUnitKey,DimBusinessUnit,BusinessUnitKey,Many:1,Single,TRUE,RLS path for BU
+DimSalesRep,RegionKey,DimRegion,RegionKey,Many:1,Single,TRUE,

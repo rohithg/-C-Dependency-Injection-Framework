@@ -1,0 +1,144 @@
+# Semantic models (dbt Semantic Layer / MetricFlow compatible YAML)
+# Documents the same business metrics implemented as SQL in models/metrics/.
+# Source of truth for calculations remains the tested SQL metric models.
+
+semantic_models:
+  - name: subscriptions_revenue
+    description: >
+      Subscription revenue semantic model for ARR, MRR, and churn measures.
+      Backed by fct_subscriptions. Cohort NRR logic lives in metric_nrr_monthly.sql.
+    model: ref('fct_subscriptions')
+    defaults:
+      agg_time_dimension: subscription_started_at
+    entities:
+      - name: subscription
+        type: primary
+        expr: subscription_id
+      - name: account
+        type: foreign
+        expr: account_id
+      - name: plan
+        type: foreign
+        expr: plan_id
+    dimensions:
+      - name: subscription_started_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: status
+        type: categorical
+      - name: segment
+        type: categorical
+      - name: region
+        type: categorical
+      - name: plan_tier
+        type: categorical
+      - name: is_internal
+        type: categorical
+      - name: is_currently_active
+        type: categorical
+      - name: is_churned
+        type: categorical
+    measures:
+      - name: total_mrr
+        description: Monthly recurring revenue in USD
+        agg: sum
+        expr: mrr_usd
+      - name: total_arr
+        description: Annual recurring revenue in USD (MRR * 12 at row grain)
+        agg: sum
+        expr: arr_usd
+      - name: subscription_count
+        description: Count of subscriptions
+        agg: count
+        expr: subscription_id
+
+  - name: product_usage
+    description: Product usage events for activation and engagement metrics.
+    model: ref('fct_usage_events')
+    defaults:
+      agg_time_dimension: event_at
+    entities:
+      - name: usage_event
+        type: primary
+        expr: event_id
+      - name: account
+        type: foreign
+        expr: account_id
+    dimensions:
+      - name: event_at
+        type: time
+        type_params:
+          time_granularity: day
+      - name: event_name
+        type: categorical
+      - name: segment
+        type: categorical
+      - name: region
+        type: categorical
+      - name: is_internal
+        type: categorical
+    measures:
+      - name: event_count
+        agg: count
+        expr: event_id
+      - name: unique_accounts
+        agg: count_distinct
+        expr: account_id
+
+metrics:
+  - name: arr
+    description: >
+      ARR — sum of arr_usd. Filter to non-internal active subscriptions in the
+      semantic layer. SQL source of truth: models/metrics/metric_arr_monthly.sql
+    type: simple
+    label: ARR
+    type_params:
+      measure:
+        name: total_arr
+    filter: |
+      {{ Dimension('subscription__is_internal') }} = false
+      and {{ Dimension('subscription__is_currently_active') }} = true
+
+  - name: mrr
+    description: >
+      MRR — sum of mrr_usd for active non-internal subscriptions.
+    type: simple
+    label: MRR
+    type_params:
+      measure:
+        name: total_mrr
+    filter: |
+      {{ Dimension('subscription__is_internal') }} = false
+      and {{ Dimension('subscription__is_currently_active') }} = true
+
+  - name: churned_subscription_count
+    description: >
+      Count of churned subscriptions. Logo churn *rate* is defined in
+      models/metrics/metric_logo_churn_monthly.sql (cohort beginning logos).
+    type: simple
+    label: Churned Subscriptions
+    type_params:
+      measure:
+        name: subscription_count
+    filter: |
+      {{ Dimension('subscription__is_churned') }} = true
+      and {{ Dimension('subscription__is_internal') }} = false
+
+  - name: product_event_count
+    description: >
+      Product event volume. Activation *rate* is defined in
+      models/metrics/metric_activation_rate.sql
+    type: simple
+    label: Product Events
+    type_params:
+      measure:
+        name: event_count
+
+  - name: active_account_events
+    description: Distinct accounts with product events (engagement proxy).
+    type: simple
+    label: Active Accounts (Events)
+    type_params:
+      measure:
+        name: unique_accounts

@@ -1,0 +1,54 @@
+version: 2
+
+models:
+  - name: metric_arr_monthly
+    description: >
+      Monthly ARR snapshot (metrics-as-code). ARR = sum of active MRR * 12
+      for non-internal accounts at month end.
+    columns:
+      - name: metric_month
+        data_tests:
+          - unique
+          - not_null
+      - name: arr_usd
+        data_tests:
+          - not_null
+      - name: active_logo_count
+        data_tests:
+          - not_null
+
+  - name: metric_logo_churn_monthly
+    description: >
+      Logo (customer) churn rate by month.
+      Churned logos / logos active at prior month end.
+    columns:
+      - name: metric_month
+        data_tests:
+          - unique
+          - not_null
+      - name: logo_churn_rate
+        description: Ratio between 0 and 1.
+
+  - name: metric_nrr_monthly
+    description: >
+      Net Revenue Retention (NRR) by month using beginning MRR cohort.
+      NRR = ending MRR of prior-month cohort / beginning MRR.
+    columns:
+      - name: metric_month
+        data_tests:
+          - unique
+          - not_null
+      - name: nrr
+        description: Net revenue retention ratio (1.0 = 100%).
+
+  - name: metric_activation_rate
+    description: >
+      Activation rate among non-internal accounts that have started
+      (created) within the analysis window.
+    columns:
+      - name: as_of_date
+        data_tests:
+          - not_null
+      - name: activation_rate
+        data_tests:
+          - not_null

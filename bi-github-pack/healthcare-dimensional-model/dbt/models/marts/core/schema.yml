@@ -1,0 +1,170 @@
+version: 2
+
+models:
+  - name: dim_patient
+    description: >
+      SYNTHETIC DEMO — current SCD2 slice of the patient dimension.
+      Tokenized names; ZIP3 only. No real PHI.
+    columns:
+      - name: enterprise_patient_id
+        description: Resolved synthetic enterprise patient key
+        tests:
+          - not_null
+          - unique
+      - name: patient_nk
+        tests: [not_null]
+      - name: birth_date
+        tests: [not_null]
+      - name: sex_cd
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['M', 'F', 'U', 'X']
+      - name: zip3
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "zip3 ~ '^[0-9]{3}$'"
+      - name: is_current
+        tests:
+          - accepted_values:
+              values: [true]
+
+  - name: dim_provider
+    description: SYNTHETIC DEMO — provider dimension
+    columns:
+      - name: provider_nk
+        tests: [not_null, unique]
+      - name: npi_synthetic
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "npi_synthetic ~ '^[0-9]{10}$'"
+      - name: specialty_cd
+        tests: [not_null]
+
+  - name: dim_facility
+    description: SYNTHETIC DEMO — facility dimension
+    columns:
+      - name: facility_nk
+        tests: [not_null, unique]
+      - name: facility_type
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['HOSPITAL', 'CLINIC', 'ASC', 'VIRTUAL', 'URGENT_CARE']
+
+  - name: dim_diagnosis
+    description: >
+      SYNTHETIC / public ICD-10 codes. Format tests enforce ICD-10-CM pattern.
+    columns:
+      - name: icd10_cd
+        tests:
+          - not_null
+          - unique
+          - dbt_utils.expression_is_true:
+              expression: "icd10_cd ~ '^[A-TV-Z][0-9][0-9A-Z](\\.[0-9A-Z]{1,4})?$'"
+      - name: clinical_group
+        tests: [not_null]
+      - name: chapter_cd
+        tests: [not_null]
+
+  - name: fct_encounters
+    description: SYNTHETIC DEMO — encounter fact at one-row-per-encounter grain
+    columns:
+      - name: encounter_nk
+        tests: [not_null, unique]
+      - name: enterprise_patient_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_patient')
+              field: enterprise_patient_id
+      - name: provider_sk_hash
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_provider')
+              field: provider_sk_hash
+      - name: facility_sk_hash
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_facility')
+              field: facility_sk_hash
+      - name: primary_dx_sk_hash
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_diagnosis')
+              field: diagnosis_sk_hash
+      - name: primary_icd10_cd
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "primary_icd10_cd ~ '^[A-TV-Z][0-9][0-9A-Z](\\.[0-9A-Z]{1,4})?$'"
+      - name: encounter_date
+        tests: [not_null]
+      - name: encounter_type
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['IP', 'OP', 'ED', 'TELEHEALTH', 'URGENT']
+      - name: length_of_stay_days
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 365
+      - name: total_charges_amt
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+  - name: fct_claims
+    description: SYNTHETIC DEMO — claim header fact
+    columns:
+      - name: claim_nk
+        tests: [not_null, unique]
+      - name: enterprise_patient_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_patient')
+              field: enterprise_patient_id
+      - name: billing_provider_sk_hash
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_provider')
+              field: provider_sk_hash
+      - name: primary_dx_sk_hash
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_diagnosis')
+              field: diagnosis_sk_hash
+      - name: primary_icd10_cd
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "primary_icd10_cd ~ '^[A-TV-Z][0-9][0-9A-Z](\\.[0-9A-Z]{1,4})?$'"
+      - name: service_date
+        tests: [not_null]
+      - name: claim_status
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['PAID', 'DENIED', 'PENDING', 'REJECTED', 'ADJUSTED']
+      - name: claim_type_cd
+        tests:
+          - accepted_values:
+              values: ['PROF', 'INST', 'RX']
+      - name: billed_amt
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+      - name: paid_amt
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0

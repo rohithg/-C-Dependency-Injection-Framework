@@ -1,0 +1,169 @@
+// =============================================================================
+// Operations & Transportation Measures
+// Table folder: Measures\Operations
+// Depends on: FactOps, FactTransport, FactSales, DimDate, DimProduct, DimCarrier
+// =============================================================================
+
+// --- Shipment / order execution ----------------------------------------------
+
+Orders Shipped =
+CALCULATE (
+    DISTINCTCOUNT ( FactOps[OrderId] ),
+    FactOps[ShippedFlag] = TRUE ()
+)
+
+Lines Due =
+CALCULATE (
+    COUNTROWS ( FactOps ),
+    FactOps[DueInPeriodFlag] = TRUE ()
+)
+
+Lines Shipped On Time =
+CALCULATE (
+    COUNTROWS ( FactOps ),
+    FactOps[ShippedFlag] = TRUE (),
+    FactOps[ShipDate] <= FactOps[PromiseDate]
+)
+
+Lines Shipped In Full =
+CALCULATE (
+    COUNTROWS ( FactOps ),
+    FactOps[ShippedFlag] = TRUE (),
+    FactOps[QtyShipped] >= FactOps[QtyOrdered]
+)
+
+OTIF Lines =
+CALCULATE (
+    COUNTROWS ( FactOps ),
+    FactOps[ShippedFlag] = TRUE (),
+    FactOps[ShipDate] <= FactOps[PromiseDate],
+    FactOps[QtyShipped] >= FactOps[QtyOrdered]
+)
+
+// Enterprise OTIF — single certified definition (see glossary)
+OTIF % =
+DIVIDE ( [OTIF Lines], [Lines Due], BLANK () )
+
+Qty Ordered =
+SUM ( FactOps[QtyOrdered] )
+
+Qty Shipped =
+CALCULATE (
+    SUM ( FactOps[QtyShipped] ),
+    FactOps[ShippedFlag] = TRUE ()
+)
+
+Fill Rate % =
+DIVIDE ( [Qty Shipped], [Qty Ordered], BLANK () )
+
+// Average order-to-ship cycle time (days)
+Cycle Time Order to Ship =
+AVERAGEX (
+    CALCULATETABLE (
+        VALUES ( FactOps[OrderId] ),
+        FactOps[ShippedFlag] = TRUE ()
+    ),
+    VAR _book =
+        CALCULATE ( MIN ( FactOps[BookDate] ) )
+    VAR _ship =
+        CALCULATE ( MIN ( FactOps[ShipDate] ) )
+    RETURN
+        INT ( _ship - _book )
+)
+
+Backordered Lines =
+CALCULATE (
+    COUNTROWS ( FactOps ),
+    FactOps[BackorderFlag] = TRUE (),
+    FactOps[CustomerDeferredFlag] = FALSE ()
+)
+
+Order Lines Booked =
+COUNTROWS ( FactOps )
+
+Backorder Rate % =
+DIVIDE ( [Backordered Lines], [Order Lines Booked], BLANK () )
+
+// Inventory turns: COGS / average inventory
+Average Inventory =
+DIVIDE (
+    CALCULATE ( SUM ( FactInventory[InventoryValue] ), FactInventory[SnapshotType] = "Begin" )
+        + CALCULATE ( SUM ( FactInventory[InventoryValue] ), FactInventory[SnapshotType] = "End" ),
+    2
+)
+
+Inventory Turns =
+DIVIDE ( [COGS], [Average Inventory], BLANK () )
+
+// Late lines for ops exception reporting
+Late Lines =
+CALCULATE (
+    COUNTROWS ( FactOps ),
+    FactOps[ShippedFlag] = TRUE (),
+    FactOps[ShipDate] > FactOps[PromiseDate]
+)
+
+Late Line % =
+DIVIDE ( [Late Lines], [Orders Shipped], BLANK () )
+
+// --- Transportation / fleet --------------------------------------------------
+
+Miles Driven =
+SUM ( FactTransport[Miles] )
+
+Loaded Miles =
+CALCULATE (
+    SUM ( FactTransport[Miles] ),
+    FactTransport[LoadStatus] = "Loaded"
+)
+
+Empty Miles =
+CALCULATE (
+    SUM ( FactTransport[Miles] ),
+    FactTransport[LoadStatus] = "Empty"
+)
+
+Loaded Mile % =
+DIVIDE ( [Loaded Miles], [Miles Driven], BLANK () )
+
+Fleet Cost =
+SUM ( FactTransport[FuelCost] )
+    + SUM ( FactTransport[MaintenanceCost] )
+    + SUM ( FactTransport[DriverCost] )
+    + SUM ( FactTransport[OtherCost] )
+
+Cost per Mile =
+DIVIDE ( [Fleet Cost], [Miles Driven], BLANK () )
+
+Shipment Count =
+DISTINCTCOUNT ( FactTransport[ShipmentId] )
+
+Freight Cost =
+SUM ( FactTransport[FreightCost] )
+
+Freight Cost per Shipment =
+DIVIDE ( [Freight Cost], [Shipment Count], BLANK () )
+
+On-Time Deliveries =
+CALCULATE (
+    DISTINCTCOUNT ( FactTransport[ShipmentId] ),
+    FactTransport[DeliveredFlag] = TRUE (),
+    FactTransport[DeliveryVarianceMinutes] <= FactTransport[AppointmentToleranceMinutes]
+)
+
+Deliveries =
+CALCULATE (
+    DISTINCTCOUNT ( FactTransport[ShipmentId] ),
+    FactTransport[DeliveredFlag] = TRUE ()
+)
+
+On-Time Delivery % (Carrier) =
+DIVIDE ( [On-Time Deliveries], [Deliveries], BLANK () )
+
+// Fuel efficiency helper
+MPG =
+DIVIDE (
+    [Miles Driven],
+    SUM ( FactTransport[Gallons] ),
+    BLANK ()
+)
