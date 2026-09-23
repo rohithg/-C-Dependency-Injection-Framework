@@ -1,5 +1,7 @@
 # Rohith Gangapuram — BI GitHub Showcase
 
+> **Live site:** enable Pages once → [Command Center](https://rohithg.github.io/-C-Dependency-Injection-Framework/) · see [LIVE.md](LIVE.md)
+
 Curated open-source projects for **BI Engineer · Analytics Engineer · Data Engineer** roles.
 
 **Author:** [Rohith Gangapuram](https://github.com/rohithg) · Dublin, CA · [LinkedIn](https://linkedin.com/in/rohithgangapuram)
