@@ -19,3 +19,18 @@ acc_017,Quartz Energy,Energy,enterprise,EMEA,2024-09-28 16:45:00,false
 acc_018,Riverbank Bank,Financial Services,mid_market,NAMER,2024-10-15 10:20:00,false
 acc_019,Summit HR,Professional Services,smb,APAC,2024-11-02 12:30:00,false
 acc_020,Tidewater Marine,Logistics,smb,NAMER,2024-11-20 08:15:00,false
+acc_021,Demo Co 21,saas,smb,US-WEST,2024-01-01 00:00:00,false
+acc_022,Demo Co 22,fintech,mid-market,US-EAST,2024-02-02 00:00:00,false
+acc_023,Demo Co 23,healthcare,enterprise,EU,2024-03-03 00:00:00,false
+acc_024,Demo Co 24,retail,smb,APAC,2024-04-04 00:00:00,false
+acc_025,Demo Co 25,logistics,mid-market,US-WEST,2024-05-05 00:00:00,false
+acc_026,Demo Co 26,saas,enterprise,US-EAST,2024-06-06 00:00:00,false
+acc_027,Demo Co 27,fintech,smb,EU,2024-07-07 00:00:00,false
+acc_028,Demo Co 28,healthcare,mid-market,APAC,2024-08-08 00:00:00,false
+acc_029,Demo Co 29,retail,enterprise,US-WEST,2024-09-09 00:00:00,false
+acc_030,Demo Co 30,logistics,smb,US-EAST,2024-10-10 00:00:00,false
+acc_031,Demo Co 31,saas,mid-market,EU,2024-11-11 00:00:00,false
+acc_032,Demo Co 32,fintech,enterprise,APAC,2024-12-12 00:00:00,false
+acc_033,Demo Co 33,healthcare,smb,US-WEST,2024-01-13 00:00:00,false
+acc_034,Demo Co 34,retail,mid-market,US-EAST,2024-02-14 00:00:00,false
+acc_035,Demo Co 35,logistics,enterprise,EU,2024-03-15 00:00:00,false

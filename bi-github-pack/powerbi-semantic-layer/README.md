@@ -142,3 +142,8 @@ Built for recruiters and hiring managers evaluating **BI Engineer**, **Analytics
 ## License
 
 Portfolio / interview sample. Not production data. All figures and entities are synthetic.
+
+
+## Sample import data
+
+CSV extracts under [`samples/data/`](samples/data/) (`FactSales`, `FactAR`, `DimRegion`, `DimBusinessUnit`) for spinning up a desktop model that matches the certified measures in `dax/measures/`.
