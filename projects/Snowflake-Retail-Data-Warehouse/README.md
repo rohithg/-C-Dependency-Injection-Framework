@@ -29,7 +29,7 @@ Sample seeds (~75–240 rows per entity) make the project runnable without live 
 
 ```text
 NetSuite / CRM / TMS / YMS
-        │  Airflow extract (stub) or COPY INTO
+        │  Airflow stage + COPY INTO RAW
         ▼
    Snowflake RAW
         │  dbt seed (demo) / dbt run
@@ -116,9 +116,9 @@ Point Airflow Variables (or defaults in the DAG) at this repo:
 
 Copy `airflow/dags/retail_elt_dag.py` into your `dags/` folder. The DAG runs daily at 06:00 UTC:
 
-`extract stub → dbt deps → dbt seed → dbt run → dbt test → dbt docs generate`
+`stage+COPY INTO RAW → dbt deps → dbt seed → dbt run → dbt test → dbt snapshot → dbt docs`
 
-Replace the extract stub with Snowpipe, Fivetran/Airbyte, or `COPY INTO` for production loads; keep dbt for transforms and tests.
+The Airflow DAG stages CSVs and runs `sql/load/01_copy_into_raw.sql`. Swap the file source for Snowpipe, Fivetran, or Airbyte in production; keep dbt for transforms, tests, and snapshots.
 
 ## Skills demonstrated
 
@@ -136,3 +136,15 @@ GitHub: [github.com/rohithg](https://github.com/rohithg)
 ---
 
 Licensed for portfolio and educational use. Adapt freely for your own Snowflake + dbt environments.
+
+
+## Custom tests, analyses & snapshots
+
+| Path | Purpose |
+|--|--|
+| `tests/assert_*.sql` | Singular tests: margin reconcile, shipment dates, AR positivity, customer FK |
+| `analyses/otif_by_region.sql` | Ops OTIF by origin region |
+| `analyses/margin_by_channel.sql` | Gross margin by order channel |
+| `analyses/ar_aging_buckets.sql` | Finance AR aging (matches Command Center buckets) |
+| `snapshots/snap_dim_customer.sql` | SCD2 history for customer credit/status |
+| `sql/load/01_copy_into_raw.sql` | Production-shaped COPY INTO from stage |
