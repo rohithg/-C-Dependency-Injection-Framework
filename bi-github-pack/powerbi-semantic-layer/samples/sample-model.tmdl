@@ -1,0 +1,457 @@
+/// Minimal tabular model sketch (TMDL-style) for the certified semantic layer.
+/// Illustrative — not a full deployable model. Aligns with model/star-schema.md.
+
+model SemanticLayer
+	culture: en-US
+	defaultMode: import
+	discourageImplicitMeasures
+
+	annotation PBI_QueryOrder = ["DimDate","DimRegion","DimBusinessUnit","DimCustomer","DimProduct","DimSalesRep","FactSales","FactAR"]
+	annotation DB_VersionVersion = "2026.09.1"
+	annotation CertificateStatus = "Certified"
+
+table DimDate
+	lineageTag: 11111111-1111-1111-1111-111111111101
+	dataCategory: Time
+
+	column DateKey
+		dataType: int64
+		isKey
+		formatString: 0
+		sourceColumn: DateKey
+
+	column Date
+		dataType: dateTime
+		formatString: Long Date
+		sourceColumn: Date
+		annotation Summarization = "None"
+
+	column MonthStart
+		dataType: dateTime
+		sourceColumn: MonthStart
+
+	column FiscalYear
+		dataType: int64
+		sourceColumn: FiscalYear
+
+	column FiscalMonth
+		dataType: int64
+		sourceColumn: FiscalMonth
+
+	partition DimDate = m
+		mode: import
+		source =
+			let
+			    Source = Sql.Database("sql-bi.contoso.local", "SemanticLayer"),
+			    dbo_DimDate = Source{[Schema="dbo",Item="DimDate"]}[Data]
+			in
+			    dbo_DimDate
+
+table DimRegion
+	lineageTag: 11111111-1111-1111-1111-111111111102
+
+	column RegionKey
+		dataType: int64
+		isKey
+		sourceColumn: RegionKey
+
+	column RegionCode
+		dataType: string
+		sourceColumn: RegionCode
+
+	column RegionName
+		dataType: string
+		sourceColumn: RegionName
+
+	partition DimRegion = m
+		mode: import
+		source = Sql.Database("sql-bi.contoso.local", "SemanticLayer"){[Schema="dbo",Item="DimRegion"]}[Data]
+
+table DimBusinessUnit
+	lineageTag: 11111111-1111-1111-1111-111111111103
+
+	column BusinessUnitKey
+		dataType: int64
+		isKey
+		sourceColumn: BusinessUnitKey
+
+	column BUCode
+		dataType: string
+		sourceColumn: BUCode
+
+	column BUName
+		dataType: string
+		sourceColumn: BUName
+
+	partition DimBusinessUnit = m
+		mode: import
+		source = Sql.Database("sql-bi.contoso.local", "SemanticLayer"){[Schema="dbo",Item="DimBusinessUnit"]}[Data]
+
+table DimCustomer
+	lineageTag: 11111111-1111-1111-1111-111111111104
+
+	column CustomerKey
+		dataType: int64
+		isKey
+		sourceColumn: CustomerKey
+
+	column CustomerName
+		dataType: string
+		sourceColumn: CustomerName
+
+	column RegionKey
+		dataType: int64
+		sourceColumn: RegionKey
+
+	partition DimCustomer = m
+		mode: import
+		source = Sql.Database("sql-bi.contoso.local", "SemanticLayer"){[Schema="dbo",Item="DimCustomer"]}[Data]
+
+table DimProduct
+	lineageTag: 11111111-1111-1111-1111-111111111105
+
+	column ProductKey
+		dataType: int64
+		isKey
+		sourceColumn: ProductKey
+
+	column SKU
+		dataType: string
+		sourceColumn: SKU
+
+	column ProductName
+		dataType: string
+		sourceColumn: ProductName
+
+	column BusinessUnitKey
+		dataType: int64
+		sourceColumn: BusinessUnitKey
+
+	partition DimProduct = m
+		mode: import
+		source = Sql.Database("sql-bi.contoso.local", "SemanticLayer"){[Schema="dbo",Item="DimProduct"]}[Data]
+
+table DimSalesRep
+	lineageTag: 11111111-1111-1111-1111-111111111106
+
+	column SalesRepKey
+		dataType: int64
+		isKey
+		sourceColumn: SalesRepKey
+
+	column RepName
+		dataType: string
+		sourceColumn: RepName
+
+	column RegionKey
+		dataType: int64
+		sourceColumn: RegionKey
+
+	partition DimSalesRep = m
+		mode: import
+		source = Sql.Database("sql-bi.contoso.local", "SemanticLayer"){[Schema="dbo",Item="DimSalesRep"]}[Data]
+
+table FactSales
+	lineageTag: 11111111-1111-1111-1111-111111111201
+
+	column SalesLineKey
+		dataType: int64
+		isKey
+		sourceColumn: SalesLineKey
+
+	column InvoiceDateKey
+		dataType: int64
+		sourceColumn: InvoiceDateKey
+
+	column ShipDateKey
+		dataType: int64
+		sourceColumn: ShipDateKey
+
+	column CustomerKey
+		dataType: int64
+		sourceColumn: CustomerKey
+
+	column ProductKey
+		dataType: int64
+		sourceColumn: ProductKey
+
+	column SalesRepKey
+		dataType: int64
+		sourceColumn: SalesRepKey
+
+	column DocType
+		dataType: string
+		sourceColumn: DocType
+
+	column ExtendedPrice
+		dataType: decimal
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		summarizeBy: sum
+		sourceColumn: ExtendedPrice
+
+	column DiscountAmount
+		dataType: decimal
+		summarizeBy: sum
+		sourceColumn: DiscountAmount
+
+	column Quantity
+		dataType: decimal
+		summarizeBy: sum
+		sourceColumn: Quantity
+
+	column COGSAmount
+		dataType: decimal
+		summarizeBy: sum
+		sourceColumn: COGSAmount
+
+	column CommissionAmount
+		dataType: decimal
+		summarizeBy: sum
+		sourceColumn: CommissionAmount
+
+	column FreightOutAmount
+		dataType: decimal
+		summarizeBy: sum
+		sourceColumn: FreightOutAmount
+
+	partition FactSales = m
+		mode: import
+		source =
+			let
+			    Source = Sql.Database("sql-bi.contoso.local", "SemanticLayer"),
+			    dbo_FactSales = Source{[Schema="dbo",Item="FactSales"]}[Data]
+			in
+			    dbo_FactSales
+
+table FactAR
+	lineageTag: 11111111-1111-1111-1111-111111111202
+
+	column ARItemKey
+		dataType: int64
+		isKey
+		sourceColumn: ARItemKey
+
+	column InvoiceDateKey
+		dataType: int64
+		sourceColumn: InvoiceDateKey
+
+	column CustomerKey
+		dataType: int64
+		sourceColumn: CustomerKey
+
+	column DueDate
+		dataType: dateTime
+		sourceColumn: DueDate
+
+	column CloseDate
+		dataType: dateTime
+		sourceColumn: CloseDate
+
+	column OpenFlag
+		dataType: boolean
+		sourceColumn: OpenFlag
+
+	column AmountOpen
+		dataType: decimal
+		summarizeBy: sum
+		sourceColumn: AmountOpen
+
+	column AgingBucket
+		dataType: string
+		sourceColumn: AgingBucket
+
+	partition FactAR = m
+		mode: import
+		source = Sql.Database("sql-bi.contoso.local", "SemanticLayer"){[Schema="dbo",Item="FactAR"]}[Data]
+
+table Measures
+	lineageTag: 11111111-1111-1111-1111-111111111301
+
+	measure 'Gross Sales' = SUM ( FactSales[ExtendedPrice] )
+		formatString: \$#,0;(\$#,0);\$#,0
+		displayFolder: Sales
+
+	measure 'Net Sales' =
+			VAR _gross =
+			    CALCULATE (
+			        [Gross Sales],
+			        FactSales[DocType] = "Invoice"
+			    )
+			VAR _discounts =
+			    CALCULATE (
+			        SUM ( FactSales[DiscountAmount] ),
+			        FactSales[DocType] = "Invoice"
+			    )
+			VAR _returns =
+			    CALCULATE (
+			        SUM ( FactSales[ExtendedPrice] ),
+			        FactSales[DocType] IN { "Credit", "Allowance" }
+			    )
+			RETURN
+			    _gross - _discounts - _returns
+		formatString: \$#,0;(\$#,0);\$#,0
+		displayFolder: Sales
+		annotation Description = "Certified. Gross - Discounts - Returns. Invoice date. See glossary."
+
+	measure 'Net Sales (Ship Date)' =
+			CALCULATE (
+			    [Net Sales],
+			    USERELATIONSHIP ( FactSales[ShipDateKey], DimDate[DateKey] )
+			)
+		formatString: \$#,0;(\$#,0);\$#,0
+		displayFolder: Sales
+
+	measure 'Gross Profit' = [Net Sales] - SUM ( FactSales[COGSAmount] )
+		formatString: \$#,0;(\$#,0);\$#,0
+		displayFolder: Finance
+
+	measure 'Gross Profit Margin %' = DIVIDE ( [Gross Profit], [Net Sales], BLANK () )
+		formatString: 0.0%
+		displayFolder: Finance
+
+	measure 'AR Open Balance' =
+			VAR _asOf = MAX ( DimDate[Date] )
+			RETURN
+			    CALCULATE (
+			        SUM ( FactAR[AmountOpen] ),
+			        FactAR[OpenFlag] = TRUE (),
+			        FactAR[InvoiceDateKey] <= MAX ( DimDate[DateKey] ),
+			        REMOVEFILTERS ( DimDate )
+			    )
+		formatString: \$#,0;(\$#,0);\$#,0
+		displayFolder: Finance
+
+	measure 'AR Aging 61-90' =
+			CALCULATE (
+			    [AR Open Balance],
+			    FactAR[AgingBucket] = "61-90"
+			)
+		formatString: \$#,0;(\$#,0);\$#,0
+		displayFolder: Finance
+
+	measure 'Net Sales YTD' = TOTALYTD ( [Net Sales], DimDate[Date] )
+		formatString: \$#,0;(\$#,0);\$#,0
+		displayFolder: Time Intelligence
+
+	measure 'Net Sales YoY %' =
+			DIVIDE (
+			    [Net Sales] - CALCULATE ( [Net Sales], SAMEPERIODLASTYEAR ( DimDate[Date] ) ),
+			    CALCULATE ( [Net Sales], SAMEPERIODLASTYEAR ( DimDate[Date] ) ),
+			    BLANK ()
+			)
+		formatString: 0.0%
+		displayFolder: Time Intelligence
+
+relationship Rel_FactSales_DimDate_Invoice
+	fromColumn: FactSales.InvoiceDateKey
+	toColumn: DimDate.DateKey
+	joinOnDateBehavior: datePartOnly
+
+relationship Rel_FactSales_DimDate_Ship
+	fromColumn: FactSales.ShipDateKey
+	toColumn: DimDate.DateKey
+	isActive: false
+	joinOnDateBehavior: datePartOnly
+
+relationship Rel_FactSales_DimCustomer
+	fromColumn: FactSales.CustomerKey
+	toColumn: DimCustomer.CustomerKey
+
+relationship Rel_FactSales_DimProduct
+	fromColumn: FactSales.ProductKey
+	toColumn: DimProduct.ProductKey
+
+relationship Rel_FactSales_DimSalesRep
+	fromColumn: FactSales.SalesRepKey
+	toColumn: DimSalesRep.SalesRepKey
+
+relationship Rel_FactAR_DimDate
+	fromColumn: FactAR.InvoiceDateKey
+	toColumn: DimDate.DateKey
+
+relationship Rel_FactAR_DimCustomer
+	fromColumn: FactAR.CustomerKey
+	toColumn: DimCustomer.CustomerKey
+
+relationship Rel_DimCustomer_DimRegion
+	fromColumn: DimCustomer.RegionKey
+	toColumn: DimRegion.RegionKey
+
+relationship Rel_DimProduct_DimBusinessUnit
+	fromColumn: DimProduct.BusinessUnitKey
+	toColumn: DimBusinessUnit.BusinessUnitKey
+
+relationship Rel_DimSalesRep_DimRegion
+	fromColumn: DimSalesRep.RegionKey
+	toColumn: DimRegion.RegionKey
+
+table DimUserSecurity
+	lineageTag: 11111111-1111-1111-1111-111111111107
+
+	column UserEmail
+		dataType: string
+		sourceColumn: UserEmail
+
+	column RegionCode
+		dataType: string
+		sourceColumn: RegionCode
+
+	column BUCode
+		dataType: string
+		sourceColumn: BUCode
+
+	column RoleType
+		dataType: string
+		sourceColumn: RoleType
+
+	partition DimUserSecurity = m
+		mode: import
+		source = Sql.Database("sql-bi.contoso.local", "SemanticLayer"){[Schema="dbo",Item="DimUserSecurity"]}[Data]
+
+role 'Region Manager'
+	modelPermission: read
+
+	tablePermission DimRegion =
+			VAR _user = USERPRINCIPALNAME ()
+			VAR _regions =
+			    CALCULATETABLE (
+			        VALUES ( DimUserSecurity[RegionCode] ),
+			        DimUserSecurity[UserEmail] = _user,
+			        DimUserSecurity[RoleType] IN { "Region", "Region+BU" },
+			        DimUserSecurity[RegionCode] <> "*"
+			    )
+			VAR _seeAll =
+			    CONTAINS (
+			        CALCULATETABLE (
+			            DimUserSecurity,
+			            DimUserSecurity[UserEmail] = _user
+			        ),
+			        DimUserSecurity[RegionCode], "*"
+			    )
+			RETURN
+			    _seeAll || DimRegion[RegionCode] IN _regions
+
+role 'BU Controller'
+	modelPermission: read
+
+	tablePermission DimBusinessUnit =
+			VAR _user = USERPRINCIPALNAME ()
+			VAR _bus =
+			    CALCULATETABLE (
+			        VALUES ( DimUserSecurity[BUCode] ),
+			        DimUserSecurity[UserEmail] = _user,
+			        DimUserSecurity[RoleType] IN { "BU", "Region+BU" },
+			        DimUserSecurity[BUCode] <> "*"
+			    )
+			VAR _seeAll =
+			    CONTAINS (
+			        CALCULATETABLE (
+			            DimUserSecurity,
+			            DimUserSecurity[UserEmail] = _user
+			        ),
+			        DimUserSecurity[BUCode], "*"
+			    )
+			RETURN
+			    _seeAll || DimBusinessUnit[BUCode] IN _bus
+
+annotation CompatibleVersions = "PowerBI:TMDL"

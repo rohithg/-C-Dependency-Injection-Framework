@@ -1,0 +1,43 @@
+version: 2
+
+sources:
+  - name: healthcare_raw
+    description: >
+      SYNTHETIC DEMO source extracts only. No real PHI.
+      Loaded from seeds/ into staging tables before dbt models run.
+    schema: healthcare_demo_stg
+    tables:
+      - name: stg_patient_src_a
+        description: Synthetic EHR patient identity extract
+        columns:
+          - name: source_patient_id
+            tests: [not_null, unique]
+      - name: stg_patient_src_b
+        description: Synthetic claims member identity extract
+        columns:
+          - name: source_member_id
+            tests: [not_null, unique]
+      - name: stg_encounters
+        description: Synthetic clinical encounters
+        columns:
+          - name: encounter_nk
+            tests: [not_null, unique]
+          - name: encounter_date
+            tests: [not_null]
+          - name: primary_icd10_cd
+            tests:
+              - not_null
+              - dbt_utils.expression_is_true:
+                  expression: "primary_icd10_cd ~ '^[A-TV-Z][0-9][0-9A-Z](\\.[0-9A-Z]{1,4})?$'"
+      - name: stg_claims
+        description: Synthetic claim headers
+        columns:
+          - name: claim_nk
+            tests: [not_null, unique]
+          - name: service_date
+            tests: [not_null]
+      - name: stg_provider
+      - name: stg_facility
+      - name: stg_diagnosis
+      - name: stg_empi_crosswalk
+      - name: stg_empi_resolved

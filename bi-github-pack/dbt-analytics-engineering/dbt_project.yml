@@ -1,0 +1,95 @@
+# Analytics Engineering — SaaS Product Analytics
+# Author: Rohith Gangapuram
+# Demonstrates metrics-as-code, reusable marts, and CI-friendly dbt patterns.
+
+name: 'saas_analytics'
+version: '1.0.0'
+config-version: 2
+
+profile: 'saas_analytics'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+docs-paths: ["docs"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+  - "logs"
+
+vars:
+  # Fiscal year starts in February (common for SaaS fiscal calendars)
+  fiscal_year_start_month: 2
+  # Activation heuristic: accounts with >= N distinct product events in first 14 days
+  activation_event_threshold: 3
+  activation_window_days: 14
+  # Currency: seed amounts are stored in cents
+  currency_code: 'USD'
+
+seeds:
+  saas_analytics:
+    +schema: raw_seed
+    +quote_columns: false
+    seed_accounts:
+      +column_types:
+        account_id: varchar(36)
+        created_at: timestamp
+    seed_plans:
+      +column_types:
+        plan_id: varchar(36)
+        price_cents: integer
+    seed_subscriptions:
+      +column_types:
+        subscription_id: varchar(36)
+        account_id: varchar(36)
+        plan_id: varchar(36)
+        mrr_cents: integer
+        started_at: timestamp
+        ended_at: timestamp
+    seed_usage_events:
+      +column_types:
+        event_id: varchar(36)
+        account_id: varchar(36)
+        event_at: timestamp
+
+models:
+  saas_analytics:
+    +materialized: view
+    staging:
+      +schema: staging
+      +materialized: view
+      +docs:
+        node_color: "#4A90A4"
+    intermediate:
+      +schema: intermediate
+      +materialized: view
+      +docs:
+        node_color: "#7B8CDE"
+    marts:
+      +schema: marts
+      +materialized: table
+      +docs:
+        node_color: "#2D6A4F"
+      core:
+        +tags: ['core', 'marts']
+      finance:
+        +tags: ['finance', 'marts']
+      product:
+        +tags: ['product', 'marts']
+    metrics:
+      +schema: metrics
+      +materialized: table
+      +tags: ['metrics']
+      +docs:
+        node_color: "#BC6C25"
+
+data_tests:
+  saas_analytics:
+    +severity: warn
+
+flags:
+  send_anonymous_usage_stats: false

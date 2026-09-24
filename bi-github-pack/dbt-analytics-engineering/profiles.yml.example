@@ -1,0 +1,34 @@
+# Copy to ~/.dbt/profiles.yml (or set DBT_PROFILES_DIR) and fill in credentials.
+# Snowflake-compatible profile used by CI and local development.
+
+saas_analytics:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: "{{ env_var('SNOWFLAKE_USER') }}"
+      authenticator: externalbrowser  # or use private_key / password via env
+      role: "{{ env_var('SNOWFLAKE_ROLE', 'TRANSFORMER') }}"
+      database: "{{ env_var('SNOWFLAKE_DATABASE', 'ANALYTICS_DEV') }}"
+      warehouse: "{{ env_var('SNOWFLAKE_WAREHOUSE', 'TRANSFORMING_WH') }}"
+      schema: "{{ env_var('SNOWFLAKE_SCHEMA', 'DBT_DEV') }}"
+      threads: 4
+      client_session_keep_alive: false
+
+    ci:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+      user: "{{ env_var('SNOWFLAKE_USER') }}"
+      password: "{{ env_var('SNOWFLAKE_PASSWORD') }}"
+      role: "{{ env_var('SNOWFLAKE_ROLE', 'TRANSFORMER') }}"
+      database: "{{ env_var('SNOWFLAKE_DATABASE', 'ANALYTICS_CI') }}"
+      warehouse: "{{ env_var('SNOWFLAKE_WAREHOUSE', 'CI_WH') }}"
+      schema: "{{ env_var('SNOWFLAKE_SCHEMA', 'DBT_CI') }}"
+      threads: 4
+
+    # DuckDB target for offline parse / docs without Snowflake credentials
+    local:
+      type: duckdb
+      path: target/saas_analytics.duckdb
+      threads: 4
