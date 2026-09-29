@@ -4,10 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>BI Projects — Rohith Gangapuram</title>
-  <meta name="description" content="Open-source BI Architect / Analytics Engineering portfolio projects by Rohith Gangapuram." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Sora:wght@300;400;600&display=swap" rel="stylesheet" />
   <style>
     :root { --ink:#0a1628; --teal:#1a9e9e; --mist:#eef3f7; --muted:#5a6d82; }
     * { box-sizing: border-box; }
@@ -19,47 +16,33 @@
     .lede { color:var(--muted); font-weight:300; line-height:1.55; margin:0 0 1.75rem; }
     ol { list-style:none; margin:0; padding:0; display:grid; gap:.85rem; }
     li { background:#fff; border:1px solid rgba(10,22,40,.1); border-radius:.45rem; padding:1.1rem 1.25rem; }
-    li a { color:var(--ink); text-decoration:none; font-family:"Fraunces",Georgia,serif; font-size:1.15rem; }
+    li a { color:var(--ink); text-decoration:none; font-family:"Fraunces",Georgia,serif; font-size:1.1rem; }
     li a:hover { color:var(--teal); }
     li p { margin:.35rem 0 0; color:var(--muted); font-size:.9rem; font-weight:300; line-height:1.5; }
     .back { display:inline-block; margin-bottom:1.25rem; color:var(--teal); font-size:.9rem; }
+    .meta { font-size:.8rem; color:var(--muted); margin-top:1.5rem; }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <a class="back" href="../">← One Number for Revenue (featured demo)</a>
+    <a class="back" href="../">← One Number for Revenue</a>
     <h1>BI project pack</h1>
-    <p class="lede">Full source for each portfolio project. Browse folders below.</p>
+    <p class="lede">Full source for every resume-aligned portfolio project. None of these folders are empty placeholders.</p>
     <ol>
-      <li>
-        <a href="../">One Number for Revenue</a>
-        <p>BI Architect career case study — governed semantic layer, Sales vs Finance alignment.</p>
-      </li>
-      <li>
-        <a href="linkedin-executive-dashboard/">linkedin-executive-dashboard/</a>
-        <p>Source for the featured demo (HTML/CSS/JS + post draft — not posted yet).</p>
-      </li>
-      <li>
-        <a href="../portfolio/">rohith-portfolio/</a>
-        <p>Personal BI portfolio site.</p>
-      </li>
-      <li>
-        <a href="Snowflake-Retail-Data-Warehouse/">Snowflake-Retail-Data-Warehouse/</a>
-        <p>dbt + Snowflake + Airflow star-schema retail / supply-chain warehouse.</p>
-      </li>
-      <li>
-        <a href="powerbi-semantic-layer/">powerbi-semantic-layer/</a>
-        <p>Governed DAX measures, glossary, RLS, workspace governance.</p>
-      </li>
-      <li>
-        <a href="dbt-analytics-engineering/">dbt-analytics-engineering/</a>
-        <p>SaaS metrics-as-code — ARR, NRR, churn.</p>
-      </li>
-      <li>
-        <a href="healthcare-dimensional-model/">healthcare-dimensional-model/</a>
-        <p>EHR/claims dimensional model with data-quality patterns.</p>
-      </li>
+      <li><a href="../">One Number for Revenue</a><p>BI Architect career case study — semantic layer / Sales vs Finance.</p></li>
+      <li><a href="energy-utility-analytics/">energy-utility-analytics/</a><p>Nexant / energy programs — kWh, peak, compliance + DAX.</p></li>
+      <li><a href="supply-chain-control-tower/">supply-chain-control-tower/</a><p>GSC OTIF, yard dwell, freight (dbt + dashboard).</p></li>
+      <li><a href="databricks-azure-lakehouse/">databricks-azure-lakehouse/</a><p>ADLS → ADF → PySpark → Synapse + Iceberg eval.</p></li>
+      <li><a href="data-quality-observability/">data-quality-observability/</a><p>DQ scorecards / expectation suites / dbt tests.</p></li>
+      <li><a href="powerbi-devops-cicd/">powerbi-devops-cicd/</a><p>Power BI REST API + Fabric workspace CI/CD.</p></li>
+      <li><a href="Snowflake-Retail-Data-Warehouse/">Snowflake-Retail-Data-Warehouse/</a><p>dbt + Airflow star schema retail DW.</p></li>
+      <li><a href="powerbi-semantic-layer/">powerbi-semantic-layer/</a><p>Governed DAX, glossary, RLS.</p></li>
+      <li><a href="dbt-analytics-engineering/">dbt-analytics-engineering/</a><p>SaaS ARR / NRR / churn metrics-as-code.</p></li>
+      <li><a href="healthcare-dimensional-model/">healthcare-dimensional-model/</a><p>EHR/claims dimensional model + DQ.</p></li>
+      <li><a href="../portfolio/">rohith-portfolio/</a><p>Personal BI portfolio site.</p></li>
+      <li><a href="linkedin-executive-dashboard/">linkedin-executive-dashboard/</a><p>Source for the featured demo.</p></li>
     </ol>
+    <p class="meta"><a href="REPO_AUDIT.md">Repository audit</a> — which public GitHub repos are still thin/dead.</p>
   </div>
 </body>
 </html>

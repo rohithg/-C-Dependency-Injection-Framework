@@ -1,0 +1,8 @@
+version: 2
+models:
+  - name: mart_otif_daily
+    columns:
+      - name: otif_rate
+        tests: [not_null]
+      - name: shipments
+        tests: [not_null]

@@ -1,0 +1,7 @@
+supply_chain_control_tower:
+  target: duckdb
+  outputs:
+    duckdb:
+      type: duckdb
+      path: /tmp/otif.duckdb
+      threads: 4
