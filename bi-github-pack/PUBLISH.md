@@ -33,3 +33,15 @@ Requires `gh auth login` with repo scope.
 | `powerbi-semantic-layer/` | `rohithg/powerbi-semantic-layer` (or `IMP`) |
 | `healthcare-dimensional-model/` | `rohithg/healthcare-dimensional-model` |
 | `dbt-analytics-engineering/` | `rohithg/dbt-analytics-engineering` |
+
+## New resume-aligned folders (publish when App has all-repo access)
+
+| Folder | Suggested repo |
+|--|--|
+| `energy-utility-analytics/` | `rohithg/energy-utility-analytics` |
+| `supply-chain-control-tower/` | `rohithg/supply-chain-control-tower` |
+| `databricks-azure-lakehouse/` | `rohithg/databricks-azure-lakehouse` |
+| `data-quality-observability/` | `rohithg/data-quality-observability` |
+| `powerbi-devops-cicd/` | `rohithg/powerbi-devops-cicd` |
+
+Until then, all content is on `gh-pages/projects/`. See `REPO_AUDIT.md`.

@@ -11,20 +11,25 @@ Because this Cloud Agent can only write to **one** GitHub repo, everything is pu
 2. **Source:** Deploy from a branch  
 3. **Branch:** `gh-pages` → `/ (root)` → **Save**
 
-## Your URLs after that
+## URLs
 
 | What | URL |
 |------|-----|
-| ★ Featured demo (One Number for Revenue) | https://rohithg.github.io/-C-Dependency-Injection-Framework/ |
-| Portfolio | https://rohithg.github.io/-C-Dependency-Injection-Framework/portfolio/ |
-| All project sources | https://rohithg.github.io/-C-Dependency-Injection-Framework/projects/ |
+| ★ One Number for Revenue | https://rohithg.github.io/-C-Dependency-Injection-Framework/ |
+| Portfolio | …/portfolio/ |
+| All project sources | …/projects/ |
+| Energy utility analytics | …/projects/energy-utility-analytics/ |
+| Supply chain OTIF tower | …/projects/supply-chain-control-tower/ |
+| Databricks Azure lakehouse | …/projects/databricks-azure-lakehouse/ |
+| Data quality observability | …/projects/data-quality-observability/ |
+| Power BI DevOps CI/CD | …/projects/powerbi-devops-cicd/ |
 | Snowflake retail DW | …/projects/Snowflake-Retail-Data-Warehouse/ |
 | Power BI semantic layer | …/projects/powerbi-semantic-layer/ |
 | dbt analytics engineering | …/projects/dbt-analytics-engineering/ |
 | Healthcare dimensional model | …/projects/healthcare-dimensional-model/ |
 
-Source pack on feature branch: `bi-github-pack/`
+Dead/thin public repos audit: [REPO_AUDIT.md](REPO_AUDIT.md)
 
 ## LinkedIn
 
-**Not posted.** Showcase copy is ready in `docs/LINKEDIN_POST.md` when you want it.
+**Not posted** (per request).

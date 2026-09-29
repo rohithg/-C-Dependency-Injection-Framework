@@ -1,0 +1,89 @@
+{
+  "suites": [
+    {
+      "suite": "customers_dirty",
+      "table": "customers_dirty",
+      "rows": 120,
+      "passed": 1,
+      "total": 5,
+      "pass_rate": 0.2,
+      "checks": [
+        {
+          "type": "expect_column_values_to_not_be_null",
+          "column": "customer_id",
+          "success": true,
+          "unexpected": 0
+        },
+        {
+          "type": "expect_column_values_to_be_unique",
+          "column": "customer_id",
+          "success": false,
+          "unexpected": 9
+        },
+        {
+          "type": "expect_column_values_to_not_be_null",
+          "column": "email",
+          "success": false,
+          "unexpected": 17
+        },
+        {
+          "type": "expect_column_values_to_be_in_set",
+          "column": "state",
+          "success": false,
+          "unexpected": 33
+        },
+        {
+          "type": "expect_column_values_to_be_between",
+          "column": "credit_limit",
+          "success": false,
+          "unexpected": 41
+        }
+      ]
+    },
+    {
+      "suite": "orders_dirty",
+      "table": "orders_dirty",
+      "rows": 200,
+      "passed": 2,
+      "total": 5,
+      "pass_rate": 0.4,
+      "checks": [
+        {
+          "type": "expect_column_values_to_not_be_null",
+          "column": "order_id",
+          "success": true,
+          "unexpected": 0
+        },
+        {
+          "type": "expect_column_values_to_be_unique",
+          "column": "order_id",
+          "success": true,
+          "unexpected": 0
+        },
+        {
+          "type": "expect_column_values_to_be_in_set",
+          "column": "status",
+          "success": false,
+          "unexpected": 46
+        },
+        {
+          "type": "expect_column_values_to_be_between",
+          "column": "amount",
+          "success": false,
+          "unexpected": 99
+        },
+        {
+          "type": "expect_column_pair_values_a_to_be_greater_than_b",
+          "columns": [
+            "ship_date",
+            "order_date"
+          ],
+          "success": false,
+          "unexpected": 15
+        }
+      ]
+    }
+  ],
+  "overall_pass_rate": 0.3,
+  "note": "Baseline on dirty synthetic data \u2014 expect failures; wire into CI to block regressions."
+}
