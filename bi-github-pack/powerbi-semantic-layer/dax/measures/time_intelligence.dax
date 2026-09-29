@@ -1,0 +1,154 @@
+// =============================================================================
+// Time Intelligence — reusable patterns over certified base measures
+// Table folder: Measures\Time Intelligence
+// Requires: marked Date table DimDate[Date], contiguous dates
+// =============================================================================
+
+// --- Standard to-date --------------------------------------------------------
+
+Net Sales MTD =
+TOTALMTD ( [Net Sales], DimDate[Date] )
+
+Net Sales QTD =
+TOTALQTD ( [Net Sales], DimDate[Date] )
+
+Net Sales YTD =
+TOTALYTD ( [Net Sales], DimDate[Date] )
+
+Gross Profit YTD =
+TOTALYTD ( [Gross Profit], DimDate[Date] )
+
+OTIF % YTD =
+// Ratio-safe YTD: rebuild from components, do not TOTALYTD a %
+DIVIDE (
+    TOTALYTD ( [OTIF Lines], DimDate[Date] ),
+    TOTALYTD ( [Lines Due], DimDate[Date] ),
+    BLANK ()
+)
+
+// --- Prior periods -----------------------------------------------------------
+
+Net Sales PY =
+CALCULATE ( [Net Sales], SAMEPERIODLASTYEAR ( DimDate[Date] ) )
+
+Net Sales PM =
+CALCULATE ( [Net Sales], DATEADD ( DimDate[Date], -1, MONTH ) )
+
+Net Sales PQ =
+CALCULATE ( [Net Sales], DATEADD ( DimDate[Date], -1, QUARTER ) )
+
+Net Sales YoY Δ =
+[Net Sales] - [Net Sales PY]
+
+Net Sales YoY % =
+DIVIDE ( [Net Sales] - [Net Sales PY], [Net Sales PY], BLANK () )
+
+Net Sales MoM % =
+DIVIDE ( [Net Sales] - [Net Sales PM], [Net Sales PM], BLANK () )
+
+// Prior year to-date (apples-to-apples vs YTD)
+Net Sales PYTD =
+CALCULATE (
+    [Net Sales],
+    DATEADD ( DATESYTD ( DimDate[Date] ), -1, YEAR )
+)
+
+Net Sales YTD vs PYTD % =
+DIVIDE ( [Net Sales YTD] - [Net Sales PYTD], [Net Sales PYTD], BLANK () )
+
+// --- Rolling windows ---------------------------------------------------------
+
+Net Sales R12 =
+CALCULATE (
+    [Net Sales],
+    DATESINPERIOD ( DimDate[Date], MAX ( DimDate[Date] ), -12, MONTH )
+)
+
+Net Sales R90 =
+CALCULATE (
+    [Net Sales],
+    DATESINPERIOD ( DimDate[Date], MAX ( DimDate[Date] ), -90, DAY )
+)
+
+Gross Profit Margin % R12 =
+DIVIDE (
+    CALCULATE (
+        [Gross Profit],
+        DATESINPERIOD ( DimDate[Date], MAX ( DimDate[Date] ), -12, MONTH )
+    ),
+    CALCULATE (
+        [Net Sales],
+        DATESINPERIOD ( DimDate[Date], MAX ( DimDate[Date] ), -12, MONTH )
+    ),
+    BLANK ()
+)
+
+// --- Parallel period helper (parameterized via calculation groups ideally) --
+
+Net Sales Prior Period =
+// Falls back by selected grain if using field parameters / calc groups.
+// Simple month-grain default:
+CALCULATE ( [Net Sales], DATEADD ( DimDate[Date], -1, MONTH ) )
+
+// --- Fiscal variants (DimDate must include FiscalYear, FiscalMonth) ----------
+
+Net Sales FYTD =
+CALCULATE (
+    [Net Sales],
+    FILTER (
+        ALL ( DimDate ),
+        DimDate[FiscalYear] = MAX ( DimDate[FiscalYear] )
+            && DimDate[Date] <= MAX ( DimDate[Date] )
+            && DimDate[FiscalYear] = SELECTEDVALUE ( DimDate[FiscalYear], MAX ( DimDate[FiscalYear] ) )
+    )
+)
+
+// Cleaner FYTD when fiscal year start is configured in model:
+// TOTALYTD ( [Net Sales], DimDate[Date], "6/30" )  -- example: FY ends June 30
+
+Net Sales FYTD (YearEndJun) =
+TOTALYTD ( [Net Sales], DimDate[Date], "6/30" )
+
+// --- Moving average ----------------------------------------------------------
+
+Net Sales 3M Avg =
+AVERAGEX (
+    DATESINPERIOD ( DimDate[Date], MAX ( DimDate[Date] ), -3, MONTH ),
+    [Net Sales]
+)
+
+// Careful: AVERAGEX over dates averages daily totals; for monthly avg use month grain:
+Net Sales 3M Avg (Month Grain) =
+VAR _months =
+    DATESINPERIOD ( DimDate[MonthStart], MAX ( DimDate[MonthStart] ), -3, MONTH )
+RETURN
+    AVERAGEX (
+        _months,
+        CALCULATE ( [Net Sales], VALUES ( DimDate[MonthStart] ) )
+    )
+
+// --- Date context utilities --------------------------------------------------
+
+Selected Max Date =
+MAX ( DimDate[Date] )
+
+Is Latest Month =
+VAR _sel = MAX ( DimDate[MonthStart] )
+VAR _latest =
+    CALCULATE ( MAX ( DimDate[MonthStart] ), REMOVEFILTERS ( DimDate ) )
+RETURN
+    INT ( _sel = _latest )
+
+// Show PY only when comparable calendar days exist (partial month guard)
+Net Sales PY (Comparable) =
+VAR _maxDate = MAX ( DimDate[Date] )
+VAR _pyEnd = DATE ( YEAR ( _maxDate ) - 1, MONTH ( _maxDate ), DAY ( _maxDate ) )
+RETURN
+    CALCULATE (
+        [Net Sales],
+        DATESBETWEEN (
+            DimDate[Date],
+            DATE ( YEAR ( MIN ( DimDate[Date] ) ) - 1, MONTH ( MIN ( DimDate[Date] ) ), DAY ( MIN ( DimDate[Date] ) ) ),
+            _pyEnd
+        )
+    )

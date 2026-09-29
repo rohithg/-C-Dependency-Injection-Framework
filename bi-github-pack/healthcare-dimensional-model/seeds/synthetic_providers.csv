@@ -1,0 +1,8 @@
+provider_nk,npi_synthetic,provider_name,specialty_cd,specialty_desc,provider_type_cd,is_active,effective_start_dt
+SYN-PRV-1001,1000000001,Dr. Priya Sharma,PC,Primary Care,MD,true,2020-01-01
+SYN-PRV-1002,1000000002,Dr. Marcus Lee,IM,Internal Medicine,MD,true,2019-06-15
+SYN-PRV-1003,1000000003,Dr. Elena Vasquez,PEDS,Pediatrics,MD,true,2021-03-01
+SYN-PRV-1004,1000000004,NP Jordan Blake,PC,Primary Care,NP,true,2022-08-01
+SYN-PRV-1005,1000000005,Dr. Wei Zhang,CARD,Cardiology,MD,true,2018-11-20
+SYN-PRV-1006,1000000006,Dr. Amira Haddad,EM,Emergency Medicine,DO,true,2020-05-10
+SYN-PRV-1007,1000000007,PA Chris Ortega,ORTHO,Orthopedics,PA,true,2023-01-09

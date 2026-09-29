@@ -1,0 +1,128 @@
+version: 2
+
+models:
+  - name: stg_customers
+    description: Cleaned and deduplicated customer master from CRM / NetSuite
+    columns:
+      - name: customer_id
+        description: Natural key from source ERP
+        data_tests: [unique, not_null]
+      - name: customer_code
+        data_tests: [not_null]
+      - name: status
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['ACTIVE', 'INACTIVE', 'PROSPECT', 'CHURNED']
+      - name: customer_type
+        data_tests:
+          - accepted_values:
+              values: ['RETAIL', 'WHOLESALE', 'DISTRIBUTOR', 'ECOMMERCE']
+
+  - name: stg_products
+    description: Cleaned product / item master from ERP inventory
+    columns:
+      - name: product_id
+        data_tests: [unique, not_null]
+      - name: sku
+        data_tests: [unique, not_null]
+      - name: status
+        data_tests:
+          - accepted_values:
+              values: ['ACTIVE', 'DISCONTINUED', 'SEASONAL', 'DRAFT']
+      - name: product_category
+        data_tests: [not_null]
+
+  - name: stg_orders
+    description: Grain = order line. Deduplicated sales order lines from ERP
+    columns:
+      - name: order_line_id
+        data_tests: [unique, not_null]
+      - name: order_id
+        data_tests: [not_null]
+      - name: customer_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_customers')
+              field: customer_id
+      - name: product_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_products')
+              field: product_id
+      - name: order_status
+        data_tests:
+          - accepted_values:
+              values: ['DRAFT', 'OPEN', 'PARTIAL', 'SHIPPED', 'CLOSED', 'CANCELLED']
+      - name: order_channel
+        data_tests:
+          - accepted_values:
+              values: ['WEB', 'EDI', 'PHONE', 'SALES_REP', 'MARKETPLACE']
+      - name: quantity
+        data_tests: [not_null]
+      - name: line_net_amount
+        data_tests: [not_null]
+
+  - name: stg_shipments
+    description: Deduplicated TMS shipment records with on-time flags
+    columns:
+      - name: shipment_id
+        data_tests: [unique, not_null]
+      - name: shipment_status
+        data_tests:
+          - accepted_values:
+              values: ['PLANNED', 'IN_TRANSIT', 'DELIVERED', 'EXCEPTION', 'CANCELLED']
+      - name: transportation_mode
+        data_tests:
+          - accepted_values:
+              values: ['TL', 'LTL', 'PARCEL', 'INTERMODAL', 'OCEAN']
+
+  - name: stg_invoices
+    description: AR invoices from NetSuite Finance with overdue and DSO helpers
+    columns:
+      - name: invoice_id
+        data_tests: [unique, not_null]
+      - name: customer_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_customers')
+              field: customer_id
+      - name: invoice_status
+        data_tests:
+          - accepted_values:
+              values: ['OPEN', 'PARTIAL', 'PAID', 'VOID', 'WRITTEN_OFF']
+      - name: total_amount
+        data_tests: [not_null]
+
+  - name: stg_locations
+    description: Facilities and ship-to locations from YMS / TMS
+    columns:
+      - name: location_id
+        data_tests: [unique, not_null]
+      - name: location_type
+        data_tests:
+          - accepted_values:
+              values: ['DC', 'WAREHOUSE', 'YARD', 'STORE', 'CUSTOMER', 'SUPPLIER']
+
+  - name: int_order_lines_enriched
+    description: Order lines joined to customer and product with margin metrics
+    columns:
+      - name: order_line_id
+        data_tests: [unique, not_null]
+      - name: line_gross_margin
+        data_tests: [not_null]
+
+  - name: int_shipments_enriched
+    description: Shipments joined to orders and origin/destination locations
+    columns:
+      - name: shipment_id
+        data_tests: [unique, not_null]
+
+  - name: int_invoice_order_bridge
+    description: Invoices bridged to order economic totals
+    columns:
+      - name: invoice_id
+        data_tests: [unique, not_null]

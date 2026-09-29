@@ -1,48 +1,15 @@
-# C# Dependency Injection Framework
+# BI Portfolio & Projects Pack
 
-Custom DI container demonstrating C# advanced features and SOLID principles.
+> **Note for reviewers:** This branch packages BI / Analytics Engineering projects for Rohith Gangapuram.
+> Prefer publishing each folder under `bi-github-pack/` to its own repository (see `bi-github-pack/PUBLISH.md`).
+> Do **not** merge this into the C# Dependency Injection Framework `main` unless you intend to replace that project.
 
-## Features
-
-- Generic type constraints
-- Reflection API
-- LINQ queries
-- Service lifetimes
-- Constructor injection
-- Interface-based design
-
-## C# Concepts
-
-- Generics and constraints
-- Reflection
-- LINQ
-- Properties and auto-properties
-- Exception handling
-- XML documentation
-
-## Design Patterns
-
-- Dependency Injection
-- Inversion of Control
-- Factory Pattern
-- Singleton Pattern
-
-## Compilation
+## Quick start
 
 ```bash
-csc /out:DIFramework.exe DIContainer.cs
+cd bi-github-pack/rohith-portfolio && python3 -m http.server 8080
 ```
 
-## Running
+See [bi-github-pack/README.md](bi-github-pack/README.md) and [bi-github-pack/PUBLISH.md](bi-github-pack/PUBLISH.md).
 
-```bash
-./DIFramework.exe
-```
-
-## Interview Topics
-
-- SOLID principles
-- Dependency injection
-- Generics vs reflection
-- C# type system
-- Memory management
+Original C# DI demo remains under `07-csharp-di-framework/`.

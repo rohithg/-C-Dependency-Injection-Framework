@@ -1,0 +1,23 @@
+# dbt
+target/
+dbt_packages/
+dbt_modules/
+logs/
+.user.yml
+
+# Local secrets
+profiles.yml
+.env
+.env.*
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+__pycache__/
+*.pyc
+
+# DuckDB local
+*.duckdb
+*.duckdb.wal

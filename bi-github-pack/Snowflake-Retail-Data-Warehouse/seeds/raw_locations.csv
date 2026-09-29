@@ -1,0 +1,81 @@
+location_id,location_code,location_name,location_type,address_line1,city,state_province,postal_code,country,region,time_zone,is_active,square_footage,dock_door_count,created_at,updated_at,_loaded_at,_source_system
+LOC0001,DC-TX-01,Dallas Dc 1,DC,101 Commerce Pkwy,Dallas,TX,75001,US,South,America/Chicago,true,50000,55,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0002,DC-GA-02,Atlanta Dc 2,DC,102 Commerce Pkwy,Atlanta,GA,75002,US,South,America/Chicago,true,120000,16,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0003,DC-IL-03,Chicago Dc 3,DC,103 Commerce Pkwy,Chicago,IL,75003,US,Midwest,America/Chicago,true,,13,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0004,DC-OH-04,Columbus Dc 4,DC,104 Commerce Pkwy,Columbus,OH,75004,US,Midwest,America/Chicago,true,50000,9,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0005,DC-CA-05,Los Angeles Dc 5,DC,105 Commerce Pkwy,Los Angeles,CA,75005,US,West,America/Los_Angeles,true,120000,40,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0006,DC-WA-06,Seattle Dc 6,DC,106 Commerce Pkwy,Seattle,WA,75006,US,West,America/Los_Angeles,true,,20,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0007,DC-NJ-07,Newark Dc 7,DC,107 Commerce Pkwy,Newark,NJ,75007,US,Northeast,America/New_York,true,,34,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0008,DC-MA-08,Boston Dc 8,DC,108 Commerce Pkwy,Boston,MA,75008,US,Northeast,America/New_York,true,,25,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0009,WAR-AZ-01,Phoenix Warehouse 1,WAREHOUSE,109 Commerce Pkwy,Phoenix,AZ,75009,US,West,America/Los_Angeles,true,50000,56,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0010,WAR-CO-02,Denver Warehouse 2,WAREHOUSE,110 Commerce Pkwy,Denver,CO,75010,US,West,America/Los_Angeles,true,400000,29,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0011,WAR-TX-03,Houston Warehouse 3,WAREHOUSE,111 Commerce Pkwy,Houston,TX,75011,US,South,America/Chicago,true,120000,56,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0012,WAR-TN-04,Memphis Warehouse 4,WAREHOUSE,112 Commerce Pkwy,Memphis,TN,75012,US,South,America/Chicago,true,50000,32,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0013,WAR-TX-05,Dallas Warehouse 5,WAREHOUSE,113 Commerce Pkwy,Dallas,TX,75013,US,South,America/Chicago,true,250000,46,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0014,WAR-GA-06,Atlanta Warehouse 6,WAREHOUSE,114 Commerce Pkwy,Atlanta,GA,75014,US,South,America/Chicago,true,50000,54,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0015,WAR-IL-07,Chicago Warehouse 7,WAREHOUSE,115 Commerce Pkwy,Chicago,IL,75015,US,Midwest,America/Chicago,true,50000,32,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0016,WAR-OH-08,Columbus Warehouse 8,WAREHOUSE,116 Commerce Pkwy,Columbus,OH,75016,US,Midwest,America/Chicago,true,250000,48,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0017,WAR-CA-09,Los Angeles Warehouse 9,WAREHOUSE,117 Commerce Pkwy,Los Angeles,CA,75017,US,West,America/Los_Angeles,true,250000,44,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0018,WAR-WA-10,Seattle Warehouse 10,WAREHOUSE,118 Commerce Pkwy,Seattle,WA,75018,US,West,America/Los_Angeles,true,50000,10,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0019,YAR-NJ-01,Newark Yard 1,YARD,119 Commerce Pkwy,Newark,NJ,75019,US,Northeast,America/New_York,true,250000,13,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,YMS
+LOC0020,YAR-MA-02,Boston Yard 2,YARD,120 Commerce Pkwy,Boston,MA,75020,US,Northeast,America/New_York,true,50000,32,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,YMS
+LOC0021,YAR-AZ-03,Phoenix Yard 3,YARD,121 Commerce Pkwy,Phoenix,AZ,75021,US,West,America/Los_Angeles,true,250000,18,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,YMS
+LOC0022,YAR-CO-04,Denver Yard 4,YARD,122 Commerce Pkwy,Denver,CO,75022,US,West,America/Los_Angeles,true,120000,50,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,YMS
+LOC0023,YAR-TX-05,Houston Yard 5,YARD,123 Commerce Pkwy,Houston,TX,75023,US,South,America/Chicago,true,50000,46,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,YMS
+LOC0024,YAR-TN-06,Memphis Yard 6,YARD,124 Commerce Pkwy,Memphis,TN,75024,US,South,America/Chicago,true,,54,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,YMS
+LOC0025,YAR-TX-07,Dallas Yard 7,YARD,125 Commerce Pkwy,Dallas,TX,75025,US,South,America/Chicago,true,400000,32,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,YMS
+LOC0026,YAR-GA-08,Atlanta Yard 8,YARD,126 Commerce Pkwy,Atlanta,GA,75026,US,South,America/Chicago,true,,22,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,YMS
+LOC0027,STO-IL-01,Chicago Store 1,STORE,127 Commerce Pkwy,Chicago,IL,75027,US,Midwest,America/Chicago,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0028,STO-OH-02,Columbus Store 2,STORE,128 Commerce Pkwy,Columbus,OH,75028,US,Midwest,America/Chicago,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0029,STO-CA-03,Los Angeles Store 3,STORE,129 Commerce Pkwy,Los Angeles,CA,75029,US,West,America/Los_Angeles,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0030,STO-WA-04,Seattle Store 4,STORE,130 Commerce Pkwy,Seattle,WA,75030,US,West,America/Los_Angeles,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0031,STO-NJ-05,Newark Store 5,STORE,131 Commerce Pkwy,Newark,NJ,75031,US,Northeast,America/New_York,false,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0032,STO-MA-06,Boston Store 6,STORE,132 Commerce Pkwy,Boston,MA,75032,US,Northeast,America/New_York,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0033,STO-AZ-07,Phoenix Store 7,STORE,133 Commerce Pkwy,Phoenix,AZ,75033,US,West,America/Los_Angeles,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0034,STO-CO-08,Denver Store 8,STORE,134 Commerce Pkwy,Denver,CO,75034,US,West,America/Los_Angeles,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0035,STO-TX-09,Houston Store 9,STORE,135 Commerce Pkwy,Houston,TX,75035,US,South,America/Chicago,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0036,STO-TN-10,Memphis Store 10,STORE,136 Commerce Pkwy,Memphis,TN,75036,US,South,America/Chicago,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0037,STO-TX-11,Dallas Store 11,STORE,137 Commerce Pkwy,Dallas,TX,75037,US,South,America/Chicago,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0038,STO-GA-12,Atlanta Store 12,STORE,138 Commerce Pkwy,Atlanta,GA,75038,US,South,America/Chicago,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0039,SUP-IL-01,Chicago Supplier 1,SUPPLIER,139 Commerce Pkwy,Chicago,IL,75039,US,Midwest,America/Chicago,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0040,SUP-OH-02,Columbus Supplier 2,SUPPLIER,140 Commerce Pkwy,Columbus,OH,75040,US,Midwest,America/Chicago,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0041,SUP-CA-03,Los Angeles Supplier 3,SUPPLIER,141 Commerce Pkwy,Los Angeles,CA,75041,US,West,America/Los_Angeles,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0042,SUP-WA-04,Seattle Supplier 4,SUPPLIER,142 Commerce Pkwy,Seattle,WA,75042,US,West,America/Los_Angeles,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0043,SUP-NJ-05,Newark Supplier 5,SUPPLIER,143 Commerce Pkwy,Newark,NJ,75043,US,Northeast,America/New_York,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0044,SUP-MA-06,Boston Supplier 6,SUPPLIER,144 Commerce Pkwy,Boston,MA,75044,US,Northeast,America/New_York,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0045,SUP-AZ-07,Phoenix Supplier 7,SUPPLIER,145 Commerce Pkwy,Phoenix,AZ,75045,US,West,America/Los_Angeles,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0046,SUP-CO-08,Denver Supplier 8,SUPPLIER,146 Commerce Pkwy,Denver,CO,75046,US,West,America/Los_Angeles,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0047,SUP-TX-09,Houston Supplier 9,SUPPLIER,147 Commerce Pkwy,Houston,TX,75047,US,South,America/Chicago,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0048,SUP-TN-10,Memphis Supplier 10,SUPPLIER,148 Commerce Pkwy,Memphis,TN,75048,US,South,America/Chicago,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0049,CUS-TX-01,Dallas Customer 1,CUSTOMER,149 Commerce Pkwy,Dallas,TX,75049,US,South,America/Chicago,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0050,CUS-GA-02,Atlanta Customer 2,CUSTOMER,150 Commerce Pkwy,Atlanta,GA,75050,US,South,America/Chicago,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0051,CUS-IL-03,Chicago Customer 3,CUSTOMER,151 Commerce Pkwy,Chicago,IL,75051,US,Midwest,America/Chicago,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0052,CUS-OH-04,Columbus Customer 4,CUSTOMER,152 Commerce Pkwy,Columbus,OH,75052,US,Midwest,America/Chicago,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0053,CUS-CA-05,Los Angeles Customer 5,CUSTOMER,153 Commerce Pkwy,Los Angeles,CA,75053,US,West,America/Los_Angeles,false,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0054,CUS-WA-06,Seattle Customer 6,CUSTOMER,154 Commerce Pkwy,Seattle,WA,75054,US,West,America/Los_Angeles,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0055,CUS-NJ-07,Newark Customer 7,CUSTOMER,155 Commerce Pkwy,Newark,NJ,75055,US,Northeast,America/New_York,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0056,CUS-MA-08,Boston Customer 8,CUSTOMER,156 Commerce Pkwy,Boston,MA,75056,US,Northeast,America/New_York,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0057,CUS-AZ-09,Phoenix Customer 9,CUSTOMER,157 Commerce Pkwy,Phoenix,AZ,75057,US,West,America/Los_Angeles,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0058,CUS-CO-10,Denver Customer 10,CUSTOMER,158 Commerce Pkwy,Denver,CO,75058,US,West,America/Los_Angeles,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0059,CUS-TX-11,Houston Customer 11,CUSTOMER,159 Commerce Pkwy,Houston,TX,75059,US,South,America/Chicago,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0060,CUS-TN-12,Memphis Customer 12,CUSTOMER,160 Commerce Pkwy,Memphis,TN,75060,US,South,America/Chicago,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0061,CUS-TX-13,Dallas Customer 13,CUSTOMER,161 Commerce Pkwy,Dallas,TX,75061,US,South,America/Chicago,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0062,CUS-GA-14,Atlanta Customer 14,CUSTOMER,162 Commerce Pkwy,Atlanta,GA,75062,US,South,America/Chicago,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0063,CUS-IL-15,Chicago Customer 15,CUSTOMER,163 Commerce Pkwy,Chicago,IL,75063,US,Midwest,America/Chicago,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0064,CUS-OH-16,Columbus Customer 16,CUSTOMER,164 Commerce Pkwy,Columbus,OH,75064,US,Midwest,America/Chicago,false,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0065,CUS-CA-17,Los Angeles Customer 17,CUSTOMER,165 Commerce Pkwy,Los Angeles,CA,75065,US,West,America/Los_Angeles,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0066,CUS-WA-18,Seattle Customer 18,CUSTOMER,166 Commerce Pkwy,Seattle,WA,75066,US,West,America/Los_Angeles,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0067,CUS-NJ-19,Newark Customer 19,CUSTOMER,167 Commerce Pkwy,Newark,NJ,75067,US,Northeast,America/New_York,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0068,CUS-MA-20,Boston Customer 20,CUSTOMER,168 Commerce Pkwy,Boston,MA,75068,US,Northeast,America/New_York,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0069,CUS-AZ-21,Phoenix Customer 21,CUSTOMER,169 Commerce Pkwy,Phoenix,AZ,75069,US,West,America/Los_Angeles,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0070,CUS-CO-22,Denver Customer 22,CUSTOMER,170 Commerce Pkwy,Denver,CO,75070,US,West,America/Los_Angeles,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0071,CUS-TX-23,Houston Customer 23,CUSTOMER,171 Commerce Pkwy,Houston,TX,75071,US,South,America/Chicago,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0072,CUS-TN-24,Memphis Customer 24,CUSTOMER,172 Commerce Pkwy,Memphis,TN,75072,US,South,America/Chicago,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0073,CUS-TX-25,Dallas Customer 25,CUSTOMER,173 Commerce Pkwy,Dallas,TX,75073,US,South,America/Chicago,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0074,CUS-GA-26,Atlanta Customer 26,CUSTOMER,174 Commerce Pkwy,Atlanta,GA,75074,US,South,America/Chicago,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0075,CUS-IL-27,Chicago Customer 27,CUSTOMER,175 Commerce Pkwy,Chicago,IL,75075,US,Midwest,America/Chicago,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0076,CUS-OH-28,Columbus Customer 28,CUSTOMER,176 Commerce Pkwy,Columbus,OH,75076,US,Midwest,America/Chicago,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0077,CUS-CA-29,Los Angeles Customer 29,CUSTOMER,177 Commerce Pkwy,Los Angeles,CA,75077,US,West,America/Los_Angeles,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0078,CUS-WA-30,Seattle Customer 30,CUSTOMER,178 Commerce Pkwy,Seattle,WA,75078,US,West,America/Los_Angeles,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0079,CUS-NJ-31,Newark Customer 31,CUSTOMER,179 Commerce Pkwy,Newark,NJ,75079,US,Northeast,America/New_York,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS
+LOC0080,CUS-MA-32,Boston Customer 32,CUSTOMER,180 Commerce Pkwy,Boston,MA,75080,US,Northeast,America/New_York,true,,,2022-01-15 00:00:00,2025-08-01 12:00:00,2025-09-20 06:00:00,TMS

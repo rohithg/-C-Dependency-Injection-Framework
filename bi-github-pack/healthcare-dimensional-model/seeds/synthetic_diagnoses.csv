@@ -1,0 +1,16 @@
+icd10_cd,icd10_desc,chapter_cd,chapter_desc,clinical_group,is_billable
+E11.9,Type 2 diabetes mellitus without complications,E00-E89,Endocrine nutritional and metabolic diseases,Diabetes,true
+E78.5,Hyperlipidemia unspecified,E00-E89,Endocrine nutritional and metabolic diseases,Lipids,true
+I10,Essential primary hypertension,I00-I99,Diseases of the circulatory system,Hypertension,true
+I25.10,Atherosclerotic heart disease of native coronary artery without angina pectoris,I00-I99,Diseases of the circulatory system,CAD,true
+J06.9,Acute upper respiratory infection unspecified,J00-J99,Diseases of the respiratory system,Respiratory,true
+J18.9,Pneumonia unspecified organism,J00-J99,Diseases of the respiratory system,Pneumonia,true
+J45.909,Unspecified asthma uncomplicated,J00-J99,Diseases of the respiratory system,Asthma,true
+M54.5,Low back pain,M00-M99,Diseases of the musculoskeletal system and connective tissue,MSK,true
+N18.3,Chronic kidney disease stage 3,N00-N99,Diseases of the genitourinary system,CKD,true
+R05.9,Cough unspecified,R00-R99,Symptoms signs and abnormal clinical findings,Symptom,true
+R51.9,Headache unspecified,R00-R99,Symptoms signs and abnormal clinical findings,Symptom,true
+Z00.00,Encounter for general adult medical examination without abnormal findings,Z00-Z99,Factors influencing health status,Wellness,true
+Z23,Encounter for immunization,Z00-Z99,Factors influencing health status,Immunization,true
+F41.1,Generalized anxiety disorder,F01-F99,Mental behavioral and neurodevelopmental disorders,BehavioralHealth,true
+G43.909,Migraine unspecified not intractable without status migrainosus,G00-G99,Diseases of the nervous system,Migraine,true

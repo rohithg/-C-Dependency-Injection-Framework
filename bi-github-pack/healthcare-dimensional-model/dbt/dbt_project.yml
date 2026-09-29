@@ -1,0 +1,31 @@
+name: healthcare_dimensional_model
+version: "1.0.0"
+config-version: 2
+
+profile: healthcare_dimensional_model
+
+model-paths: ["models"]
+seed-paths: ["../seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+analysis-paths: ["analyses"]
+
+models:
+  healthcare_dimensional_model:
+    +materialized: view
+    staging:
+      +schema: stg
+      +materialized: view
+    marts:
+      core:
+        +schema: core
+        +materialized: table
+
+seeds:
+  healthcare_dimensional_model:
+    +quote_columns: false
+
+vars:
+  # Demo only — no real PHI environments
+  synthetic_data_only: true
+  icd10_regex: '^[A-TV-Z][0-9][0-9A-Z](\\.[0-9A-Z]{1,4})?$'
