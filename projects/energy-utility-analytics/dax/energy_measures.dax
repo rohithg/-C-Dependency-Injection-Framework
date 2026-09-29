@@ -32,3 +32,27 @@ CALCULATE (
     DISTINCTCOUNT ( DimUtility[UtilityID] ),
     FactEnergyUsage[IsCompliant] = FALSE
 )
+
+// --- Additional time intelligence / program mix ---
+Incentive Spend YTD :=
+TOTALYTD ( [Incentive Spend], DimDate[FullDate] )
+
+kWh vs Prior Month % :=
+VAR Curr = [Total kWh]
+VAR Prior = CALCULATE ( [Total kWh], DATEADD ( DimDate[FullDate], -1, MONTH ) )
+RETURN DIVIDE ( Curr - Prior, Prior )
+
+EE Share of kWh :=
+DIVIDE (
+    CALCULATE ( [Total kWh], DimProgram[ProgramFamily] = "EE" ),
+    [Total kWh]
+)
+
+Avg Incentive per Customer :=
+DIVIDE ( [Incentive Spend], [Participating Customers] )
+
+Compliance Gap Utilities :=
+CALCULATE (
+    DISTINCTCOUNT ( DimUtility[UtilityID] ),
+    [Compliance Rate] < 0.90
+)
