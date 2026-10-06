@@ -1,0 +1,100 @@
+name: RevenueLiveDrilldown
+description: Live DirectQuery revenue dashboard with Region → Product → Customer drillthrough
+
+snowflake:
+  database: ANALYTICS
+  schema: MARTS
+  bi_role: BI_ANALYST
+  default_account: ORG-ACCOUNT
+  default_warehouse: BI_WH
+
+views_sql:
+  - vw_dim_customer.sql
+  - vw_dim_product.sql
+  - vw_revenue_order_line.sql
+  - vw_revenue_daily_region.sql
+
+tables:
+  - name: RevenueOrderLine
+    snowflake_view: VW_REVENUE_ORDER_LINE
+    kind: fact
+    columns:
+      - { name: ORDER_LINE_ID, data_type: string, is_key: true, summarize_by: none }
+      - { name: ORDER_ID, data_type: string, summarize_by: none }
+      - { name: ORDER_DATE, data_type: dateTime, format_string: "Short Date", summarize_by: none }
+      - { name: CUSTOMER_ID, data_type: string, summarize_by: none }
+      - { name: CUSTOMER_NAME, data_type: string, summarize_by: none }
+      - { name: REGION_NAME, data_type: string, summarize_by: none }
+      - { name: PRODUCT_ID, data_type: string, summarize_by: none }
+      - { name: PRODUCT_NAME, data_type: string, summarize_by: none }
+      - { name: PRODUCT_CATEGORY, data_type: string, summarize_by: none }
+      - { name: NET_REVENUE, data_type: double, format_string: '"$"#,0.00', summarize_by: sum }
+      - { name: GROSS_MARGIN, data_type: double, format_string: '"$"#,0.00', summarize_by: sum }
+    measures:
+      - name: Net Revenue
+        expression: SUM(RevenueOrderLine[NET_REVENUE])
+        format_string: '"$"#,0.00'
+        display_folder: Revenue
+      - name: Gross Margin
+        expression: SUM(RevenueOrderLine[GROSS_MARGIN])
+        format_string: '"$"#,0.00'
+        display_folder: Revenue
+      - name: Margin %
+        expression: DIVIDE([Gross Margin], [Net Revenue])
+        format_string: "0.0%"
+        display_folder: Revenue
+
+  - name: RevenueDailyRegion
+    snowflake_view: VW_REVENUE_DAILY_REGION
+    kind: agg
+    columns:
+      - { name: ORDER_DAY, data_type: dateTime, summarize_by: none }
+      - { name: REGION_NAME, data_type: string, summarize_by: none }
+      - { name: NET_REVENUE, data_type: double, format_string: '"$"#,0.00', summarize_by: sum }
+      - { name: ORDER_COUNT, data_type: int64, summarize_by: sum }
+    measures:
+      - name: Region Net Revenue
+        expression: SUM(RevenueDailyRegion[NET_REVENUE])
+        format_string: '"$"#,0.00'
+        display_folder: Overview
+
+  - name: DimCustomer
+    snowflake_view: VW_DIM_CUSTOMER
+    kind: dim
+    columns:
+      - { name: CUSTOMER_ID, data_type: string, is_key: true, summarize_by: none }
+      - { name: CUSTOMER_NAME, data_type: string, summarize_by: none }
+      - { name: REGION_NAME, data_type: string, summarize_by: none }
+      - { name: SEGMENT, data_type: string, summarize_by: none }
+
+  - name: DimProduct
+    snowflake_view: VW_DIM_PRODUCT
+    kind: dim
+    columns:
+      - { name: PRODUCT_ID, data_type: string, is_key: true, summarize_by: none }
+      - { name: PRODUCT_NAME, data_type: string, summarize_by: none }
+      - { name: PRODUCT_CATEGORY, data_type: string, summarize_by: none }
+
+relationships:
+  - name: FactToCustomer
+    from_table: RevenueOrderLine
+    from_column: CUSTOMER_ID
+    to_table: DimCustomer
+    to_column: CUSTOMER_ID
+  - name: FactToProduct
+    from_table: RevenueOrderLine
+    from_column: PRODUCT_ID
+    to_table: DimProduct
+    to_column: PRODUCT_ID
+
+pages:
+  - name: overview
+    display_name: Revenue Overview
+    role: overview
+  - name: drill_region_product_customer
+    display_name: Region Product Customer Detail
+    role: drillthrough
+    drill_fields:
+      - { table: RevenueOrderLine, column: REGION_NAME }
+      - { table: RevenueOrderLine, column: PRODUCT_CATEGORY }
+      - { table: RevenueOrderLine, column: CUSTOMER_NAME }

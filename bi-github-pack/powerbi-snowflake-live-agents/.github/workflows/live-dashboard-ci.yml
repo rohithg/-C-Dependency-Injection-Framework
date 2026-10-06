@@ -1,0 +1,25 @@
+name: Live Power BI drill-down (Snowflake)
+
+on:
+  push:
+    paths:
+      - "bi-github-pack/powerbi-snowflake-live-agents/**"
+  pull_request:
+    paths:
+      - "bi-github-pack/powerbi-snowflake-live-agents/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bi-github-pack/powerbi-snowflake-live-agents
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: python -m generator.cli validate --manifest examples/revenue-drilldown/manifest.yaml
+      - run: python -m generator.cli generate --manifest examples/revenue-drilldown/manifest.yaml --clean
+      - run: python -m pytest tests/ -q
