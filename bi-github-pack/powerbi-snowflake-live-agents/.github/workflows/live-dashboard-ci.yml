@@ -37,3 +37,6 @@ jobs:
       - run: pip install -r requirements.txt
       - run: python -m retail_etl run --seed
       - run: python -m pytest tests/ -q
+      - run: python -m complex_etl seed
+      - run: python -m complex_etl run
+      - run: python -m pytest complex_etl/tests -q

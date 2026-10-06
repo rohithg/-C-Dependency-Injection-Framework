@@ -1,5 +1,11 @@
 data/out/
 data/raw/
+complex_etl/data/lake/
+complex_etl/data/reports/
+complex_etl/data/state/
+complex_etl/data/api_cache/
+complex_etl/data/raw/
+complex_etl/data/cdc/
 __pycache__/
 *.py[cod]
 .pytest_cache/

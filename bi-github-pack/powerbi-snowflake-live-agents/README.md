@@ -23,13 +23,24 @@ python3 -m pytest tests/ -q
 
 ### End-to-end ETL (Python + Polars)
 
+Simple retail ETL:
+
 ```bash
 cd etl
 pip install -r requirements.txt
-python3 -m retail_etl run --seed    # extract → transform → parquet marts
-python3 -m pytest tests/ -q
-# With Snowflake creds: python3 -m retail_etl run --seed --load-snowflake
+python3 -m retail_etl run --seed
 ```
+
+**Complex medallion platform** (CDC · SCD2 · DQ gates · lineage):
+
+```bash
+cd etl
+python3 -m complex_etl seed
+python3 -m complex_etl run
+python3 -m pytest complex_etl/tests -q
+```
+
+Details: [docs/COMPLEX_ETL.md](docs/COMPLEX_ETL.md) · [docs/ETL.md](docs/ETL.md)
 
 Open the generated `.pbip` in Power BI Desktop, sign in to Snowflake, then publish. Queries run live on every visual interaction (DirectQuery).
 
