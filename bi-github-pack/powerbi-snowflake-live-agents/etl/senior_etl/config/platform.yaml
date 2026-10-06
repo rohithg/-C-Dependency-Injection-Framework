@@ -1,0 +1,12 @@
+platform_name: enterprise_order_platform
+sla_seconds: 30
+anomaly:
+  fct_orders_min_rows: 1
+  fct_orders_max_rows: 100000
+  net_revenue_usd_min: 1
+  net_revenue_usd_max: 100000000
+circuit_breaker:
+  max_task_failures: 1
+pii_columns:
+  customers: [email, phone]
+contracts_strict: true

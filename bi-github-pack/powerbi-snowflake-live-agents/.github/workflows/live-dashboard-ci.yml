@@ -1,0 +1,45 @@
+name: Live Power BI drill-down (Snowflake)
+
+on:
+  push:
+    paths:
+      - "bi-github-pack/powerbi-snowflake-live-agents/**"
+  pull_request:
+    paths:
+      - "bi-github-pack/powerbi-snowflake-live-agents/**"
+
+jobs:
+  test-generator:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bi-github-pack/powerbi-snowflake-live-agents
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: python -m generator.cli validate --manifest examples/revenue-drilldown/manifest.yaml
+      - run: python -m generator.cli generate --manifest examples/revenue-drilldown/manifest.yaml --clean
+      - run: python -m pytest tests/ -q
+
+  test-etl:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bi-github-pack/powerbi-snowflake-live-agents/etl
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: python -m retail_etl run --seed
+      - run: python -m pytest tests/ -q
+      - run: python -m complex_etl seed
+      - run: python -m complex_etl run
+      - run: python -m pytest complex_etl/tests -q
+      - run: python -m senior_etl seed
+      - run: python -m senior_etl run --batch-id batch_ci_001
+      - run: python -m pytest senior_etl/tests -q
