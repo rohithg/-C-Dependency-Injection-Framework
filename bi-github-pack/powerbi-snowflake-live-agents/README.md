@@ -40,7 +40,17 @@ python3 -m complex_etl run
 python3 -m pytest complex_etl/tests -q
 ```
 
-Details: [docs/COMPLEX_ETL.md](docs/COMPLEX_ETL.md) · [docs/ETL.md](docs/ETL.md)
+**Senior / enterprise platform** (contracts · PIT · idempotent batches · anomaly/SLA · replay):
+
+```bash
+cd etl
+python3 -m senior_etl seed
+python3 -m senior_etl run --batch-id batch_demo_001
+python3 -m senior_etl replay --batch-id batch_demo_001
+python3 -m pytest senior_etl/tests -q
+```
+
+Details: [docs/SENIOR_ETL_WALKTHROUGH.md](docs/SENIOR_ETL_WALKTHROUGH.md) · [docs/COMPLEX_ETL.md](docs/COMPLEX_ETL.md) · [docs/ETL.md](docs/ETL.md)
 
 Open the generated `.pbip` in Power BI Desktop, sign in to Snowflake, then publish. Queries run live on every visual interaction (DirectQuery).
 

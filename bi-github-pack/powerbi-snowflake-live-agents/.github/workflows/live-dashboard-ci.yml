@@ -40,3 +40,6 @@ jobs:
       - run: python -m complex_etl seed
       - run: python -m complex_etl run
       - run: python -m pytest complex_etl/tests -q
+      - run: python -m senior_etl seed
+      - run: python -m senior_etl run --batch-id batch_ci_001
+      - run: python -m pytest senior_etl/tests -q
