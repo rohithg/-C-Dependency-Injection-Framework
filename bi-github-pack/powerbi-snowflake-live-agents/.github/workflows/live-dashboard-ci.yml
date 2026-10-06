@@ -9,7 +9,7 @@ on:
       - "bi-github-pack/powerbi-snowflake-live-agents/**"
 
 jobs:
-  test:
+  test-generator:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -22,4 +22,18 @@ jobs:
       - run: pip install -r requirements.txt
       - run: python -m generator.cli validate --manifest examples/revenue-drilldown/manifest.yaml
       - run: python -m generator.cli generate --manifest examples/revenue-drilldown/manifest.yaml --clean
+      - run: python -m pytest tests/ -q
+
+  test-etl:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: bi-github-pack/powerbi-snowflake-live-agents/etl
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: python -m retail_etl run --seed
       - run: python -m pytest tests/ -q

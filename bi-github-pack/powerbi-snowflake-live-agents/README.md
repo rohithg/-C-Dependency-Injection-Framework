@@ -21,6 +21,16 @@ python3 -m generator.cli generate --manifest examples/revenue-drilldown/manifest
 python3 -m pytest tests/ -q
 ```
 
+### End-to-end ETL (Python + Polars)
+
+```bash
+cd etl
+pip install -r requirements.txt
+python3 -m retail_etl run --seed    # extract → transform → parquet marts
+python3 -m pytest tests/ -q
+# With Snowflake creds: python3 -m retail_etl run --seed --load-snowflake
+```
+
 Open the generated `.pbip` in Power BI Desktop, sign in to Snowflake, then publish. Queries run live on every visual interaction (DirectQuery).
 
 ## Agent usage in Cursor
