@@ -9,6 +9,20 @@ needs no keys and no money, and never places a real order.
 Sibling of the [TVM / Kronos stock paper trader](../08-python-paper-trading-strategy/);
 it reuses that project's notification channels.
 
+## The "Claude finds the Polymarket wallets that win" pipeline, built honestly
+
+The viral version of this idea has six screens. All six exist here, with
+real data behind them:
+
+| The post says | What this project does | Where |
+|---|---|---|
+| **Finds top wallets** - ranks public wallets by profit, win rate, consistency | Pulls the month / week / all-time / politics / sports leaderboards, screens out bots (>100 trades/day) and dormant accounts, then ranks by *copyability* (see below). Profit, win rate and consistency are computed and shown, but they are not the ranking key, because they are the leader's numbers, not yours | `polycopy/universe.py`, `polycopy/selection.py` |
+| **Studies how they trade** - history, win rate, position sizing, favourite markets | Per-wallet profile from their full trade history: win rate over decided markets, realised PnL, average position, profitable months, category mix (politics / sports / crypto / ...), biggest markets | `polycopy/analysis.py`; the "Their record" column of every report |
+| **Watches when they make a move** - new position / closed position feed | Every hour the job reads each followed wallet's new trades and logs them as *new position / added / reduced / closed*, with what we did about each one | `polycopy/paper.py` activity monitor; `state/activity.jsonl` |
+| **Doesn't copy every trade** - liquidity, volume, price change, size checks | Every BUY goes through an 11-point review: leader size, market type, price range, freshness, time to resolution, market liquidity, 24h volume, spread, price move since the leader's fill (no chasing), current price, our position-size room. The report shows each check's value and pass/fail | `polycopy/review.py`; "Trade review" section of the report |
+| **Copies approved positions** into a paper account | Fills walk the live order book, pay the market's taker fee, are sized at 1% of equity but never more than the leader's own notional; exits mirror the leader's; resolutions pay $1 / $0 | `polycopy/copy.py`, `polycopy/paper.py` |
+| **$2,000 -> $12,000 in one night** | No. See the backtest below for what the same idea does over six months with real prices, latency and fees. A 6x overnight is a creator-reported screenshot, not a strategy property; a backtest that produced numbers like that here turned out to be a fill-model bug | `results/polymarket_backtest.md` |
+
 ## The idea, and why naive copying loses
 
 Polymarket publishes every wallet's trades and a profit leaderboard, so
@@ -38,6 +52,8 @@ A wallet whose edge evaporates in an hour scores low no matter how rich it is.
 | Follow | top 10 by copyability score, re-picked monthly (weekly in the live job) | `copy return / max(2%, drawdown)` on the trailing 90 days |
 | Copy a BUY if | leader paid $25+, price in [0.03, 0.97], market ends 3h+ later, not an up/down or 5m/15m/1h market | skip dust, lottery tickets, near-certainties and markets we would enter after the fact |
 | Size | 1% of equity per copied buy, never more than the leader's own notional, max 5% of equity per market | we take at most the liquidity the leader took |
+| Don't chase | skip if the price is already more than 0.10 above the leader's fill | the edge was theirs at their price, not ours an hour later |
+| Live-only review | market liquidity >= $1,000, 24h volume >= $500, spread <= 0.05 | current values only exist for open markets, so the backtest cannot apply these; they only make the live account stricter |
 | Exit | mirror the fraction the leader sells; otherwise hold to resolution (paid $1 or $0) | copy the leader's exit decision, not our own |
 | Fill price | **backtest:** the worse of the leader's price and the first hourly print after 60 min, plus 0.01; **live:** walk the real order book | hourly prints of thin books can be absurd for a moment; assuming we filled there would turn the backtest into a lottery |
 
@@ -51,22 +67,25 @@ hourly price history for every market touched (fetched once, cached in
 
 | portfolio ($10,000 start) | total | vol | Sharpe | max DD |
 |---|---|---|---|---|
-| **Copy: walk-forward top-10 by copyability** | **+114%** | 128% | 1.80 | **-59%** |
-| Copy: today's leaderboard top-10 (knows who ended up rich) | -82% | 97% | -3.00 | -83% |
-| Copy: every screened wallet, 0.2% per trade | -14% | 74% | -0.05 | -46% |
+| **Copy: walk-forward top-10 by copyability** | **+40%** | 125% | 1.14 | **-56%** |
+| Copy: today's leaderboard top-10 (knows who ended up rich) | -84% | 97% | -3.20 | -84% |
+| Copy: every screened wallet, 0.2% per trade | -12% | 75% | 0.02 | -43% |
 | VOO buy & hold | +5% | 12% | 0.93 | -5% |
 
-1,930 copied buys, 744 positions carried to resolution (431 paid out), $2,070
-of fees on a $10k account.
+1,548 copied buys, 533 positions carried to resolution (293 paid out), $1,705
+of fees on a $10k account. Without the no-chasing rule (buy even if the price
+is already >0.10 above the leader's fill) the same run makes +114% with a
+-59% drawdown: the extra return comes from buying into news spikes, which
+worked in this window and is exactly the behaviour that eventually does not.
 
-**Read the +114% as "interesting", not as "expected".**
+**Read the +40% as "interesting", not as "expected".**
 
-- It is **lumpy**. The ten best positions made more than the whole net gain;
-  the single best was a leader putting $3,400 into *Russia x Ukraine ceasefire
-  by May 31* at 6 cents four days before it happened. We paid 7 cents. Five
-  of the top eight winners are geopolitical long shots like that.
-- It is **violent**. The account went $10k -> $15.8k -> $6.6k -> $20k, with
-  days of -25% and +34%. Max drawdown -59%. Scale `trade_fraction` down if that
+- It is **lumpy**. The ten best positions made several times the whole net
+  gain; the single best was a leader putting $3,400 into *Russia x Ukraine
+  ceasefire by May 31* at 6 cents four days before it happened. We paid 7
+  cents. Most of the top winners are geopolitical long shots like that.
+- It is **violent**. The account went $10k -> $17.8k -> $7.9k -> $12.8k, with
+  days of -27% and +32%. Max drawdown -56%. Scale `trade_fraction` down if that
   is not acceptable; the copied set is otherwise unchanged.
 - The **universe is survivor-biased**. Polymarket only publishes *today's*
   leaderboard, so even the walk-forward selection chooses among wallets that
@@ -99,8 +118,11 @@ runs the paper account on GitHub's servers, hourly.
    with the next hour; the first run picks the followed wallets, which takes
    a while (about 15 minutes of API paging, cached afterwards).
 3. **Done.** State lives on the `polymarket-copy-log` branch (`state.json`,
-   `fills.jsonl`); every Monday 06:00 UTC the followed set is re-picked; each
-   day after 20:00 UTC a status message goes out.
+   `fills.jsonl`, `activity.jsonl` with every leader trade seen and every
+   review); every Monday 06:00 UTC the followed set is re-picked; each day
+   after 20:00 UTC a status message goes out. Each run's page shows the
+   fills, the trade reviews (every check with its value), the hour's wallet
+   activity, open positions and the followed wallets' records.
 
 The daily message:
 
@@ -126,7 +148,7 @@ to see what that costs.
 ```bash
 cd 09-python-polymarket-copy-trader
 pip install -r requirements.txt
-python -m pytest -q                       # 19 tests, offline
+python -m pytest -q                       # 23 tests, offline
 
 python run_backtest.py                    # walk-forward backtest; first run fetches ~500 MB of history (20-30 min)
 python run_backtest.py --start 2026-07-01 --follow 5 --no-plot
@@ -144,9 +166,11 @@ file (`--config`) overriding any field of `CopyConfig`.
 polycopy/api.py        Polymarket data-api / CLOB / Gamma client with a disk cache
 polycopy/copy.py       CopyConfig, filters, sizing, Portfolio, LeaderBook, copy_trade()
 polycopy/universe.py   leaderboard universe and the trade-rate / dormancy screen
+polycopy/analysis.py   wallet profile: win rate, PnL, sizing, consistency, market categories
 polycopy/backtest.py   hourly-price replay, bulk prefetch, metrics
 polycopy/selection.py  copyability scoring and the follow set
-polycopy/paper.py      the hourly live tick (state, live books, marks, resolutions)
+polycopy/review.py     the per-trade checklist (liquidity, volume, spread, chase, size, ...)
+polycopy/paper.py      the hourly live tick (activity monitor, review, live books, marks, resolutions)
 polycopy/report.py     markdown / text status and notification plumbing
 run_backtest.py        walk-forward backtest + report + chart
 paper_trade.py         CLI used by the workflow
@@ -162,6 +186,11 @@ tests/                 offline tests with a fake API
 - **Hourly latency is a choice.** A websocket follower reacting in seconds
   would copy a different, larger set of trades; it would also pay more fees
   and chase more spikes. The backtest's `latency_min` lets you price that.
+- **Wallet profiles see CLOB trades only.** Splits, merges and early
+  redemptions are not trades, so a market maker who buys both sides and
+  merges them back to USDC looks like a total loss in "their record". The
+  copyability score is unaffected (it only ever copies trades), but read the
+  win-rate column as "how they trade", not as an audited P&L.
 - **Prediction-market P&L is binary and clustered.** A handful of resolutions
   decide a quarter. Compared with VOO this is a different kind of risk, not a
   scaled-up version of the same risk.

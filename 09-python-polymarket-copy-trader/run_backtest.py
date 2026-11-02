@@ -26,6 +26,7 @@ import pandas as pd
 from polycopy.api import PolymarketAPI
 from polycopy.backtest import PriceSource, simulate, summarize, format_summary, month_starts
 from polycopy.copy import CopyConfig, DEFAULT, Portfolio, LeaderBook
+from polycopy.analysis import wallet_profile, profile_line
 from polycopy.selection import score_wallets, choose, scores_table
 from polycopy.universe import build_universe, screen_universe, fetch_history
 
@@ -157,8 +158,11 @@ def main() -> None:
     for p in picks:
         print(f"   {p['month']}  scored {p['scored']:3d}  copied {p['copied_buys']:4d} buys  equity {p['equity_end']:>9,.0f}  follow: {', '.join(p['followed'])}")
     scores = score_wallets(histories, names, markets, prices, cfg, end_ts - cfg.lookback_days * 86400, end_ts, api=api)
+    today = scores_table(scores, 15)
+    today["their record (90d)"] = [profile_line(wallet_profile(api, [t for t in histories[s.wallet] if t["timestamp"] >= end_ts - cfg.lookback_days * 86400], markets))
+                                   for s in scores[:15]]
     print("\n  Who we would follow today (trailing %d days):" % cfg.lookback_days)
-    print(scores_table(scores, 15).to_string(index=False, float_format=lambda v: f"{v:.3f}"))
+    print(today.to_string(index=False, float_format=lambda v: f"{v:.3f}"))
 
     RESULTS.mkdir(exist_ok=True)
     md = ["# Polymarket copy-trading walk-forward backtest", "",
@@ -172,7 +176,9 @@ def main() -> None:
           "Skipped leader trades: " + ", ".join(f"{k} {v}" for k, v in sorted(skip_tot.items(), key=lambda kv: -kv[1])), "",
           "## Followed wallets by month", "", "| month | wallets scored | copied buys | equity at month end | followed |", "|---|---|---|---|---|",
           *[f"| {p['month']} | {p['scored']} | {p['copied_buys']} | {p['equity_end']:,.0f} | {', '.join(p['followed'])} |" for p in picks], "",
-          "## Who the rules would follow today", "", md_table(scores_table(scores, 15)), ""]
+          "## Who the rules would follow today", "",
+          "'copy return' is what copying the wallet under our rules would have made; 'their record' is what the wallet itself did.", "",
+          md_table(today), ""]
     (RESULTS / "polymarket_backtest.md").write_text("\n".join(md))
     pd.DataFrame(curves).to_csv(RESULTS / "polymarket_equity.csv")
     json.dump([f.__dict__ for f in wf_fills], open(RESULTS / "polymarket_fills.json", "w"), default=str)
