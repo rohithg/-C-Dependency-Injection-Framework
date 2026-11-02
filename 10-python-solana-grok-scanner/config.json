@@ -1,0 +1,31 @@
+{
+  "_comment": "Thresholds and risk limits. Tighten freely; loosen only after reviewing logs/decisions.jsonl (README, 'How to test it').",
+
+  "poll_seconds": 60,
+  "max_tokens_per_cycle": 15,
+
+  "min_liquidity_usd": 25000,
+  "min_pool_age_minutes": 10,
+  "max_pool_age_hours": 48,
+  "max_single_holder": 0.10,
+  "max_top10_share": 0.40,
+  "require_mint_disabled": true,
+  "require_freeze_disabled": true,
+  "require_lp_locked": true,
+  "min_lp_locked_pct": 90,
+  "fail_on_rugcheck_danger": true,
+
+  "grok_required": true,
+  "grok_model": "grok-4.7",
+  "grok_max_risk": 4,
+
+  "paper_start_balance_usd": 1000,
+  "max_position_pct": 0.02,
+  "max_open_positions": 10,
+  "stop_loss_pct": 0.25,
+  "take_profit_pct": 1.00,
+  "max_hold_hours": 24,
+  "max_daily_loss_pct": 0.05,
+  "dex_fee_pct": 0.01,
+  "max_price_impact_pct": 0.50
+}
