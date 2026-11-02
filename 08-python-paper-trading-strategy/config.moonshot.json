@@ -1,0 +1,16 @@
+{
+  "_comment": "Moonshot leg: $100 paper account, the most aggressive rules the data supports. Fully invested in whichever of BTC, ETH, SOL has the stronger trend while BTC is above its 100-day average, otherwise T-bills. No leverage (max_leverage 1.0); the aggression is the asset class, whose volatility is 2-3x equities. Costs modeled at 0.4% per side. See README: $100 reached $500 in 7 months from Sep 2020 and in 2.7 years from Apr 2018, and has not reached it in 4.8 years from the Jan 2022 start, with a -59% worst drawdown.",
+  "trend_symbol": "BTC-USD",
+  "risk_assets": ["BTC-USD", "ETH-USD", "SOL-USD"],
+  "leveraged_2x": {},
+  "cash_symbol": "BIL",
+  "benchmark_symbol": "BTC-USD",
+  "sma_window": 100,
+  "momentum_window": 63,
+  "min_hold_days": 10,
+  "vol_window": 20,
+  "target_vol": 0.80,
+  "max_leverage": 1.0,
+  "rebalance_band": 0.10,
+  "cost_bps": 40.0
+}

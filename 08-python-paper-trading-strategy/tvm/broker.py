@@ -142,8 +142,9 @@ class LocalPaperBroker:
     configured; `--mode paper`.
     """
 
-    def __init__(self, path: Path | str, prices: dict[str, float], as_of: str, start_equity: float = 100_000.0):
-        self.path, self.prices, self.as_of = Path(path), dict(prices), as_of
+    def __init__(self, path: Path | str, prices: dict[str, float], as_of: str, start_equity: float = 100_000.0,
+                 fee_rate: float = 0.0):
+        self.path, self.prices, self.as_of, self.fee_rate = Path(path), dict(prices), as_of, fee_rate
         if self.path.exists():
             self.state = json.loads(self.path.read_text())
         else:
@@ -174,20 +175,32 @@ class LocalPaperBroker:
         return None
 
     def submit(self, order: Order) -> dict:
+        """Fill at today's price. The fee comes out of the trade: a buy of $N receives
+        $N of coin minus the fee, a sell returns $N minus the fee, so cash never goes
+        negative just from the fee."""
         px = self._price(order.symbol)
         shares = self.state["shares"]
         if order.liquidate:
-            qty = -shares.pop(order.symbol, 0.0)
+            qty = shares.pop(order.symbol, 0.0)
+            fee = qty * px * self.fee_rate
+            self.state["cash"] += qty * px - fee
+            signed = -qty
+        elif order.notional > 0:
+            fee = order.notional * self.fee_rate
+            signed = (order.notional - fee) / px
+            shares[order.symbol] = shares.get(order.symbol, 0.0) + signed
+            self.state["cash"] -= order.notional
         else:
-            qty = order.notional / px
-            shares[order.symbol] = shares.get(order.symbol, 0.0) + qty
+            signed = order.notional / px
+            fee = -order.notional * self.fee_rate
+            shares[order.symbol] = shares.get(order.symbol, 0.0) + signed
             if abs(shares[order.symbol]) < 1e-9:
                 del shares[order.symbol]
-        self.state["cash"] -= qty * px
-        self.state["fills"].append({"date": self.as_of, "symbol": order.symbol, "qty": round(qty, 6),
-                                    "price": round(px, 4), "notional": round(qty * px, 2)})
+            self.state["cash"] += -order.notional - fee
+        self.state["fills"].append({"date": self.as_of, "symbol": order.symbol, "qty": round(signed, 6),
+                                    "price": round(px, 4), "notional": round(signed * px, 2), "fee": round(fee, 4)})
         self._save()
-        return {"status": "filled", "symbol": order.symbol, "qty": qty, "price": px}
+        return {"status": "filled", "symbol": order.symbol, "qty": signed, "price": px, "fee": fee}
 
     def cancel_open_orders(self) -> None:
         pass

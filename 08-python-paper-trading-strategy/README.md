@@ -339,7 +339,7 @@ the result to your phone. There is nothing to install and no account to open.
    branch, fills at each day's close, and reports equity vs VOO in every
    summary and daily message. The daily message arrives as a GitHub
    notification (see "Daily text message" for SMS / push options).
-3. **Two legs run on the schedule**, each as a separate paper account and a
+3. **Three legs run on the schedule**, each as a separate paper account and a
    separate daily message:
    - **TVM** (adaptive ensemble, `state/`): the default, 13.4%/yr fixed rules
      with the learning layer on top.
@@ -350,6 +350,23 @@ the result to your phone. There is nothing to install and no account to open.
      vs +0.4%. It beat VOO in 83% of rolling 3-year windows and every 10-year
      window. It is the same edge scaled up, not a different bet, so it will
      also have a -35% to -45% year at some point.
+   - **TVM moonshot** (`state/moonshot/`, `config.moonshot.json`): the $100
+     account, and the most aggressive rules the data supports. It holds
+     whichever of BTC, ETH and SOL is trending strongest while BTC is above
+     its 100-day average, and sits in T-bills otherwise. No leverage; the
+     aggression is the asset class. Fills cost 0.4% a side, in the backtest
+     and in the paper account. What actually happened to $100, in calendar
+     time:
+     - from Sep 2020: $500 in 7 months, $2,567 after 6.2 years, but it also
+       fell from $1,874 to $775 and touched $49 (-59%)
+     - BTC+ETH only, from Apr 2018: $500 in 2.7 years, $1,564 after 8.6 years,
+       worst point $63 (-51%)
+     - from the Jan 2022 peak: **never reached $500** in 4.8 years (ended at
+       $175), spent a third of all days below the starting $100, worst $53
+     So the goal is reachable and the attempt costs a coin-flip-sized
+     drawdown. Crypto's whole history is one cycle, so this is a much weaker
+     claim than the equity legs. It gets its own daily message, "TVM
+     moonshot: daily status".
 4. **To pause**, set repo variable `TVM_PAPER_TRADING_ENABLED` = `false`
    (*Settings* -> *Secrets and variables* -> *Actions* -> *Variables*).
    Manual runs keep working.
@@ -453,6 +470,7 @@ run_backtest.py   report + charts in results/
 run_kronos_backtest.py  walk-forward evaluation of the Kronos rules vs TVM and VOO
 paper_trade.py    CLI for the daily run (--strategy adaptive | fixed | kronos, --config, --state-dir, --label)
 config.aggressive.json  the aggressive leg: target_vol 0.30, max_leverage 2.0
+config.moonshot.json    the $100 moonshot: BTC/ETH/SOL trend rotation, 0.4% costs
 tests/            60 unit + integration tests on synthetic data (Kronos tests use a stub model)
 ```
 

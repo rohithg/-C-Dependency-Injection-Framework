@@ -88,6 +88,17 @@ def test_local_paper_broker_persists_positions_and_equity(tmp_path):
     assert len(json.loads(path.read_text())["fills"]) == 3
 
 
+def test_local_paper_broker_fee_comes_out_of_the_trade(tmp_path):
+    from tvm.broker import LocalPaperBroker, Order
+    b = LocalPaperBroker(tmp_path / "p.json", {"BTC": 50_000.0}, as_of="2026-01-05", start_equity=100.0, fee_rate=0.004)
+    b.submit(Order("BTC", 100.0))
+    assert b.account().cash == 0
+    assert abs(b.account().equity - 99.60) < 1e-9              # 0.4% fee, cash stays non-negative
+    b.submit(Order("BTC", 0, liquidate=True))
+    assert abs(b.account().cash - 99.60 * 0.996) < 1e-9        # 0.4% again on the way out
+    assert abs(b.state["fills"][0]["fee"] - 0.4) < 1e-9
+
+
 def test_run_once_with_local_paper_broker_keeps_the_account_across_runs(tmp_path):
     from tvm.broker import LocalPaperBroker
     closes = uptrend_closes()

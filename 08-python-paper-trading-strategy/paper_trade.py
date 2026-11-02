@@ -60,6 +60,7 @@ def main() -> int:
                     help="where tvm_state.json / trade_log.jsonl live (default state/, or state/kronos for --strategy kronos)")
     ap.add_argument("--dry-run", action="store_true", help="compute and print orders without submitting")
     ap.add_argument("--label", default=os.environ.get("TVM_LABEL"), help="name used in the report / text, e.g. 'TVM aggressive'")
+    ap.add_argument("--start-equity", type=float, default=None, help="starting cash for a new built-in paper account (default 100000)")
     ap.add_argument("--fake", action="store_true", help="use an in-memory fake broker (no credentials needed)")
     ap.add_argument("--no-live-prices", action="store_true", help="use last daily close only, even if market is open")
     ap.add_argument("--force", action="store_true", help="rebalance to target even if inside the band")
@@ -110,7 +111,9 @@ def main() -> int:
         from tvm.broker import LocalPaperBroker
         last = closes.ffill().iloc[-1]
         prices = {s: float(last[s]) for s in tradable if s in last.index and last[s] == last[s]}
-        broker = LocalPaperBroker(state_dir / "paper_account.json", prices, as_of=str(closes.index[-1].date()))
+        broker = LocalPaperBroker(state_dir / "paper_account.json", prices, as_of=str(closes.index[-1].date()),
+                                  fee_rate=cfg.cost_bps / 1e4,
+                                  **({"start_equity": args.start_equity} if args.start_equity else {}))
     else:
         from tvm.broker import AlpacaBroker
         broker = AlpacaBroker()

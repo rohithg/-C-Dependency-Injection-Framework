@@ -38,6 +38,11 @@ def performance_vs_benchmark(broker: Broker, bench_closes: pd.Series) -> dict | 
     }
 
 
+def _usd(v: float) -> str:
+    """Cents for small accounts, whole dollars once the amount is large."""
+    return f"${v:,.2f}" if abs(v) < 10_000 else f"${v:,.0f}"
+
+
 def to_markdown(report: dict, perf: dict | None, cfg: TVMConfig = DEFAULT, mode: str = "") -> str:
     sig, after = report["signal"], report["state_after"]
     regime = "RISK-ON" if sig["risk_on"] else "RISK-OFF (cash)"
@@ -46,7 +51,7 @@ def to_markdown(report: dict, perf: dict | None, cfg: TVMConfig = DEFAULT, mode:
         f"## {name} daily run - {report['as_of']}  {('(' + mode + ')') if mode else ''}".rstrip(),
         "",
         f"**Regime:** {regime}  |  **Asset:** {after['asset']}  |  **Target exposure:** {after['exposure']:.2f}x  "
-        f"|  **Realized vol:** {sig['realized_vol']:.1%}  |  **Equity:** ${report['equity']:,.0f}",
+        f"|  **Realized vol:** {sig['realized_vol']:.1%}  |  **Equity:** {_usd(report['equity'])}",
         "",
         "| Momentum (6m) | " + " | ".join(cfg.risk_assets) + " |",
         "|---|" + "---|" * len(cfg.risk_assets),
@@ -103,7 +108,7 @@ def to_markdown(report: dict, perf: dict | None, cfg: TVMConfig = DEFAULT, mode:
             "|---|---|---|",
             f"| Return | {perf['strategy_return']:+.2%} | {perf['benchmark_return']:+.2%} |",
             f"| Max drawdown | {perf['strategy_maxdd']:.2%} | {perf['benchmark_maxdd']:.2%} |",
-            f"| Equity | ${perf['equity']:,.0f} (from ${perf['start_equity']:,.0f}) | |",
+            f"| Equity | {_usd(perf['equity'])} (from {_usd(perf['start_equity'])}) | |",
             "",
         ]
     lines.append(f"<sub>live prices used: {report['live_prices_used']} - state before: {report['state_before']['asset']} "

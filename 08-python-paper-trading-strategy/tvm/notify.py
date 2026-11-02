@@ -59,13 +59,16 @@ def to_text(report: dict, perf: dict | None, cfg: TVMConfig = DEFAULT, mode: str
             if o["liquidate"]:
                 parts.append(f"sell all {o['symbol']}")
             else:
-                parts.append(f"{'buy' if o['notional'] > 0 else 'sell'} {o['symbol']} ${abs(o['notional']) / 1000:.1f}k")
+                amt = abs(o["notional"])
+                parts.append(f"{'buy' if o['notional'] > 0 else 'sell'} {o['symbol']} "
+                             + (f"${amt:,.0f}" if amt < 1000 else f"${amt / 1000:.1f}k"))
         trades = ("Orders (not sent): " if report["dry_run"] else "Orders: ") + ", ".join(parts)
     else:
         trades = "No trades"
-    perf_txt = f"Equity ${report['equity']:,.0f}"
+    money = (lambda v: f"${v:,.2f}" if abs(v) < 10_000 else f"${v:,.0f}")
+    perf_txt = f"Equity {money(report['equity'])}"
     if perf:
-        perf_txt = (f"Paper ${perf['equity']:,.0f} {perf['strategy_return']:+.1%} vs {cfg.benchmark_symbol} "
+        perf_txt = (f"Paper {money(perf['equity'])} {perf['strategy_return']:+.1%} vs {cfg.benchmark_symbol} "
                     f"{perf['benchmark_return']:+.1%} since {dt.date.fromisoformat(perf['since']).strftime('%b %d')}")
     return f"{head}: {pos}. {trades}. {perf_txt}."
 
