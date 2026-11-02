@@ -1,0 +1,108 @@
+name: Crypto paper bot
+
+# The $100 Prompt 02 paper account (11-python-claude-mcp-crypto-paper).
+# Every 4 hours the offline rule agent drives the same MCP tools Claude Code
+# would, against Kraken's public prices. No exchange, no wallet, no API key,
+# and no Claude login: the rule agent is the unattended path. Claude Code
+# remains available for a manual run on your own machine.
+#
+# Runs unless the repository variable CRYPTO_PAPER_ENABLED is "false".
+# State is committed to the `crypto-paper-log` branch. The daily status goes
+# out on the first run after 20:00 UTC, through the same GitHub-issue
+# notification as the other paper accounts (optional Twilio / ntfy / Telegram
+# secrets work here too).
+on:
+  schedule:
+    - cron: "8 */4 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: crypto-paper
+  cancel-in-progress: false
+
+jobs:
+  round:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.CRYPTO_PAPER_ENABLED != 'false' }}
+    permissions:
+      contents: write
+      issues: write
+    defaults:
+      run:
+        working-directory: 11-python-claude-mcp-crypto-paper
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: 11-python-claude-mcp-crypto-paper/requirements.txt
+      - run: pip install -r requirements.txt
+      - name: Restore state from crypto-paper-log branch
+        run: |
+          mkdir -p state
+          if git fetch --depth=1 origin crypto-paper-log:refs/remotes/origin/crypto-paper-log 2>/dev/null; then
+            git -C "$(git rev-parse --show-toplevel)" archive origin/crypto-paper-log | tar -x -C state
+            echo "restored $(find state -type f | tr '\n' ' ')"
+          else
+            echo "no crypto-paper-log branch yet (first run)"
+          fi
+      - name: One round
+        run: python run_round.py --agent rules
+      - name: Daily phone update
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ISSUE_TITLE: "Crypto paper bot: daily status"
+          TVM_GITHUB_ISSUE_NOTIFY: ${{ vars.TVM_GITHUB_ISSUE_NOTIFY }}
+          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+          TWILIO_FROM: ${{ secrets.TWILIO_FROM }}
+          TWILIO_TO: ${{ secrets.TWILIO_TO }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python - <<'PY'
+          import datetime as dt, json, sys
+          from pathlib import Path
+          sys.path.insert(0, str(Path.cwd().parent / "08-python-paper-trading-strategy"))
+          from tvm.notify import send_all
+          state = Path("state")
+          rounds = state / "rounds.jsonl"
+          if not rounds.exists():
+              print("no round recorded"); raise SystemExit(0)
+          last = json.loads(rounds.read_text().splitlines()[-1])
+          d = last.get("decision") or {}
+          text = (f"Crypto paper {last['time'][5:16]}: {str(d.get('action')).upper()} {d.get('symbol') or ''} "
+                  f"[{d.get('status')}]. Equity ${last['equity']:.2f}. {d.get('reason') or ''}")[:300]
+          now = dt.datetime.now(dt.timezone.utc)
+          marker = state / "last_notified.txt"
+          due = now.hour >= 20 and (not marker.exists() or marker.read_text().strip() != now.strftime("%Y-%m-%d"))
+          print(text)
+          if not due:
+              print("notification not due yet"); raise SystemExit(0)
+          sent = [k for k, v in send_all(text).items() if v == "sent"]
+          print("sent:", sent or "none")
+          if sent:
+              marker.write_text(now.strftime("%Y-%m-%d"))
+          PY
+      - name: Persist state to crypto-paper-log branch
+        if: always()
+        run: |
+          [ -f state/ledger.json ] || { echo "nothing to persist"; exit 0; }
+          git config user.name "crypto-paper-bot"
+          git config user.email "crypto-paper-bot@users.noreply.github.com"
+          if git rev-parse --verify origin/crypto-paper-log >/dev/null 2>&1; then
+            git worktree add /tmp/log origin/crypto-paper-log
+            git -C /tmp/log checkout -B crypto-paper-log
+          else
+            git worktree add --detach /tmp/log
+            git -C /tmp/log checkout --orphan crypto-paper-log
+            git -C /tmp/log rm -rfq . || true
+          fi
+          mkdir -p /tmp/log
+          cp -r state/. /tmp/log/
+          git -C /tmp/log add -A
+          git -C /tmp/log commit -qm "crypto round $(date -u +%Y-%m-%dT%H:%MZ)" || { echo "no changes"; exit 0; }
+          git -C /tmp/log push origin crypto-paper-log

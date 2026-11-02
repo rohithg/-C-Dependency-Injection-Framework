@@ -4,19 +4,19 @@ name: Polymarket copy trade
 # servers; no API keys (Polymarket's data endpoints are public and the
 # account is simulated).
 #
-# MANUAL ONLY. There is no schedule: the backtest (+40% with a -56%
-# drawdown over six months, see 09-python-polymarket-copy-trader/README.md)
-# is not a result worth spending Actions minutes on unattended. To put it
-# back on a timer, add under `on:`
-#     schedule:
-#       - cron: "12 * * * *"        # hourly tick (~700 Actions minutes/month)
-#       - cron: "0 6 * * 1"         # weekly wallet re-selection
-# and set the repository variable POLY_COPY_ENABLED to "true".
+# Runs on its own. Hourly tick, and a wallet re-selection every Monday 06:00
+# UTC. No repository variable and no API key: the account is simulated and
+# the daily status goes out on the first run after 20:00 UTC. Set the
+# repository variable POLY_COPY_ENABLED to "false" to pause it. The backtest
+# (+40% with a -56% drawdown over six months) is documented in the README;
+# the account runs anyway so it can be watched rather than trusted.
 #
-# A run restores state from the `polymarket-copy-log` branch, copies new
-# leader trades against live order books, marks positions, optionally
-# re-selects wallets (slow, ~15 min), and commits state back in live mode.
+# State is committed to the `polymarket-copy-log` branch after each run.
+# Hourly runs use ~700 Actions minutes/month, free on a public repo.
 on:
+  schedule:
+    - cron: "12 * * * *"
+    - cron: "0 6 * * 1"
   workflow_dispatch:
     inputs:
       mode:
@@ -36,7 +36,7 @@ concurrency:
 jobs:
   tick:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || vars.POLY_COPY_ENABLED == 'true' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.POLY_COPY_ENABLED != 'false' }}
     permissions:
       contents: write
       issues: write

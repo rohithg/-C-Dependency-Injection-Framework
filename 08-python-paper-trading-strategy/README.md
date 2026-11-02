@@ -339,7 +339,7 @@ the result to your phone. There is nothing to install and no account to open.
    branch, fills at each day's close, and reports equity vs VOO in every
    summary and daily message. The daily message arrives as a GitHub
    notification (see "Daily text message" for SMS / push options).
-3. **Three legs run on the schedule**, each as a separate paper account and a
+3. **Four legs run on the schedule**, each as a separate paper account and a
    separate daily message:
    - **TVM** (adaptive ensemble, `state/`): the default, 13.4%/yr fixed rules
      with the learning layer on top.
@@ -379,11 +379,10 @@ the result to your phone. There is nothing to install and no account to open.
    prices, orders fill at the next open).
 6. **Scope.** Paper only, either way: the Alpaca client refuses any endpoint
    without "paper" in its URL, and the built-in accounts are JSON files.
-7. **Kronos is manual-only.** It did not beat VOO out of sample (see
-   "Walk-forward results"), and its model download and inference are the
-   most expensive step in this repo. To try it by hand: *Run workflow* ->
-   strategy `kronos`, mode `preview` (no keys needed). Its state lives in
-   `state/kronos/` and it reports to *Kronos paper trading: daily status*.
+7. **Kronos runs on the same schedule.** It did not beat VOO out of sample
+   (see "Walk-forward results") and its model download is the slowest step,
+   but it keeps its own paper account in `state/kronos/` and reports to
+   *Kronos paper trading: daily status* with no keys.
 
 ### About "$5 a day in any market"
 

@@ -144,7 +144,15 @@ so only these five tools are available to it. The rule agent connects to the
 same server over stdio and follows `prompts/trading_prompt.md` literally, so
 the two can be compared decision for decision in `state/rounds.jsonl`.
 
-## Run it every 4 hours on your computer
+## It already runs every 4 hours
+
+`.github/workflows/crypto-paper.yml` runs one round on GitHub's servers every
+4 hours with the offline rule agent, keeps the account on the
+`crypto-paper-log` branch, and sends "Crypto paper bot: daily status" on the
+first run after 20:00 UTC. No Claude login and no key. Set the repository
+variable `CRYPTO_PAPER_ENABLED` to `false` to pause it.
+
+To run the same round on your own computer instead:
 
 **macOS / Linux (cron):** `crontab -e`, then add one line (edit the path):
 

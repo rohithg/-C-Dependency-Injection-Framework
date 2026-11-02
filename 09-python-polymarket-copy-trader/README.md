@@ -105,25 +105,17 @@ number above uses the pessimistic fill rule in the table.
 ## Running it from your phone
 
 [`.github/workflows/polymarket-copy.yml`](../.github/workflows/polymarket-copy.yml)
-runs one tick of the paper account on GitHub's servers. **It is manual-only:
-there is no schedule.** A +40% backtest with a -56% drawdown over six months
-on a survivor-biased universe is not a result worth running unattended, so
-the project is kept as a research tool rather than a strategy.
+runs the paper account on GitHub's servers every hour, and re-picks wallets
+every Monday 06:00 UTC. Nothing to switch on. A +40% backtest with a -56%
+drawdown over six months on a survivor-biased universe is not a result to
+size money around; the account runs so the daily message shows what it
+actually does. Set the repository variable `POLY_COPY_ENABLED` to `false`
+to pause it.
 
-1. **Try it.** Repo -> *Actions* -> *Polymarket copy trade* -> *Run
-   workflow* -> mode `dry-run`. Two to three minutes later the run page shows
-   who would be followed and what would have been copied this hour. No
-   accounts or secrets needed. (Use a browser; the GitHub app can read runs but
-   not start them. The workflow must be on the default branch for the button
-   to appear.)
-2. **A `live` manual run** keeps a simulated account on the
-   `polymarket-copy-log` branch (`state.json`, `fills.jsonl`, `activity.jsonl`
-   with every leader trade seen and every review); tick `reselect` to re-pick
-   the followed wallets (about 15 minutes of API paging, cached afterwards).
-3. **To automate it anyway**, add the two cron lines shown at the top of the
-   workflow file and set the repository variable `POLY_COPY_ENABLED` = `true`;
-   it then ticks hourly (~700 Actions minutes a month), re-picks wallets every
-   Monday 06:00 UTC and sends a status message after 20:00 UTC each day.
+State lives on the `polymarket-copy-log` branch (`state.json`, `fills.jsonl`,
+`activity.jsonl`). Hourly ticks use about 700 Actions minutes a month, free
+on a public repo. A manual *Run workflow* is only for looking at one hour
+without waiting; the schedule does not need it.
 
 The daily message:
 

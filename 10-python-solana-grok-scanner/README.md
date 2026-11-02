@@ -90,29 +90,17 @@ MODE=live python src/main.py
 
 ## 3. Run it from your phone (GitHub Actions)
 
-`.github/workflows/solana-scanner.yml` runs one cycle on GitHub's servers and
-commits `data/` and `logs/` to a `solana-scanner-log` branch. **It is
-manual-only: there is no schedule.** This strategy has no demonstrated edge
-(section 8) and every Grok call costs xAI tokens, so it never runs unless you
-press the button.
+`.github/workflows/solana-scanner.yml` runs one cycle every 15 minutes on
+GitHub's servers and commits `data/` and `logs/` to a `solana-scanner-log`
+branch. Nothing to switch on. This strategy has no demonstrated edge
+(section 8). Grok is called only if the `XAI_API_KEY` secret is set, so with
+no key the run spends no xAI tokens and simply logs the tokens that passed
+the hard rules. The daily status goes out on the first run after 20:00 UTC.
+Set the repository variable `SOLANA_SCANNER_ENABLED` to `false` to pause it.
 
-1. Repo → Settings → Secrets and variables → Actions → **Secrets**: add
-   `XAI_API_KEY` (optional) and `SOLANA_RPC_URL` (optional but recommended; the
-   public endpoint rate-limits the holder lookups, see caveats).
-2. Actions tab → "Solana token scanner" → Run workflow → `dry-run` to look,
-   `paper` to record a cycle into the simulated account, `notify` to also
-   send the status message (GitHub issue @mention by default; SMS / ntfy /
-   Telegram with the same secrets as the TVM project,
-   `../08-python-paper-trading-strategy/README.md`, "Daily text").
-
-Every run attaches `data/` and `logs/` as an artifact and writes the markdown
-report to the job summary, so you can read it in the GitHub app.
-
-To automate it anyway, add the cron shown at the top of the workflow file and
-set the repository variable `SOLANA_SCANNER_ENABLED` = `true`. Fifteen-minute
-runs use roughly 2,900 Actions minutes a month (free on a public repo, over
-the 2,000-minute quota on a private one) plus about $0.001–0.01 of xAI tokens
-per token that passes the hard rules.
+Optional: add `XAI_API_KEY` and `SOLANA_RPC_URL` under Settings → Secrets.
+The public RPC rate-limits holder lookups (see caveats). Fifteen-minute runs
+use roughly 2,900 Actions minutes a month, free on a public repo.
 
 ## 4. The rules (config.json)
 

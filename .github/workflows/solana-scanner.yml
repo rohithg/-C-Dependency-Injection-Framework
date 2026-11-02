@@ -7,17 +7,19 @@ name: Solana token scanner
 # paper-trades the survivors. There is no wallet, no private key and no
 # signing code; MODE is forced to "paper".
 #
-# MANUAL ONLY. There is no schedule: this strategy has no demonstrated edge
-# (see 10-python-solana-grok-scanner/README.md, "What to expect"), and every
-# Grok call costs xAI tokens, so it never runs unless someone presses "Run
-# workflow". To put it on a timer again, add under `on:`
-#     schedule:
-#       - cron: "*/15 * * * *"     # ~2,900 Actions minutes/month
-# and set the repository variable SOLANA_SCANNER_ENABLED to "true".
+# Runs on its own every 15 minutes. No repository variable. Grok is asked
+# only when the XAI_API_KEY secret exists; without it, tokens that pass the
+# hard rules are logged and not bought, so a fresh repo spends no xAI tokens.
+# Set SOLANA_SCANNER_ENABLED to "false" to pause. This strategy has no
+# demonstrated edge (see the README); it runs so the paper log keeps going.
 #
 # A run reads data/ and logs/ from the `solana-scanner-log` branch, scans
-# once, and commits the result back (unless mode is dry-run).
+# once, and commits the result back. The daily status goes out on the first
+# run after 20:00 UTC. Fifteen-minute runs are ~2,900 Actions minutes/month,
+# free on a public repo.
 on:
+  schedule:
+    - cron: "*/15 * * * *"
   workflow_dispatch:
     inputs:
       mode:
@@ -33,7 +35,7 @@ concurrency:
 jobs:
   scan:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || vars.SOLANA_SCANNER_ENABLED == 'true' }}   # schedule gate, kept for when a cron is re-added
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.SOLANA_SCANNER_ENABLED != 'false' }}
     permissions:
       contents: write
       issues: write

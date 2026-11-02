@@ -20,10 +20,10 @@ name: TVM paper trade
 #   moonshot    BTC/ETH/SOL trend rotation, $100 account    -> state/moonshot/    (ALPACA_MOONSHOT_* secrets, optional)
 #   kronos      Kronos candlestick foundation model         -> state/kronos/      (ALPACA_KRONOS_* secrets, optional)
 # With Alpaca they need separate paper accounts because each manages the
-# whole account. The schedule runs adaptive, aggressive and moonshot. Kronos did not
-# beat VOO out of sample (README, "Walk-forward results") and its model
-# download and inference are the most expensive step in this repo, so it is
-# manual-only ("Run workflow" -> strategy: kronos).
+# whole account. The schedule runs all four legs, including Kronos. Kronos did
+# not beat VOO out of sample and its model download is the slowest step here;
+# it still runs because every paper account in this repo is on the schedule.
+# Its state lives in state/kronos/.
 #
 # After every real run the state files and trade logs are committed to the
 # `paper-trading-log` branch. That gives a permanent history and, because it
@@ -102,7 +102,7 @@ jobs:
             issue_title: "TVM moonshot: daily status"
           - strategy: kronos
             flags: "--strategy kronos"
-            scheduled: false
+            scheduled: true
             requirements: requirements-kronos.txt
             key_secret: ALPACA_KRONOS_KEY_ID
             secret_secret: ALPACA_KRONOS_SECRET_KEY
