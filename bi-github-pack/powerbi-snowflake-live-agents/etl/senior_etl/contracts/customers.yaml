@@ -1,0 +1,13 @@
+name: customers
+version: "1.0.0"
+primary_key: [customer_id]
+fields:
+  - { name: customer_id, dtype: string, required: true }
+  - { name: customer_name, dtype: string, required: true }
+  - { name: email, dtype: string, required: false, pii: true }
+  - { name: phone, dtype: string, required: false, pii: true }
+  - { name: region_name, dtype: string, required: true }
+  - { name: country_code, dtype: string, required: true }
+  - { name: segment, dtype: string, required: true }
+  - { name: credit_tier, dtype: string, required: true }
+  - { name: valid_from, dtype: datetime, required: true }

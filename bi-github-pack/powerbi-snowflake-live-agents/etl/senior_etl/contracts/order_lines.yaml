@@ -1,0 +1,11 @@
+name: order_lines
+version: "1.0.0"
+primary_key: [order_line_id]
+fields:
+  - { name: order_line_id, dtype: string, required: true }
+  - { name: order_id, dtype: string, required: true }
+  - { name: product_id, dtype: string, required: true }
+  - { name: quantity, dtype: int, required: true }
+  - { name: unit_price, dtype: float, required: true }
+  - { name: discount_pct, dtype: float, required: false }
+  - { name: tax_amount, dtype: float, required: false }

@@ -11,21 +11,9 @@ Custom DI container demonstrating C# advanced features and SOLID principles.
 - Constructor injection
 - Interface-based design
 
-## C# Concepts
+## Also in this repo
 
-- Generics and constraints
-- Reflection
-- LINQ
-- Properties and auto-properties
-- Exception handling
-- XML documentation
-
-## Design Patterns
-
-- Dependency Injection
-- Inversion of Control
-- Factory Pattern
-- Singleton Pattern
+- **[Live Power BI + Snowflake agents](bi-github-pack/powerbi-snowflake-live-agents/)** — Cursor agents that generate live DirectQuery drill-down Power BI dashboards from Snowflake views (PBIP / TMDL / PBIR).
 
 ## Compilation
 
@@ -38,11 +26,3 @@ csc /out:DIFramework.exe DIContainer.cs
 ```bash
 ./DIFramework.exe
 ```
-
-## Interview Topics
-
-- SOLID principles
-- Dependency injection
-- Generics vs reflection
-- C# type system
-- Memory management

@@ -1,0 +1,13 @@
+---
+description: Live Power BI DirectQuery dashboards on Snowflake views
+globs: bi-github-pack/powerbi-snowflake-live-agents/**
+alwaysApply: false
+---
+
+When editing this pack:
+
+- Keep semantic models in DirectQuery mode (`mode: directQuery`).
+- Source Power BI tables from Snowflake **views**, not raw landing tables.
+- Prefer the manifest + `python3 -m generator.cli generate` path over hand-writing entire PBIP trees.
+- Overview pages stay sparse; put detail on drillthrough pages.
+- Do not commit secrets, `.pbix`, or live account passwords.

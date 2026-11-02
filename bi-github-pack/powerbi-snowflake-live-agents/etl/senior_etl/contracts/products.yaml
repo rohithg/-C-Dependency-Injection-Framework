@@ -1,0 +1,11 @@
+name: products
+version: "1.0.0"
+primary_key: [product_id]
+fields:
+  - { name: product_id, dtype: string, required: true }
+  - { name: product_name, dtype: string, required: true }
+  - { name: product_category, dtype: string, required: true }
+  - { name: brand, dtype: string, required: true }
+  - { name: unit_cost, dtype: float, required: true }
+  - { name: is_active, dtype: bool, required: true }
+  - { name: valid_from, dtype: datetime, required: true }

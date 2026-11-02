@@ -1,0 +1,13 @@
+name: orders
+version: "1.0.0"
+primary_key: [order_id]
+fields:
+  - { name: order_id, dtype: string, required: true }
+  - { name: customer_id, dtype: string, required: true }
+  - { name: order_date, dtype: date, required: true }
+  - { name: order_status, dtype: string, required: true }
+  - { name: order_channel, dtype: string, required: true }
+  - { name: currency_code, dtype: string, required: true }
+  - { name: promised_ship_date, dtype: date, required: false }
+  - { name: actual_ship_date, dtype: date, required: false }
+  - { name: delivered_date, dtype: date, required: false }
