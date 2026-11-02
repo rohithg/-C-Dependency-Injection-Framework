@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Basis — read the bet</title>
+<style>
+  :root {
+    --bg: #f4f1ea;
+    --ink: #1c1915;
+    --muted: #5e584e;
+    --line: #ddd6c8;
+    --card: #fffdf8;
+    --pass: #8c3a2f;
+    --watch: #1f6b4a;
+    --accent: #c4a15a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.45 "Iowan Old Style", Palatino, Georgia, serif;
+  }
+  header, main { max-width: 1080px; margin: 0 auto; padding: 28px 20px; }
+  header { padding-bottom: 0; }
+  h1 { font-weight: 500; font-size: 34px; letter-spacing: -0.03em; margin: 0; }
+  h1 span { color: var(--accent); }
+  .lede { color: var(--muted); max-width: 62ch; margin: 8px 0 0; }
+  form { display: flex; gap: 8px; margin: 22px 0; }
+  input[type="text"] {
+    flex: 1; font: inherit; padding: 12px 14px; border: 1px solid var(--line);
+    background: var(--card); color: var(--ink); border-radius: 8px;
+  }
+  button {
+    font: inherit; background: var(--ink); color: var(--bg); border: 0;
+    border-radius: 8px; padding: 0 16px; cursor: pointer;
+  }
+  button.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+  .layout { display: grid; grid-template-columns: 320px 1fr; gap: 22px; align-items: start; }
+  .board, .read { background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
+  .board { padding: 8px; }
+  .row, .choice {
+    width: 100%; text-align: left; background: transparent; color: inherit;
+    border: 0; border-radius: 8px; padding: 10px 10px; cursor: pointer; font: inherit;
+  }
+  .row:hover, .choice:hover { background: #f3ecdf; }
+  .row small, .choice small { display: block; color: var(--muted); font-size: 13px; }
+  .read { padding: 22px; min-height: 420px; }
+  .stance { font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; margin: 0; }
+  .stance.PASS { color: var(--pass); }
+  .stance.WATCH { color: var(--watch); }
+  h2 { font-weight: 500; font-size: 26px; letter-spacing: -0.02em; margin: 6px 0 10px; }
+  .headline { font-size: 18px; margin: 0 0 16px; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 7px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; font-size: 13px; }
+  .ok { color: var(--watch); }
+  .bad { color: var(--pass); }
+  .rules { white-space: pre-wrap; color: var(--muted); font-size: 14px; }
+  .notes li { margin: 6px 0; }
+  .empty { color: var(--muted); }
+  footer { max-width: 1080px; margin: 0 auto; padding: 0 20px 40px; color: var(--muted); font-size: 13px; }
+  @media (max-width: 800px) { .layout { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Basis <span>/</span> read the bet</h1>
+  <p class="lede">Paste a Polymarket link. Basis pulls the live market and tells you what the price already says, what a $100 bet pays, and when to get out. It does not place the bet and it does not invent news.</p>
+  <form id="find">
+    <input id="q" type="text" placeholder="Polymarket link, or a question" autocomplete="off" required>
+    <button type="submit">Read</button>
+  </form>
+</header>
+<main>
+  <div class="layout">
+    <section class="board" id="board" aria-label="Active markets"></section>
+    <article class="read" id="read">
+      <p class="empty">The busiest open markets load on the left. Pick one, or paste a link.</p>
+    </article>
+  </div>
+</main>
+<footer>
+  Paper reading only. Not a broker and not financial advice. The price is the forecast of everyone already in the market. Basis has no information they lack. Notes stay in this browser.
+</footer>
+<script>
+const boardEl = document.getElementById("board");
+const readEl = document.getElementById("read");
+const form = document.getElementById("find");
+const input = document.getElementById("q");
+
+function money(n) {
+  if (n >= 1e6) return "$" + (n / 1e6).toFixed(1) + "m";
+  if (n >= 1e3) return "$" + Math.round(n / 1e3) + "k";
+  return "$" + Math.round(n);
+}
+function cents(p) { return (p * 100).toFixed(1) + "¢"; }
+
+function rowButton(market) {
+  const b = document.createElement("button");
+  b.className = "row";
+  const title = document.createElement("div");
+  title.textContent = market.question;
+  const meta = document.createElement("small");
+  const others = (market.outcomes || []).slice().sort((a, c) => c.price - a.price);
+  const lead = others[0];
+  meta.textContent = (lead ? lead.name + " " + cents(lead.price) + " · " : "") + money(market.volume_24h) + " today";
+  b.append(title, meta);
+  b.addEventListener("click", () => show(market));
+  return b;
+}
+
+function show(market) {
+  readEl.replaceChildren();
+  const read = market.read;
+  const stance = document.createElement("p");
+  stance.className = "stance " + read.stance;
+  stance.textContent = read.stance;
+  const h = document.createElement("h2");
+  h.textContent = market.question;
+  const headline = document.createElement("p");
+  headline.className = "headline";
+  headline.textContent = read.headline;
+  readEl.append(stance, h, headline);
+
+  const pay = document.createElement("table");
+  pay.innerHTML = "<tr><th>A $100 buy</th><th>Price</th><th>If it wins</th><th>If it loses</th></tr>";
+  for (const p of read.payoff) {
+    const tr = document.createElement("tr");
+    for (const text of [p.name, cents(p.price), "+$" + Math.round(p.profit_if_wins), "−$100"]) {
+      const td = document.createElement("td");
+      td.textContent = text;
+      tr.append(td);
+    }
+    pay.append(tr);
+  }
+  readEl.append(pay);
+
+  const checks = document.createElement("table");
+  checks.innerHTML = "<tr><th>Check</th><th>Value</th><th></th></tr>";
+  for (const c of read.checks) {
+    const tr = document.createElement("tr");
+    const a = document.createElement("td"); a.textContent = c.label;
+    const b = document.createElement("td"); b.textContent = c.value;
+    const d = document.createElement("td");
+    d.className = c.ok ? "ok" : "bad";
+    d.textContent = c.ok ? "ok" : "fail";
+    tr.append(a, b, d);
+    checks.append(tr);
+  }
+  readEl.append(checks);
+
+  const risks = document.createElement("ul");
+  risks.className = "notes";
+  for (const risk of read.risks) {
+    const li = document.createElement("li");
+    li.textContent = risk;
+    risks.append(li);
+  }
+  const exit = document.createElement("p");
+  exit.textContent = read.exit;
+  const rules = document.createElement("p");
+  rules.className = "rules";
+  rules.textContent = read.rules || "No resolution text was published for this market.";
+  const actions = document.createElement("p");
+  const save = document.createElement("button");
+  save.className = "ghost";
+  save.type = "button";
+  save.textContent = "Save a paper note";
+  save.addEventListener("click", () => {
+    const notes = JSON.parse(localStorage.getItem("basis-notes") || "[]");
+    notes.unshift({ at: new Date().toISOString(), question: market.question, stance: read.stance, url: market.url });
+    localStorage.setItem("basis-notes", JSON.stringify(notes.slice(0, 30)));
+    save.textContent = "Saved on this browser";
+  });
+  const link = document.createElement("a");
+  link.href = market.url;
+  link.textContent = "Open on Polymarket";
+  link.target = "_blank";
+  link.rel = "noreferrer";
+  link.style.marginLeft = "12px";
+  actions.append(save, link);
+  readEl.append(risks, exit, rules, actions);
+}
+
+async function loadBoard() {
+  boardEl.textContent = "Loading markets…";
+  try {
+    const data = await (await fetch("/api/board")).json();
+    boardEl.replaceChildren();
+    const label = document.createElement("div");
+    label.style.cssText = "padding:8px 10px;color:#5e584e;font-size:13px";
+    label.textContent = "Busiest open markets";
+    boardEl.append(label);
+    for (const market of data.markets) boardEl.append(rowButton(market));
+  } catch (err) {
+    boardEl.textContent = "Could not load markets.";
+  }
+}
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  readEl.innerHTML = "<p class='empty'>Reading…</p>";
+  const data = await (await fetch("/api/market?q=" + encodeURIComponent(input.value))).json();
+  if (!data.markets.length) {
+    readEl.innerHTML = "<p class='empty'>No open market matched that. Try a Polymarket link.</p>";
+    return;
+  }
+  if (data.markets.length === 1) {
+    show(data.markets[0]);
+    return;
+  }
+  readEl.replaceChildren();
+  const h = document.createElement("h2");
+  h.textContent = "Which contract?";
+  readEl.append(h);
+  for (const market of data.markets) {
+    const b = document.createElement("button");
+    b.className = "choice";
+    b.type = "button";
+    const t = document.createElement("div");
+    t.textContent = market.question;
+    const s = document.createElement("small");
+    const lead = market.outcomes.slice().sort((a, c) => c.price - a.price)[0];
+    s.textContent = lead ? lead.name + " " + cents(lead.price) : "";
+    b.append(t, s);
+    b.addEventListener("click", () => show(market));
+    readEl.append(b);
+  }
+});
+
+loadBoard();
+</script>
+</body>
+</html>
