@@ -12,8 +12,10 @@ name: TVM paper trade
 #   adaptive  the TVM expert ensemble            -> state/            (ALPACA_PAPER_* secrets)
 #   kronos    Kronos candlestick foundation model -> state/kronos/     (ALPACA_KRONOS_* secrets)
 # They need separate Alpaca paper accounts because each manages the whole
-# account. The kronos leg only runs on a schedule once repo variable
-# KRONOS_PAPER_TRADING_ENABLED is "true" (manual runs can always pick it).
+# account. Only the adaptive leg runs on the schedule: Kronos did not beat
+# VOO out of sample (README, "Walk-forward results") and its model download
+# and inference are the most expensive step in this repo, so it is
+# manual-only ("Run workflow" -> strategy: kronos).
 #
 # After every real run the state files and trade logs are committed to the
 # `paper-trading-log` branch. That gives a permanent history and, because it
@@ -88,13 +90,12 @@ jobs:
           EVENT: ${{ github.event_name }}
           WANTED: ${{ inputs.strategy }}
           LEG: ${{ matrix.strategy }}
-          KRONOS_ENABLED: ${{ vars.KRONOS_PAPER_TRADING_ENABLED }}
         run: |
           run=false
           if [ "$EVENT" = workflow_dispatch ]; then
             { [ "$WANTED" = both ] || [ "$WANTED" = "$LEG" ]; } && run=true
           else
-            { [ "$LEG" = adaptive ] || [ "$KRONOS_ENABLED" = true ]; } && run=true
+            [ "$LEG" = adaptive ] && run=true     # scheduled runs: adaptive only
           fi
           echo "run=$run" >> "$GITHUB_OUTPUT"
           echo "leg $LEG: run=$run"

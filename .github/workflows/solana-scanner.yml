@@ -7,19 +7,17 @@ name: Solana token scanner
 # paper-trades the survivors. There is no wallet, no private key and no
 # signing code; MODE is forced to "paper".
 #
-# Scheduled runs do nothing until the repository variable
-# SOLANA_SCANNER_ENABLED is "true"; manual runs always work. The daily status
-# message goes out on the first run after 20:00 UTC (GitHub issue @mention by
-# default; same optional Twilio / SMTP / ntfy / Telegram secrets as the other
-# paper-trading workflows). State (data/, logs/) is committed to the
-# `solana-scanner-log` branch after each run.
+# MANUAL ONLY. There is no schedule: this strategy has no demonstrated edge
+# (see 10-python-solana-grok-scanner/README.md, "What to expect"), and every
+# Grok call costs xAI tokens, so it never runs unless someone presses "Run
+# workflow". To put it on a timer again, add under `on:`
+#     schedule:
+#       - cron: "*/15 * * * *"     # ~2,900 Actions minutes/month
+# and set the repository variable SOLANA_SCANNER_ENABLED to "true".
 #
-# Cost: 15-minute runs are ~2,900 Actions minutes/month. Free on public repos;
-# on a private repo that exceeds the 2,000-minute free quota, so change the
-# cron to "*/30 * * * *" or "7 * * * *" there.
+# A run reads data/ and logs/ from the `solana-scanner-log` branch, scans
+# once, and commits the result back (unless mode is dry-run).
 on:
-  schedule:
-    - cron: "*/15 * * * *"
   workflow_dispatch:
     inputs:
       mode:
@@ -35,7 +33,7 @@ concurrency:
 jobs:
   scan:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || vars.SOLANA_SCANNER_ENABLED == 'true' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.SOLANA_SCANNER_ENABLED == 'true' }}   # schedule gate, kept for when a cron is re-added
     permissions:
       contents: write
       issues: write

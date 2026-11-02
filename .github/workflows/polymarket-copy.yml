@@ -1,23 +1,22 @@
 name: Polymarket copy trade
 
-# Hourly paper copy-trading of Polymarket's most copyable wallets. Runs on
-# GitHub's servers; no API keys (Polymarket's data endpoints are public and
-# the account is simulated). Scheduled runs do nothing until the repository
-# variable POLY_COPY_ENABLED is "true"; manual runs always work.
+# Paper copy-trading of Polymarket's most copyable wallets. Runs on GitHub's
+# servers; no API keys (Polymarket's data endpoints are public and the
+# account is simulated).
 #
-# Every Monday 06:00 UTC the followed wallets are re-selected (slow, ~15 min
-# of API paging); every other hour the job copies new leader trades against
-# live order books, marks positions and, once per day after 20:00 UTC, sends
-# the status message (GitHub issue @mention by default; same optional
-# Twilio / SMTP / ntfy / Telegram secrets as the TVM workflow).
+# MANUAL ONLY. There is no schedule: the backtest (+40% with a -56%
+# drawdown over six months, see 09-python-polymarket-copy-trader/README.md)
+# is not a result worth spending Actions minutes on unattended. To put it
+# back on a timer, add under `on:`
+#     schedule:
+#       - cron: "12 * * * *"        # hourly tick (~700 Actions minutes/month)
+#       - cron: "0 6 * * 1"         # weekly wallet re-selection
+# and set the repository variable POLY_COPY_ENABLED to "true".
 #
-# State is committed to the `polymarket-copy-log` branch after each run.
-# Note: hourly runs use ~700 Actions minutes/month; that is free on public
-# repos and about a third of the free quota on private ones.
+# A run restores state from the `polymarket-copy-log` branch, copies new
+# leader trades against live order books, marks positions, optionally
+# re-selects wallets (slow, ~15 min), and commits state back in live mode.
 on:
-  schedule:
-    - cron: "12 * * * *"        # hourly tick
-    - cron: "0 6 * * 1"         # weekly re-selection (the tick at 06:12 then runs as usual)
   workflow_dispatch:
     inputs:
       mode:

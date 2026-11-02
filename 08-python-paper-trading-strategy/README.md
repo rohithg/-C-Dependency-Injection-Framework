@@ -343,14 +343,15 @@ reads fine in the GitHub mobile app or a phone browser.
    further input. Check in whenever you like: the Actions tab shows each day's
    summary, the `paper-trading-log` branch holds the full trade history, and
    the Alpaca app shows positions and P&L.
-6. **Optional: paper trade Kronos as well.** Each strategy manages a whole
-   account, so create a *second* paper account in Alpaca (the dashboard
-   allows several), add its keys as secrets `ALPACA_KRONOS_KEY_ID` /
-   `ALPACA_KRONOS_SECRET_KEY`, and set variable `KRONOS_PAPER_TRADING_ENABLED`
-   = `true`. The workflow then runs both legs every day (Kronos's state lives
-   in `state/kronos/` on the log branch) and reports to a separate issue,
-   *Kronos paper trading: daily status*. To try it without keys: *Run
-   workflow* -> strategy `kronos`, mode `preview`.
+6. **Kronos is manual-only.** It did not beat VOO out of sample (see
+   "Walk-forward results"), and its model download and inference are the
+   most expensive step in this repo, so the schedule runs the adaptive leg
+   only. To try Kronos by hand: *Run workflow* -> strategy `kronos`, mode
+   `preview` (no keys needed). To paper trade it for real you would need a
+   *second* Alpaca paper account with its keys in `ALPACA_KRONOS_KEY_ID` /
+   `ALPACA_KRONOS_SECRET_KEY` and a `live` manual run; its state lives in
+   `state/kronos/` on the log branch and reports to *Kronos paper trading:
+   daily status*.
 
 ### Daily text message
 

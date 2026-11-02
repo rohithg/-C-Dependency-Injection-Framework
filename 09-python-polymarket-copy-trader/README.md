@@ -105,24 +105,25 @@ number above uses the pessimistic fill rule in the table.
 ## Running it from your phone
 
 [`.github/workflows/polymarket-copy.yml`](../.github/workflows/polymarket-copy.yml)
-runs the paper account on GitHub's servers, hourly.
+runs one tick of the paper account on GitHub's servers. **It is manual-only:
+there is no schedule.** A +40% backtest with a -56% drawdown over six months
+on a survivor-biased universe is not a result worth running unattended, so
+the project is kept as a research tool rather than a strategy.
 
-1. **Try it now.** Repo -> *Actions* -> *Polymarket copy trade* -> *Run
+1. **Try it.** Repo -> *Actions* -> *Polymarket copy trade* -> *Run
    workflow* -> mode `dry-run`. Two to three minutes later the run page shows
    who would be followed and what would have been copied this hour. No
    accounts or secrets needed. (Use a browser; the GitHub app can read runs but
    not start them. The workflow must be on the default branch for the button
    to appear.)
-2. **Switch it on.** *Settings* -> *Secrets and variables* -> *Actions* ->
-   *Variables* -> `POLY_COPY_ENABLED` = `true`. The hourly schedule starts
-   with the next hour; the first run picks the followed wallets, which takes
-   a while (about 15 minutes of API paging, cached afterwards).
-3. **Done.** State lives on the `polymarket-copy-log` branch (`state.json`,
-   `fills.jsonl`, `activity.jsonl` with every leader trade seen and every
-   review); every Monday 06:00 UTC the followed set is re-picked; each day
-   after 20:00 UTC a status message goes out. Each run's page shows the
-   fills, the trade reviews (every check with its value), the hour's wallet
-   activity, open positions and the followed wallets' records.
+2. **A `live` manual run** keeps a simulated account on the
+   `polymarket-copy-log` branch (`state.json`, `fills.jsonl`, `activity.jsonl`
+   with every leader trade seen and every review); tick `reselect` to re-pick
+   the followed wallets (about 15 minutes of API paging, cached afterwards).
+3. **To automate it anyway**, add the two cron lines shown at the top of the
+   workflow file and set the repository variable `POLY_COPY_ENABLED` = `true`;
+   it then ticks hourly (~700 Actions minutes a month), re-picks wallets every
+   Monday 06:00 UTC and sends a status message after 20:00 UTC each day.
 
 The daily message:
 
