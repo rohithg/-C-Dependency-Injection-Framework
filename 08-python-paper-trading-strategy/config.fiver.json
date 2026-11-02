@@ -1,0 +1,5 @@
+{
+  "_comment": "Same rules as config.aggressive.json (30% vol target, up to 2x). The paper account starts at $11,060 because 16.5%/yr on that balance is $5 per calendar day. Since 1994 a day on an account this size averaged about $7.86 on trading days ($5.40 spread over every calendar day). The median trading day was +$1, 36% of trading days lost money, and the worst day scaled to this balance was about -$1,456. A -37% drawdown is about $4,100.",
+  "target_vol": 0.30,
+  "max_leverage": 2.0
+}

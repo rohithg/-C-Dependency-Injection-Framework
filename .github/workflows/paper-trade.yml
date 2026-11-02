@@ -14,9 +14,10 @@ name: TVM paper trade
 # VOO. Add ALPACA_PAPER_KEY_ID / ALPACA_PAPER_SECRET_KEY to use an Alpaca
 # paper account instead.
 #
-# Four strategies run as a matrix, one after the other:
+# Five strategies run as a matrix, one after the other:
 #   adaptive    the TVM expert ensemble                     -> state/             (ALPACA_PAPER_* secrets, optional)
 #   aggressive  fixed TVM rules, 30% vol target, 2x ETFs    -> state/aggressive/  (ALPACA_AGGRESSIVE_* secrets, optional)
+#   fiver       same aggressive rules, $11,060 start        -> state/fiver/       (ALPACA_FIVER_* secrets, optional)
 #   moonshot    BTC/ETH/SOL trend rotation, $100 account    -> state/moonshot/    (ALPACA_MOONSHOT_* secrets, optional)
 #   kronos      Kronos candlestick foundation model         -> state/kronos/      (ALPACA_KRONOS_* secrets, optional)
 # With Alpaca they need separate paper accounts because each manages the
@@ -61,7 +62,7 @@ on:
       strategy:
         description: "which strategy leg(s) to run"
         type: choice
-        options: [scheduled, adaptive, aggressive, moonshot, kronos, all]
+        options: [scheduled, adaptive, aggressive, fiver, moonshot, kronos, all]
         default: scheduled
 
 jobs:
@@ -93,6 +94,13 @@ jobs:
             key_secret: ALPACA_AGGRESSIVE_KEY_ID
             secret_secret: ALPACA_AGGRESSIVE_SECRET_KEY
             issue_title: "TVM aggressive paper trading: daily status"
+          - strategy: fiver
+            flags: "--strategy fixed --config config.fiver.json --state-dir state/fiver --label 'TVM 5-a-day' --start-equity 11060"
+            scheduled: true
+            requirements: requirements.txt
+            key_secret: ALPACA_FIVER_KEY_ID
+            secret_secret: ALPACA_FIVER_SECRET_KEY
+            issue_title: "TVM 5-a-day: daily status"
           - strategy: moonshot
             flags: "--strategy fixed --config config.moonshot.json --state-dir state/moonshot --label 'TVM moonshot' --start-equity 100"
             scheduled: true

@@ -334,12 +334,12 @@ the result to your phone. There is nothing to install and no account to open.
    branch, so merging is the on switch. The first scheduled run happens the
    next weekday afternoon; to see one sooner, *Actions* -> *TVM paper trade*
    -> *Run workflow* (browser, not the app) with the defaults.
-2. **That is all.** With no brokerage keys each leg keeps its own $100k paper
+2. **That is all.** With no brokerage keys each leg keeps its own paper
    account in `state/.../paper_account.json` on the `paper-trading-log`
    branch, fills at each day's close, and reports equity vs VOO in every
    summary and daily message. The daily message arrives as a GitHub
    notification (see "Daily text message" for SMS / push options).
-3. **Four legs run on the schedule**, each as a separate paper account and a
+3. **Five legs run on the schedule**, each as a separate paper account and a
    separate daily message:
    - **TVM** (adaptive ensemble, `state/`): the default, 13.4%/yr fixed rules
      with the learning layer on top.
@@ -350,6 +350,9 @@ the result to your phone. There is nothing to install and no account to open.
      vs +0.4%. It beat VOO in 83% of rolling 3-year windows and every 10-year
      window. It is the same edge scaled up, not a different bet, so it will
      also have a -35% to -45% year at some point.
+   - **TVM 5-a-day** (`state/fiver/`, `config.fiver.json`): the aggressive
+     rules on a **$11,060** account. 16.5% a year on that balance is $5 per
+     calendar day. See the next section for what a day actually looked like.
    - **TVM moonshot** (`state/moonshot/`, `config.moonshot.json`): the $100
      account, and the most aggressive rules the data supports. It holds
      whichever of BTC, ETH and SOL is trending strongest while BTC is above
@@ -384,22 +387,33 @@ the result to your phone. There is nothing to install and no account to open.
    but it keeps its own paper account in `state/kronos/` and reports to
    *Kronos paper trading: daily status* with no keys.
 
-### About "$5 a day in any market"
+### The $5-a-day account
 
-Neither leg, nor anything else in this repository, can promise a fixed
-dollar amount per day; nothing that trades can. What the numbers support:
+`config.fiver.json` is the aggressive TVM strategy (30% volatility target,
+up to 2x, into T-bills when SPY is under its 200-day average) started at
+**$11,060**. That size is 16.5% a year, the 1994–2026 result, divided into
+$5 per calendar day. It is its own paper account and its own phone issue,
+*TVM 5-a-day: daily status*. The next weekday run opens it. No key and no
+click.
 
-- On the $100k paper account, the aggressive leg's 16.5%/yr backtest averages
-  about **$45 a day**, the default leg's 13.4% about **$37 a day**. Both have
-  daily swings of roughly $1,000-1,500, so most individual days are far from
-  the average and about 45% of them are negative.
-- To average $5 a day you need roughly **$11,000** at the aggressive leg's
-  rate or **$14,000** at the default's; on $1,000 it is 45 cents a day.
-- "Any market" is covered the only way history supports: the trend gate goes
-  to T-bills when SPY is below its 200-day average, which is why both legs
-  made money through 1999-2010 while VOO made nothing. They still lose in
-  whipsaw years (2015, 2018, 2022-23) and in fast crashes before the gate
-  closes (-37% worst case for the aggressive leg since 1994).
+Holding the balance at $11,060 and replaying every trading day since 1994:
+
+| | |
+|---|---|
+| Average trading day | **+$7.86** (about **$5.40** if spread across weekends) |
+| Median trading day | +$1.03 |
+| Days that made at least $5 | 42% |
+| Days that lost money | 36% |
+| An ordinary bad day (5th percentile) | -$266 |
+| Worst day, scaled to this balance | -$1,456 |
+| Worst drawdown | -37%, about $4,100 |
+
+The average is $5. A typical day is about $1, and a bad day takes hundreds.
+Leaving the gains in the account makes later days larger than $5. Taking the
+gains out keeps the average near $5 and also keeps a crash at about $4,100.
+The same balance in VOO averaged about $3.30 a calendar day over this history.
+On $1,000 the same rules average about 45 cents a day. On $100 they average
+about 5 cents.
 
 ### Daily text message
 
