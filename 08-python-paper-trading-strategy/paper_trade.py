@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""Run one TVM rebalance against an Alpaca paper account.
+"""Run one TVM rebalance against a paper account.
 
-    export APCA_API_KEY_ID=... APCA_API_SECRET_KEY=...
+    python paper_trade.py                  # no credentials: built-in $100k paper account, persisted in state/
+    python paper_trade.py --fake           # no credentials, nothing saved: today's signal on a throwaway account
+
+    export APCA_API_KEY_ID=... APCA_API_SECRET_KEY=...   # optional: use an Alpaca paper account instead
     python paper_trade.py --dry-run        # show the plan, send nothing
-    python paper_trade.py                  # submit orders (paper account only)
-    python paper_trade.py --fake           # no credentials: simulate with a fake $100k account
+    python paper_trade.py                  # submit orders (Alpaca paper account only)
 
 Strategies (--strategy, or env TVM_STRATEGY):
     adaptive   TVM expert ensemble (default)
@@ -13,13 +15,14 @@ Strategies (--strategy, or env TVM_STRATEGY):
                rule via --kronos-rule, default "calibrated")
 
 Or via --mode (used by the GitHub Actions workflow):
-    --mode preview   same as --fake --dry-run; works without any credentials
-    --mode dry-run   real account, no orders
-    --mode live      real paper account, orders submitted
+    --mode paper     built-in paper account (state/paper_account.json), fills at the daily close; no credentials
+    --mode preview   same as --fake --dry-run; works without any credentials, saves nothing
+    --mode dry-run   Alpaca paper account, no orders
+    --mode live      Alpaca paper account, orders submitted
     --mode notify-test   send a test message through every configured channel and exit
 
-If --mode is omitted and credentials are missing, falls back to preview so a
-run from a fresh checkout never fails for lack of setup.
+Without Alpaca credentials, --mode live/dry-run fall back to paper/preview so
+the scheduled job keeps a running paper account from day one.
 
 Schedule it once per trading day, e.g. 15:40 America/New_York (see
 .github/workflows/paper-trade.yml).
@@ -46,7 +49,7 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--config", help="JSON file overriding TVMConfig fields")
-    ap.add_argument("--mode", choices=["preview", "dry-run", "live", "notify-test"], help="see module docstring")
+    ap.add_argument("--mode", choices=["paper", "preview", "dry-run", "live", "notify-test"], help="see module docstring")
     ap.add_argument("--no-notify", action="store_true", help="skip SMS/push notifications")
     ap.add_argument("--strategy", choices=["adaptive", "fixed", "kronos"],
                     default=os.environ.get("TVM_STRATEGY", "adaptive"), help="see module docstring")
@@ -72,14 +75,17 @@ def main() -> int:
     have_keys = bool(os.environ.get("APCA_API_KEY_ID") and os.environ.get("APCA_API_SECRET_KEY"))
     mode = args.mode
     if mode is None:
-        if args.fake or not have_keys:
+        if args.fake:
             mode = "preview"
+        elif not have_keys:
+            mode = "preview" if args.dry_run else "paper"
         else:
             mode = "dry-run" if args.dry_run else "live"
     if mode in ("dry-run", "live") and not have_keys:
-        print(f"--mode {mode} needs APCA_API_KEY_ID / APCA_API_SECRET_KEY; falling back to preview", file=sys.stderr)
-        mode = "preview"
-    fake, dry_run = mode == "preview", mode != "live"
+        fallback = "paper" if mode == "live" else "preview"
+        print(f"--mode {mode} needs APCA_API_KEY_ID / APCA_API_SECRET_KEY; falling back to {fallback}", file=sys.stderr)
+        mode = fallback
+    fake, dry_run = mode == "preview", mode not in ("live", "paper")
 
     cfg = TVMConfig.from_json(args.config) if args.config else DEFAULT
     adaptive = AdaptiveConfig(max_leverage=cfg.max_leverage) if strategy == "adaptive" else None
@@ -99,12 +105,19 @@ def main() -> int:
     if fake:
         from tvm.broker import FakeBroker
         broker = FakeBroker(is_open=False)
+    elif mode == "paper":
+        from tvm.broker import LocalPaperBroker
+        last = closes.ffill().iloc[-1]
+        prices = {s: float(last[s]) for s in tradable if s in last.index and last[s] == last[s]}
+        broker = LocalPaperBroker(state_dir / "paper_account.json", prices, as_of=str(closes.index[-1].date()))
     else:
         from tvm.broker import AlpacaBroker
         broker = AlpacaBroker()
 
     report = run_once(broker, signal_closes, cfg, dry_run=dry_run, use_live_prices=not args.no_live_prices,
                       force=args.force, adaptive=adaptive, kronos=kronos, bars=bars, state_dir=state_dir)
+    if mode == "paper":
+        broker.mark()
     perf = None if fake else performance_vs_benchmark(broker, closes[cfg.benchmark_symbol])
     md = to_markdown(report, perf, cfg, mode=mode)
     text = to_text(report, perf, cfg, mode=mode)

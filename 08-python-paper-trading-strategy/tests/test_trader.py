@@ -70,6 +70,37 @@ def test_run_once_is_idempotent_within_band(tmp_path):
     assert second["state_after"]["days_held"] == first_saved["days_held"]
 
 
+def test_local_paper_broker_persists_positions_and_equity(tmp_path):
+    from tvm.broker import LocalPaperBroker, Order
+    path = tmp_path / "paper_account.json"
+    b = LocalPaperBroker(path, {"SPY": 100.0, "BIL": 50.0}, as_of="2026-01-05")
+    b.submit(Order("SPY", 60_000)); b.submit(Order("BIL", 40_000))
+    assert b.account().cash == 0 and b.account().positions == {"SPY": 60_000, "BIL": 40_000}
+    b.mark()
+    # next day, SPY +10%: reload from disk and the account carries over
+    b2 = LocalPaperBroker(path, {"SPY": 110.0, "BIL": 50.0}, as_of="2026-01-06")
+    assert b2.account().equity == 106_000
+    b2.submit(Order("SPY", 0, liquidate=True))
+    assert b2.account().cash == 66_000 and "SPY" not in b2.account().positions
+    b2.mark()
+    hist = LocalPaperBroker(path, {"BIL": 50.0}, as_of="2026-01-07").equity_history()
+    assert list(hist.round(2)) == [100_000, 106_000, 106_000]
+    assert len(json.loads(path.read_text())["fills"]) == 3
+
+
+def test_run_once_with_local_paper_broker_keeps_the_account_across_runs(tmp_path):
+    from tvm.broker import LocalPaperBroker
+    closes = uptrend_closes()
+    prices = {s: float(closes[s].iloc[-1]) for s in closes.columns} | {"BIL": 91.0, "SSO": 50.0, "QLD": 60.0}
+    b = LocalPaperBroker(tmp_path / "paper_account.json", prices, as_of=str(closes.index[-1].date()))
+    report = run_once(b, closes, CFG, state_dir=tmp_path, log=lambda *_: None)
+    assert report["orders"] and abs(b.account().equity - 100_000) < 1.0
+    b.mark()
+    b2 = LocalPaperBroker(tmp_path / "paper_account.json", prices, as_of=str(closes.index[-1].date()))
+    second = run_once(b2, closes, CFG, state_dir=tmp_path, log=lambda *_: None)
+    assert second["orders"] == [] and second["current_weights"] == {k: round(v, 4) for k, v in b.account().weights().items()}
+
+
 def test_dry_run_sends_nothing(tmp_path):
     broker = FakeBroker(equity=50_000, is_open=False)
     report = run_once(broker, uptrend_closes(), CFG, dry_run=True, state_dir=tmp_path, log=lambda *_: None)

@@ -7,7 +7,9 @@ dry runs and tests.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import json
 import os
+from pathlib import Path
 from typing import Protocol
 
 import pandas as pd
@@ -128,6 +130,81 @@ class AlpacaBroker:
         eq = pd.Series([float(v) if v is not None else float("nan") for v in data.get("equity", [])],
                        index=idx, name="equity").dropna()
         return eq[eq > 0]
+
+
+class LocalPaperBroker:
+    """Persisted paper account that needs no brokerage at all.
+
+    Holds cash and share counts in a JSON file (committed to the log branch
+    by the workflow), fills at the prices it is given (the day's adjusted
+    close, so dividends are included), and records end-of-day equity so the
+    report can compare it with the benchmark. Used when no Alpaca keys are
+    configured; `--mode paper`.
+    """
+
+    def __init__(self, path: Path | str, prices: dict[str, float], as_of: str, start_equity: float = 100_000.0):
+        self.path, self.prices, self.as_of = Path(path), dict(prices), as_of
+        if self.path.exists():
+            self.state = json.loads(self.path.read_text())
+        else:
+            self.state = {"started": as_of, "start_equity": start_equity, "cash": start_equity,
+                          "shares": {}, "history": {}, "fills": []}
+
+    def _save(self) -> None:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.path.write_text(json.dumps(self.state, indent=2))
+
+    def _price(self, symbol: str) -> float:
+        px = self.prices.get(symbol)
+        if not px:
+            raise RuntimeError(f"no price for {symbol}; cannot fill")
+        return float(px)
+
+    def account(self) -> Account:
+        positions = {s: q * self._price(s) for s, q in self.state["shares"].items() if q}
+        return Account(equity=self.state["cash"] + sum(positions.values()), cash=self.state["cash"], positions=positions)
+
+    def market_is_open(self) -> bool:
+        return False                      # no live feed: the daily close drives every decision and fill
+
+    def latest_price(self, symbol: str) -> float | None:
+        return self.prices.get(symbol)
+
+    def today_bar(self, symbol: str) -> dict | None:
+        return None
+
+    def submit(self, order: Order) -> dict:
+        px = self._price(order.symbol)
+        shares = self.state["shares"]
+        if order.liquidate:
+            qty = -shares.pop(order.symbol, 0.0)
+        else:
+            qty = order.notional / px
+            shares[order.symbol] = shares.get(order.symbol, 0.0) + qty
+            if abs(shares[order.symbol]) < 1e-9:
+                del shares[order.symbol]
+        self.state["cash"] -= qty * px
+        self.state["fills"].append({"date": self.as_of, "symbol": order.symbol, "qty": round(qty, 6),
+                                    "price": round(px, 4), "notional": round(qty * px, 2)})
+        self._save()
+        return {"status": "filled", "symbol": order.symbol, "qty": qty, "price": px}
+
+    def cancel_open_orders(self) -> None:
+        pass
+
+    def mark(self) -> float:
+        """Record today's equity in the history (call once per run, after orders)."""
+        eq = self.account().equity
+        self.state["history"][self.as_of] = round(eq, 2)
+        self._save()
+        return eq
+
+    def equity_history(self) -> pd.Series:
+        h = dict(self.state["history"])
+        h.setdefault(self.as_of, self.account().equity)
+        s = pd.Series(h, name="equity", dtype=float)
+        s.index = pd.to_datetime(s.index)
+        return s.sort_index()
 
 
 @dataclass

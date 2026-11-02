@@ -8,11 +8,17 @@ name: TVM paper trade
 # summer, 20:40 UTC = 15:40 ET in winter. Both fire; the off-season one is a
 # harmless no-op because the trader is idempotent within a day.
 #
+# No brokerage account is needed: without Alpaca secrets the job keeps its
+# own $100k paper account in state/paper_account.json (fills at the daily
+# close, dividends included via adjusted prices) and reports its equity vs
+# VOO. Add ALPACA_PAPER_KEY_ID / ALPACA_PAPER_SECRET_KEY to use an Alpaca
+# paper account instead.
+#
 # Two strategies run as a matrix, one after the other:
-#   adaptive  the TVM expert ensemble            -> state/            (ALPACA_PAPER_* secrets)
-#   kronos    Kronos candlestick foundation model -> state/kronos/     (ALPACA_KRONOS_* secrets)
-# They need separate Alpaca paper accounts because each manages the whole
-# account. Only the adaptive leg runs on the schedule: Kronos did not beat
+#   adaptive  the TVM expert ensemble            -> state/            (ALPACA_PAPER_* secrets, optional)
+#   kronos    Kronos candlestick foundation model -> state/kronos/     (ALPACA_KRONOS_* secrets, optional)
+# With Alpaca they need separate paper accounts because each manages the
+# whole account. Only the adaptive leg runs on the schedule: Kronos did not beat
 # VOO out of sample (README, "Walk-forward results") and its model download
 # and inference are the most expensive step in this repo, so it is
 # manual-only ("Run workflow" -> strategy: kronos).
@@ -23,9 +29,10 @@ name: TVM paper trade
 # schedule after 60 idle days.
 #
 # Modes (chosen automatically for scheduled runs, manually for "Run workflow"):
-#   preview  - no Alpaca keys needed; shows today's signal on a fake $100k account
-#   dry-run  - real paper account, prints the orders it would send
-#   live     - real paper account, submits the orders
+#   paper    - built-in paper account, no keys needed (what the schedule runs without Alpaca)
+#   preview  - no keys, nothing saved; shows today's signal on a throwaway $100k account
+#   dry-run  - Alpaca paper account, prints the orders it would send
+#   live     - Alpaca paper account, submits the orders (what the schedule runs with Alpaca)
 #   notify-test - sends a test text/push through every configured channel
 #
 # Daily text message / push: add any of these repository secrets and the run
@@ -45,9 +52,9 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "preview (no keys needed) / dry-run / live / notify-test"
+        description: "paper (built-in account, no keys) / preview (no keys, nothing saved) / dry-run / live (Alpaca) / notify-test"
         type: choice
-        options: [preview, dry-run, live, notify-test]
+        options: [paper, preview, dry-run, live, notify-test]
         default: preview
       strategy:
         description: "which strategy leg(s) to run"
@@ -150,7 +157,7 @@ jobs:
           MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'live' }}
         run: python paper_trade.py --mode "$MODE"
       - name: Persist state and trade log to paper-trading-log branch
-        if: ${{ always() && steps.gate.outputs.run == 'true' && (github.event_name == 'schedule' || inputs.mode == 'live') }}
+        if: ${{ always() && steps.gate.outputs.run == 'true' && (github.event_name == 'schedule' || inputs.mode == 'live' || inputs.mode == 'paper') }}
         run: |
           [ -n "$(find state -type f 2>/dev/null)" ] || { echo "nothing to persist"; exit 0; }
           git config user.name "tvm-bot"

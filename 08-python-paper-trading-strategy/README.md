@@ -296,10 +296,13 @@ python run_backtest.py --config config.example.json
 # Tests (synthetic data, no network)
 python -m pytest -q tests
 
-# Paper trading against Alpaca (https://alpaca.markets, free paper account)
-python paper_trade.py --mode preview     # no credentials: today's signal on a fake $100k account
+# Paper trading, no brokerage needed: built-in $100k account in state/paper_account.json
+python paper_trade.py --mode paper       # fills at the daily close, equity vs VOO tracked run to run
+python paper_trade.py --mode preview     # today's signal on a throwaway account, nothing saved
+
+# Optional: Alpaca paper account instead (https://alpaca.markets, free)
 export APCA_API_KEY_ID=...  APCA_API_SECRET_KEY=...
-python paper_trade.py --mode dry-run     # real paper account; print orders, submit nothing
+python paper_trade.py --mode dry-run     # Alpaca paper account; print orders, submit nothing
 python paper_trade.py --mode live        # submit market orders (paper endpoint only; live is refused)
 
 # Kronos candlestick model as the strategy (separate paper account recommended)
@@ -309,13 +312,17 @@ python run_kronos_backtest.py            # walk-forward report; ~1h on first run
 ```
 
 `paper_trade.py` is idempotent: run it once per trading day, ideally in the
-last ~10 minutes of the session. When the market is open it pulls live IEX
-prices from Alpaca and appends them as today's bar so the 200-day check sees
-the near-final close; after hours it uses the last daily close and orders fill
-at the next open. The (asset, exposure) state is rebuilt from live positions
+last ~10 minutes of the session. The built-in paper account fills every order
+at that day's adjusted close (so dividends are included and there is no
+slippage: treat its return as an upper bound on a real account by a few basis
+points a year). With Alpaca, when the market is open it pulls live IEX prices
+and appends them as today's bar so the 200-day check sees the near-final
+close; after hours it uses the last daily close and orders fill at the next
+open. The (asset, exposure) state is rebuilt from live positions
 every run, so a failed order or manual intervention self-heals on the next run.
 Only the hold-period counter is persisted in `state/tvm_state.json`; every run
-appends a JSON record to `state/trade_log.jsonl`.
+appends a JSON record to `state/trade_log.jsonl`; the built-in account (cash,
+shares, fills, daily equity) lives in `state/paper_account.json`.
 
 ### Running it from your phone (no computer needed)
 
@@ -327,22 +334,28 @@ reads fine in the GitHub mobile app or a phone browser.
 1. **Try it right now, no accounts needed.** In a phone browser open this repo
    -> *Actions* -> *TVM paper trade* -> *Run workflow* -> mode `preview`.
    About a minute later open the run and read the *Summary*. This shows
-   today's signal on a fake $100k account. (The GitHub app can read runs but
-   cannot start them; use the browser for that step. The workflow file must be
-   on the default branch for the button to appear.)
-2. **Get paper-trading keys.** Sign up at [alpaca.markets](https://alpaca.markets)
-   (free, works on phone), switch the dashboard to *Paper*, and generate an API
-   key + secret.
-3. **Store them in GitHub.** Repo -> *Settings* -> *Secrets and variables* ->
-   *Actions*. Add secrets `ALPACA_PAPER_KEY_ID` and `ALPACA_PAPER_SECRET_KEY`.
-   Under *Variables* add `TVM_PAPER_TRADING_ENABLED` = `true`. (Daily phone
-   notifications need nothing extra; see "Daily text message" below.)
-4. **First real run.** *Run workflow* with mode `dry-run` to see the orders
-   against your actual paper account, then once with `live` to place them.
-5. **Done.** From then on it runs itself every weekday at 15:40 ET with no
+   today's signal on a throwaway $100k account. (The GitHub app can read runs
+   but cannot start them; use the browser for that step. The workflow file
+   must be on the default branch for the button to appear.)
+2. **Switch it on.** Repo -> *Settings* -> *Secrets and variables* ->
+   *Actions* -> *Variables* -> `TVM_PAPER_TRADING_ENABLED` = `true`. That is
+   the whole setup: with no brokerage keys the job keeps its own $100k paper
+   account in `state/paper_account.json` on the `paper-trading-log` branch,
+   fills at each day's close, and reports equity vs VOO in every summary and
+   daily message. (Daily phone notifications need nothing extra; see "Daily
+   text message" below.)
+3. **Done.** From then on it runs itself every weekday at 15:40 ET with no
    further input. Check in whenever you like: the Actions tab shows each day's
-   summary, the `paper-trading-log` branch holds the full trade history, and
-   the Alpaca app shows positions and P&L.
+   summary and the `paper-trading-log` branch holds the account, fills and
+   full trade history.
+4. **Optional: a real brokerage paper account.** If you would rather see the
+   positions in a broker app, sign up at [alpaca.markets](https://alpaca.markets)
+   (free), switch the dashboard to *Paper*, generate a key + secret, and add
+   them as secrets `ALPACA_PAPER_KEY_ID` / `ALPACA_PAPER_SECRET_KEY`. The
+   schedule then trades that account instead (live IEX prices, orders fill at
+   the next open); *Run workflow* -> `dry-run` first to see the orders.
+5. **Scope.** Paper only, either way: the Alpaca client refuses any endpoint
+   without "paper" in its URL, and the built-in account is a JSON file.
 6. **Kronos is manual-only.** It did not beat VOO out of sample (see
    "Walk-forward results"), and its model download and inference are the
    most expensive step in this repo, so the schedule runs the adaptive leg
@@ -413,7 +426,7 @@ tvm/adaptive.py   expert pool, Hedge learner, blended execution, regime post-mor
 tvm/kronos_signal.py  Kronos forecaster: sampled candle paths -> signal, calibration, decision rules, walk-forward cache
 tvm/kronos_vendor/    vendored Kronos model code (MIT, shiyu-coder/Kronos)
 tvm/data.py       yfinance loader with CSV cache (closes + OHLCV)
-tvm/broker.py     Broker protocol, AlpacaBroker (REST), FakeBroker
+tvm/broker.py     Broker protocol, LocalPaperBroker (built-in account), AlpacaBroker (REST), FakeBroker
 tvm/trader.py     one daily rebalance: reconstruct state -> signal -> orders
 tvm/report.py     markdown run summary (GitHub step summary) + paper P&L vs VOO
 tvm/notify.py     daily one-liner via GitHub issue (default) / Twilio SMS / email-to-SMS / ntfy / Telegram
