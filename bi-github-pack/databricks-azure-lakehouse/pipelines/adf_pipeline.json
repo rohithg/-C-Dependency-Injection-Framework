@@ -1,0 +1,34 @@
+{
+  "name": "pl_adls_databricks_synapse_daily",
+  "properties": {
+    "description": "Daily: land ADLS bronze → Databricks transform → Synapse gold refresh",
+    "activities": [
+      {
+        "name": "Copy_Usage_To_Bronze",
+        "type": "Copy",
+        "typeProperties": {
+          "source": { "type": "DelimitedTextSource" },
+          "sink": { "type": "DelimitedTextSink", "storeSettings": { "type": "AzureBlobFSWriteSettings" } }
+        },
+        "outputs": [{ "referenceName": "ds_adls_bronze_usage", "type": "DatasetReference" }]
+      },
+      {
+        "name": "Databricks_Transform_Usage",
+        "type": "DatabricksSparkPython",
+        "dependsOn": [{ "activity": "Copy_Usage_To_Bronze", "dependencyConditions": ["Succeeded"] }],
+        "typeProperties": {
+          "pythonFile": "dbfs:/jobs/transform_usage.py",
+          "parameters": ["--input", "abfss://bronze@lake.dfs.core.windows.net/usage",
+                        "--output", "abfss://gold@lake.dfs.core.windows.net/usage_daily"]
+        }
+      },
+      {
+        "name": "Synapse_Refresh_External_Table",
+        "type": "SqlServerStoredProcedure",
+        "dependsOn": [{ "activity": "Databricks_Transform_Usage", "dependencyConditions": ["Succeeded"] }],
+        "typeProperties": { "storedProcedureName": "[dbo].[usp_refresh_usage_daily]" }
+      }
+    ],
+    "annotations": ["resume-portfolio", "rohith-gangapuram"]
+  }
+}

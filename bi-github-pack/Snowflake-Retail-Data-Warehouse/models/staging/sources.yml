@@ -1,0 +1,65 @@
+version: 2
+
+sources:
+  - name: raw_erp
+    description: >
+      NetSuite-style ERP landing zone for orders, customers, products, and invoices.
+      Loaded daily into Snowflake RAW schemas before dbt staging.
+    database: "{{ target.database }}"
+    schema: raw
+    loader: airflow
+    freshness:
+      warn_after: {count: 24, period: hour}
+      error_after: {count: 48, period: hour}
+    loaded_at_field: _loaded_at
+    tables:
+      - name: raw_customers
+        description: Customer master from CRM / NetSuite Customer entity
+        columns:
+          - name: customer_id
+            data_tests: [not_null, unique]
+          - name: _loaded_at
+            data_tests: [not_null]
+
+      - name: raw_products
+        description: Item master from ERP inventory / NetSuite Item
+        columns:
+          - name: product_id
+            data_tests: [not_null, unique]
+
+      - name: raw_orders
+        description: Sales orders / sales order lines from ERP
+        columns:
+          - name: order_id
+            data_tests: [not_null]
+          - name: order_line_id
+            data_tests: [not_null, unique]
+
+      - name: raw_invoices
+        description: Accounts receivable invoices from NetSuite Finance
+        columns:
+          - name: invoice_id
+            data_tests: [not_null, unique]
+
+  - name: raw_logistics
+    description: >
+      Transportation (TMS) and yard (YMS) landing zone for shipment and location events.
+    database: "{{ target.database }}"
+    schema: raw
+    loader: airflow
+    freshness:
+      warn_after: {count: 24, period: hour}
+      error_after: {count: 48, period: hour}
+    loaded_at_field: _loaded_at
+    tables:
+      - name: raw_shipments
+        description: Shipment headers and stops from TMS
+        columns:
+          - name: shipment_id
+            data_tests: [not_null, unique]
+
+      - name: raw_locations
+        description: Warehouses, DCs, yards, and customer ship-to locations from YMS / TMS
+        columns:
+          - name: location_id
+            data_tests: [not_null, unique]

@@ -1,0 +1,13 @@
+suite_name: orders_dirty
+table: orders_dirty
+expectations:
+  - type: expect_column_values_to_not_be_null
+    kwargs: { column: order_id }
+  - type: expect_column_values_to_be_unique
+    kwargs: { column: order_id }
+  - type: expect_column_values_to_be_in_set
+    kwargs: { column: status, value_set: [OPEN, CLOSED, CANCELLED, PARTIAL] }
+  - type: expect_column_values_to_be_between
+    kwargs: { column: amount, min_value: 0.01, max_value: 1000000 }
+  - type: expect_column_pair_values_a_to_be_greater_than_b
+    kwargs: { column_A: ship_date, column_B: order_date, or_equal: true }

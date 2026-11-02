@@ -1,0 +1,148 @@
+// =============================================================================
+// Sales Measures — Certified semantic layer
+// Table folder: Measures\Sales
+// Depends on: FactSales, DimDate (active on InvoiceDateKey), DimProduct, DimCustomer
+// Inactive: FactSales[ShipDateKey] -> DimDate[DateKey]
+// =============================================================================
+
+// --- Additive bases ----------------------------------------------------------
+
+Gross Sales =
+SUM ( FactSales[ExtendedPrice] )
+
+Discounts =
+SUM ( FactSales[DiscountAmount] )
+
+Returns & Allowances =
+CALCULATE (
+    SUM ( FactSales[ExtendedPrice] ),
+    FactSales[DocType] IN { "Credit", "Allowance" }
+)
+
+// Credits are stored as positive ExtendedPrice on credit docs; subtract explicitly.
+Net Sales =
+VAR _gross =
+    CALCULATE (
+        [Gross Sales],
+        FactSales[DocType] = "Invoice"
+    )
+VAR _discounts =
+    CALCULATE (
+        [Discounts],
+        FactSales[DocType] = "Invoice"
+    )
+VAR _returns = [Returns & Allowances]
+RETURN
+    _gross - _discounts - _returns
+
+Units Sold =
+CALCULATE (
+    SUM ( FactSales[Quantity] ),
+    FactSales[DocType] = "Invoice"
+)
+
+COGS =
+CALCULATE (
+    SUM ( FactSales[COGSAmount] ),
+    FactSales[DocType] = "Invoice"
+)
+
+// --- Ratios (always DIVIDE) --------------------------------------------------
+
+Average Selling Price =
+DIVIDE ( [Net Sales], [Units Sold], BLANK () )
+
+Gross Profit =
+[Net Sales] - [COGS]
+
+Gross Profit Margin % =
+DIVIDE ( [Gross Profit], [Net Sales], BLANK () )
+
+Variable Selling Cost =
+SUM ( FactSales[CommissionAmount] ) + SUM ( FactSales[FreightOutAmount] )
+
+Contribution Margin =
+[Gross Profit] - [Variable Selling Cost]
+
+Contribution Margin % =
+DIVIDE ( [Contribution Margin], [Net Sales], BLANK () )
+
+// --- Alternate date role (ship date) -----------------------------------------
+
+Net Sales (Ship Date) =
+CALCULATE (
+    [Net Sales],
+    USERELATIONSHIP ( FactSales[ShipDateKey], DimDate[DateKey] )
+)
+
+Units Sold (Ship Date) =
+CALCULATE (
+    [Units Sold],
+    USERELATIONSHIP ( FactSales[ShipDateKey], DimDate[DateKey] )
+)
+
+// --- Commercial performance --------------------------------------------------
+
+Quota =
+SUM ( FactQuota[QuotaAmount] )
+
+Sales vs Quota % =
+DIVIDE ( [Net Sales], [Quota], BLANK () )
+
+// Bookings live on FactOrders (book date active to DimDate)
+Bookings =
+SUM ( FactOrders[BookedAmount] )
+
+// Open backlog as of the last date in filter context (open-items pattern)
+Backlog =
+VAR _asOf =
+    MAX ( DimDate[Date] )
+RETURN
+    CALCULATE (
+        SUM ( FactOrders[OpenAmount] ),
+        FactOrders[OrderStatus] = "Open",
+        FactOrders[BookDate] <= _asOf,
+        REMOVEFILTERS ( DimDate )
+    )
+
+// Opportunity metrics (FactOpportunity)
+Won Opportunity Value =
+CALCULATE (
+    SUM ( FactOpportunity[Amount] ),
+    FactOpportunity[Status] = "Won"
+)
+
+Closed Opportunity Value =
+CALCULATE (
+    SUM ( FactOpportunity[Amount] ),
+    FactOpportunity[Status] IN { "Won", "Lost" }
+)
+
+Win Rate % (Value) =
+DIVIDE ( [Won Opportunity Value], [Closed Opportunity Value], BLANK () )
+
+// --- Useful filters / quality ------------------------------------------------
+
+Invoice Line Count =
+CALCULATE (
+    COUNTROWS ( FactSales ),
+    FactSales[DocType] = "Invoice"
+)
+
+Net Sales (Selected Currency) =
+IF (
+    SELECTEDVALUE ( DimCurrency[CurrencyCode], "USD" ) = "USD",
+    [Net Sales],
+    CALCULATE (
+        SUM ( FactSales[ExtendedPriceReporting] ),
+        FactSales[DocType] = "Invoice"
+    )
+        - CALCULATE (
+            SUM ( FactSales[DiscountAmountReporting] ),
+            FactSales[DocType] = "Invoice"
+        )
+        - CALCULATE (
+            SUM ( FactSales[ExtendedPriceReporting] ),
+            FactSales[DocType] IN { "Credit", "Allowance" }
+        )
+)

@@ -1,0 +1,8 @@
+plan_id,plan_name,plan_tier,billing_interval,price_cents,seat_limit,is_active
+plan_starter,Starter,starter,monthly,4900,5,true
+plan_growth,Growth,growth,monthly,14900,25,true
+plan_pro,Professional,professional,monthly,39900,100,true
+plan_enterprise,Enterprise,enterprise,annual,99900,,true
+plan_starter_annual,Starter Annual,starter,annual,49000,5,true
+plan_growth_annual,Growth Annual,growth,annual,149000,25,true
+plan_legacy,Legacy Basic,starter,monthly,2900,3,false

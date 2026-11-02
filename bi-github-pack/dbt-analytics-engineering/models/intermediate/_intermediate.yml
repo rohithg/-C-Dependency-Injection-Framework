@@ -1,0 +1,39 @@
+version: 2
+
+models:
+  - name: int_subscription_spine
+    description: >
+      One row per subscription with denormalized account/plan attributes and
+      derived fiscal periods for revenue reporting.
+    columns:
+      - name: subscription_id
+        data_tests:
+          - unique
+          - not_null
+      - name: arr_usd
+        description: Annual recurring revenue (MRR * 12) in USD.
+
+  - name: int_account_activation
+    description: >
+      Account-level activation status based on product events within the
+      configured activation window after signup.
+    columns:
+      - name: account_id
+        data_tests:
+          - unique
+          - not_null
+      - name: is_activated
+        data_tests:
+          - not_null
+
+  - name: int_monthly_recurring_revenue
+    description: >
+      Monthly MRR snapshot by calendar month for cohort and retention metrics
+      (used to compute NRR and logo churn).
+    columns:
+      - name: month_start
+        data_tests:
+          - not_null
+      - name: account_id
+        data_tests:
+          - not_null

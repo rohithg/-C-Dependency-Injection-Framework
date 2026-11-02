@@ -1,0 +1,49 @@
+name: snowflake_retail_dw
+version: '1.0.0'
+config-version: 2
+
+profile: snowflake_retail_dw
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - target
+  - dbt_packages
+  - logs
+
+require-dbt-version: [">=1.7.0", "<2.0.0"]
+
+vars:
+  start_date: '2023-01-01'
+  end_date: '2025-12-31'
+  sur_key_null_value: -1
+
+models:
+  snowflake_retail_dw:
+    +materialized: view
+    staging:
+      +schema: staging
+      +materialized: view
+      +tags: ["staging", "elt"]
+    intermediate:
+      +schema: intermediate
+      +materialized: view
+      +tags: ["intermediate"]
+    marts:
+      +schema: marts
+      +materialized: table
+      +tags: ["marts"]
+      core:
+        +tags: ["core", "star_schema"]
+
+seeds:
+  snowflake_retail_dw:
+    +schema: raw
+    +quote_columns: false
+
+docs-paths: ["docs"]

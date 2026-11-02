@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Energy Program Performance — Rohith Gangapuram</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Sora:wght@300;400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+  <script src="js/app.js" defer></script>
+</head>
+<body>
+  <header>
+    <p class="kicker">Resume case study · utility / energy analytics</p>
+    <h1>Energy Program Performance</h1>
+    <p class="lede">kWh, peak demand, incentive spend, and compliance — the Power BI story behind 12-state utility programs.</p>
+  </header>
+  <section class="kpis">
+    <article><p>Total kWh</p><strong id="kpiKwh">—</strong></article>
+    <article><p>Incentive spend</p><strong id="kpiSpend">—</strong></article>
+    <article><p>Compliance rate</p><strong id="kpiComp">—</strong></article>
+    <article><p>Peak demand</p><strong id="kpiPeak">—</strong></article>
+  </section>
+  <section class="charts">
+    <div><h2>kWh by program</h2><canvas id="progChart"></canvas></div>
+    <div><h2>Compliance by utility</h2><canvas id="utilChart"></canvas></div>
+  </section>
+  <footer>Rohith Gangapuram · synthetic demo aligned to energy-sector BI work · <a href="../README.md">README</a></footer>
+</body>
+</html>

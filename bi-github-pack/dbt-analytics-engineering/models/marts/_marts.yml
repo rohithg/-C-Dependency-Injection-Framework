@@ -1,0 +1,79 @@
+version: 2
+
+models:
+  - name: dim_accounts
+    description: Account dimension for SaaS tenants (excludes heavy PII; ready for BI tools).
+    columns:
+      - name: account_sk
+        description: Surrogate key (hash of account_id).
+        data_tests:
+          - unique
+          - not_null
+      - name: account_id
+        data_tests:
+          - unique
+          - not_null
+      - name: is_activated
+        description: Whether the account met activation criteria in the onboarding window.
+
+  - name: dim_plans
+    description: Plan / SKU dimension with list pricing.
+    columns:
+      - name: plan_sk
+        data_tests:
+          - unique
+          - not_null
+      - name: plan_id
+        data_tests:
+          - unique
+          - not_null
+
+  - name: fct_subscriptions
+    description: >
+      Subscription fact at grain of one row per subscription.
+      Primary fact for ARR, MRR, and churn analyses.
+    columns:
+      - name: subscription_sk
+        data_tests:
+          - unique
+          - not_null
+      - name: subscription_id
+        data_tests:
+          - unique
+          - not_null
+      - name: account_id
+        data_tests:
+          - relationships:
+              to: ref('dim_accounts')
+              field: account_id
+      - name: plan_id
+        data_tests:
+          - relationships:
+              to: ref('dim_plans')
+              field: plan_id
+      - name: mrr_usd
+        data_tests:
+          - not_null
+      - name: arr_usd
+        data_tests:
+          - not_null
+
+  - name: fct_usage_events
+    description: Product usage event fact for engagement and activation funnels.
+    columns:
+      - name: usage_event_sk
+        data_tests:
+          - unique
+          - not_null
+      - name: event_id
+        data_tests:
+          - unique
+          - not_null
+      - name: account_id
+        data_tests:
+          - relationships:
+              to: ref('dim_accounts')
+              field: account_id
+      - name: event_at
+        data_tests:
+          - not_null

@@ -1,0 +1,33 @@
+# target
+target/
+dbt_packages/
+logs/
+# duckdb local
+*.duckdb
+*.duckdb.wal
+
+# python / airflow
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+*.egg-info/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+*.swp
+
+# dbt docs serve artifacts already under target/
+# secrets — never commit real profiles
+profiles.yml
+**/credentials.json
+*.pem
+*.p8
+
+# pytest / coverage
+.coverage
+htmlcov/
+.pytest_cache/

@@ -1,0 +1,18 @@
+version: 2
+
+seeds:
+  - name: raw_customers
+    description: Sample NetSuite / CRM customer master for local demos
+    config:
+      column_types:
+        credit_limit: decimal(18,2)
+  - name: raw_products
+    description: Sample ERP item master
+  - name: raw_orders
+    description: Sample sales order lines (grain = order line)
+  - name: raw_invoices
+    description: Sample AR invoices
+  - name: raw_shipments
+    description: Sample TMS shipment headers with YMS yard timestamps
+  - name: raw_locations
+    description: Sample DC / warehouse / yard / customer locations

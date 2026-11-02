@@ -1,0 +1,6 @@
+facility_nk,facility_name,facility_type,region_cd,state_cd,zip3,is_active
+SYN-FAC-01,Bayview Demo Medical Center,HOSPITAL,NORCAL,CA,941,true
+SYN-FAC-02,Mission Demo Family Clinic,CLINIC,NORCAL,CA,941,true
+SYN-FAC-03,East Bay Demo Surgery Center,ASC,NORCAL,CA,946,true
+SYN-FAC-04,Peninsula Demo Urgent Care,URGENT_CARE,NORCAL,CA,940,true
+SYN-FAC-05,Virtual Demo Care Hub,VIRTUAL,NORCAL,CA,951,true

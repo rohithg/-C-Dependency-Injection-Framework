@@ -1,0 +1,77 @@
+{
+  "name": "SemanticLayer",
+  "compatibilityLevel": 1567,
+  "model": {
+    "culture": "en-US",
+    "discourageImplicitMeasures": true,
+    "tables": [
+      {
+        "name": "DimDate",
+        "columns": [
+          { "name": "DateKey", "dataType": "int64", "isKey": true },
+          { "name": "Date", "dataType": "dateTime", "isNameInferred": false },
+          { "name": "MonthStart", "dataType": "dateTime" },
+          { "name": "FiscalYear", "dataType": "int64" }
+        ]
+      },
+      {
+        "name": "FactSales",
+        "columns": [
+          { "name": "SalesLineKey", "dataType": "int64", "isKey": true },
+          { "name": "InvoiceDateKey", "dataType": "int64" },
+          { "name": "ShipDateKey", "dataType": "int64" },
+          { "name": "CustomerKey", "dataType": "int64" },
+          { "name": "ProductKey", "dataType": "int64" },
+          { "name": "DocType", "dataType": "string" },
+          { "name": "ExtendedPrice", "dataType": "decimal", "summarizeBy": "sum" },
+          { "name": "DiscountAmount", "dataType": "decimal", "summarizeBy": "sum" },
+          { "name": "COGSAmount", "dataType": "decimal", "summarizeBy": "sum" }
+        ]
+      },
+      {
+        "name": "Measures",
+        "measures": [
+          {
+            "name": "Net Sales",
+            "expression": "VAR _gross = CALCULATE ( SUM ( FactSales[ExtendedPrice] ), FactSales[DocType] = \"Invoice\" )\nVAR _discounts = CALCULATE ( SUM ( FactSales[DiscountAmount] ), FactSales[DocType] = \"Invoice\" )\nVAR _returns = CALCULATE ( SUM ( FactSales[ExtendedPrice] ), FactSales[DocType] IN { \"Credit\", \"Allowance\" } )\nRETURN _gross - _discounts - _returns",
+            "formatString": "$#,0;($#,0);$#,0",
+            "displayFolder": "Sales"
+          },
+          {
+            "name": "Gross Profit Margin %",
+            "expression": "DIVIDE ( [Net Sales] - SUM ( FactSales[COGSAmount] ), [Net Sales], BLANK () )",
+            "formatString": "0.0%",
+            "displayFolder": "Finance"
+          },
+          {
+            "name": "Net Sales (Ship Date)",
+            "expression": "CALCULATE ( [Net Sales], USERELATIONSHIP ( FactSales[ShipDateKey], DimDate[DateKey] ) )",
+            "displayFolder": "Sales"
+          }
+        ]
+      }
+    ],
+    "relationships": [
+      {
+        "name": "Rel_FactSales_DimDate_Invoice",
+        "fromTable": "FactSales",
+        "fromColumn": "InvoiceDateKey",
+        "toTable": "DimDate",
+        "toColumn": "DateKey",
+        "isActive": true
+      },
+      {
+        "name": "Rel_FactSales_DimDate_Ship",
+        "fromTable": "FactSales",
+        "fromColumn": "ShipDateKey",
+        "toTable": "DimDate",
+        "toColumn": "DateKey",
+        "isActive": false
+      }
+    ],
+    "annotations": [
+      { "name": "CertificateStatus", "value": "Certified" },
+      { "name": "DB_VersionVersion", "value": "2026.09.1" }
+    ]
+  }
+}

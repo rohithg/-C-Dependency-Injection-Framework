@@ -1,0 +1,131 @@
+version: 2
+
+models:
+  - name: dim_customer
+    description: Customer dimension for the retail star schema
+    columns:
+      - name: customer_sk
+        data_tests: [unique, not_null]
+      - name: customer_nk
+        data_tests: [unique, not_null]
+      - name: status
+        data_tests:
+          - accepted_values:
+              values: ['ACTIVE', 'INACTIVE', 'PROSPECT', 'CHURNED']
+
+  - name: dim_product
+    description: Product dimension with list margin
+    columns:
+      - name: product_sk
+        data_tests: [unique, not_null]
+      - name: product_nk
+        data_tests: [unique, not_null]
+      - name: sku
+        data_tests: [unique, not_null]
+
+  - name: dim_date
+    description: Calendar / fiscal date dimension (Feb fiscal year start)
+    columns:
+      - name: date_sk
+        data_tests: [unique, not_null]
+      - name: date_day
+        data_tests: [unique, not_null]
+
+  - name: dim_location
+    description: Location dimension (DC, yard, store, customer ship-to)
+    columns:
+      - name: location_sk
+        data_tests: [unique, not_null]
+      - name: location_nk
+        data_tests: [unique, not_null]
+
+  - name: fct_orders
+    description: >
+      Order line fact. Grain = one row per sales order line.
+      Links to customer, product, date, and ship-from / ship-to locations.
+    columns:
+      - name: order_line_sk
+        data_tests: [unique, not_null]
+      - name: order_line_nk
+        data_tests: [unique, not_null]
+      - name: customer_sk
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_customer')
+              field: customer_sk
+      - name: product_sk
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_product')
+              field: product_sk
+      - name: order_date_sk
+        data_tests:
+          - relationships:
+              to: ref('dim_date')
+              field: date_sk
+      - name: quantity
+        data_tests: [not_null]
+      - name: line_net_amount
+        data_tests: [not_null]
+      - name: order_status
+        data_tests:
+          - accepted_values:
+              values: ['DRAFT', 'OPEN', 'PARTIAL', 'SHIPPED', 'CLOSED', 'CANCELLED']
+
+  - name: fct_shipments
+    description: >
+      Shipment fact from TMS/YMS. Grain = one row per shipment.
+      Includes on-time delivery and yard dwell metrics.
+    columns:
+      - name: shipment_sk
+        data_tests: [unique, not_null]
+      - name: shipment_nk
+        data_tests: [unique, not_null]
+      - name: customer_sk
+        data_tests:
+          - relationships:
+              to: ref('dim_customer')
+              field: customer_sk
+      - name: origin_location_sk
+        data_tests:
+          - relationships:
+              to: ref('dim_location')
+              field: location_sk
+      - name: destination_location_sk
+        data_tests:
+          - relationships:
+              to: ref('dim_location')
+              field: location_sk
+      - name: shipment_status
+        data_tests:
+          - accepted_values:
+              values: ['PLANNED', 'IN_TRANSIT', 'DELIVERED', 'EXCEPTION', 'CANCELLED']
+
+  - name: fct_finance
+    description: >
+      Finance / AR fact. Grain = one row per invoice.
+      Bridges invoice cash application to order economics.
+    columns:
+      - name: invoice_sk
+        data_tests: [unique, not_null]
+      - name: invoice_nk
+        data_tests: [unique, not_null]
+      - name: customer_sk
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_customer')
+              field: customer_sk
+      - name: invoice_date_sk
+        data_tests:
+          - relationships:
+              to: ref('dim_date')
+              field: date_sk
+      - name: total_amount
+        data_tests: [not_null]
+      - name: invoice_status
+        data_tests:
+          - accepted_values:
+              values: ['OPEN', 'PARTIAL', 'PAID', 'VOID', 'WRITTEN_OFF']

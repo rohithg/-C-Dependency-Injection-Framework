@@ -1,0 +1,8 @@
+# Optional Python deps for local Airflow + dbt workers
+# Pin in your deployment image as needed.
+
+apache-airflow>=2.7.0,<3
+dbt-core>=1.7.0,<2
+dbt-snowflake>=1.7.0,<2
+# Local alternate:
+# dbt-duckdb>=1.7.0,<2

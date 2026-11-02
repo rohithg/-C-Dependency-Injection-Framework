@@ -1,0 +1,37 @@
+version: 2
+
+sources:
+  - name: raw_saas
+    description: >
+      Synthetic SaaS product data loaded via seeds for this portfolio project.
+      In production these would map to Stripe / billing warehouse and product event streams.
+    schema: "{{ target.schema }}_raw_seed"
+    tables:
+      - name: seed_accounts
+        description: Customer accounts (B2B SaaS tenants).
+        columns:
+          - name: account_id
+            data_tests:
+              - unique
+              - not_null
+      - name: seed_plans
+        description: Pricing plan catalog.
+        columns:
+          - name: plan_id
+            data_tests:
+              - unique
+              - not_null
+      - name: seed_subscriptions
+        description: Subscription lifecycle events and current state.
+        columns:
+          - name: subscription_id
+            data_tests:
+              - unique
+              - not_null
+      - name: seed_usage_events
+        description: Product usage / activation events.
+        columns:
+          - name: event_id
+            data_tests:
+              - unique
+              - not_null

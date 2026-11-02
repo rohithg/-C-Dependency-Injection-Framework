@@ -1,0 +1,13 @@
+suite_name: customers_dirty
+table: customers_dirty
+expectations:
+  - type: expect_column_values_to_not_be_null
+    kwargs: { column: customer_id }
+  - type: expect_column_values_to_be_unique
+    kwargs: { column: customer_id }
+  - type: expect_column_values_to_not_be_null
+    kwargs: { column: email }
+  - type: expect_column_values_to_be_in_set
+    kwargs: { column: state, value_set: [CA, NY, TX, FL, WA, IL, AZ, CO, NJ, GA] }
+  - type: expect_column_values_to_be_between
+    kwargs: { column: credit_limit, min_value: 0, max_value: 1000000 }

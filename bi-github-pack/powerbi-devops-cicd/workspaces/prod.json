@@ -1,0 +1,31 @@
+{
+  "workspace_name": "BI-Prod-SupplyChain",
+  "capacity": "Premium",
+  "datasets": [
+    {
+      "name": "SemanticLayer_Revenue",
+      "id": "00000000-0000-0000-0000-000000000201",
+      "refresh_schedule": "Daily 05:00 UTC",
+      "rls_roles": [
+        "RegionWest",
+        "RegionEast",
+        "FinanceAll"
+      ]
+    },
+    {
+      "name": "OTIF_ControlTower",
+      "id": "00000000-0000-0000-0000-000000000202",
+      "refresh_schedule": "Daily 06:00 UTC",
+      "rls_roles": [
+        "OpsAll",
+        "CarrierScoped"
+      ]
+    }
+  ],
+  "gate_checks": [
+    "rls_roles_present",
+    "refresh_not_failed_24h",
+    "workspace_description_set",
+    "sensitivity_label_set"
+  ]
+}
