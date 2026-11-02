@@ -10,6 +10,7 @@ Or via --mode (used by the GitHub Actions workflow):
     --mode preview   same as --fake --dry-run; works without any credentials
     --mode dry-run   real account, no orders
     --mode live      real paper account, orders submitted
+    --mode notify-test   send a test message through every configured channel and exit
 
 If --mode is omitted and credentials are missing, falls back to preview so a
 run from a fresh checkout never fails for lack of setup.
@@ -28,6 +29,7 @@ from tvm.config import TVMConfig, DEFAULT
 from tvm.data import load_closes
 from tvm.trader import run_once
 from tvm.report import performance_vs_benchmark, to_markdown, write_step_summary
+from tvm.notify import to_text, send_all
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
@@ -35,13 +37,20 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--config", help="JSON file overriding TVMConfig fields")
-    ap.add_argument("--mode", choices=["preview", "dry-run", "live"], help="see module docstring")
+    ap.add_argument("--mode", choices=["preview", "dry-run", "live", "notify-test"], help="see module docstring")
+    ap.add_argument("--no-notify", action="store_true", help="skip SMS/push notifications")
     ap.add_argument("--dry-run", action="store_true", help="compute and print orders without submitting")
     ap.add_argument("--fake", action="store_true", help="use an in-memory fake broker (no credentials needed)")
     ap.add_argument("--no-live-prices", action="store_true", help="use last daily close only, even if market is open")
     ap.add_argument("--force", action="store_true", help="rebalance to target even if inside the band")
     ap.add_argument("--refresh", action="store_true", help="bypass the price cache")
     args = ap.parse_args()
+
+    if args.mode == "notify-test":
+        results = send_all("TVM paper trading: test message. Daily updates will arrive here after each run.")
+        print(results)
+        write_step_summary("## Notification test\n\n" + "\n".join(f"- {k}: {v}" for k, v in results.items()) + "\n")
+        return 0 if any(v == "sent" for v in results.values()) else 1
 
     have_keys = bool(os.environ.get("APCA_API_KEY_ID") and os.environ.get("APCA_API_SECRET_KEY"))
     mode = args.mode
@@ -70,7 +79,14 @@ def main() -> int:
     report = run_once(broker, signal_closes, cfg, dry_run=dry_run, use_live_prices=not args.no_live_prices, force=args.force)
     perf = None if fake else performance_vs_benchmark(broker, closes[cfg.benchmark_symbol])
     md = to_markdown(report, perf, cfg, mode=mode)
+    text = to_text(report, perf, cfg, mode=mode)
     print("\n" + md)
+    print(text)
+    if not args.no_notify:
+        results = send_all(text)
+        sent = [k for k, v in results.items() if v == "sent"]
+        errors = {k: v for k, v in results.items() if v.startswith("error")}
+        md += f"\n<sub>notifications: sent via {', '.join(sent) or 'none configured'}" + (f"; errors: {errors}" if errors else "") + "</sub>\n"
     if write_step_summary(md):
         print("(summary written to GitHub step summary)")
     return 0

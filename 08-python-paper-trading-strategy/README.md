@@ -176,6 +176,28 @@ reads fine in the GitHub mobile app or a phone browser.
    whenever you like: the Actions tab shows each day's summary, and the Alpaca
    app shows positions and P&L.
 
+### Daily text message
+
+After each run the trader sends a one-line status to every notification
+channel that has its secrets set (see [`tvm/notify.py`](tvm/notify.py)):
+
+```
+TVM Nov 03: RISK-ON SPY 0.88x (vol 23%). No trades. Paper $100,412 +0.4% vs VOO +0.1% since Nov 03.
+```
+
+Pick one and add its values as repository secrets (same place as the Alpaca
+keys), then *Run workflow* with mode `notify-test` to confirm it arrives:
+
+| Channel | What you need | Secrets |
+|---|---|---|
+| **ntfy push** (free, 2 minutes, recommended) | Install the ntfy app, subscribe to a hard-to-guess topic name like `tvm-7f3a9c` | `NTFY_TOPIC` |
+| **Real SMS via Twilio** | Twilio account + phone number (US numbers need A2P 10DLC registration for reliable delivery) | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM`, `TWILIO_TO` |
+| **SMS via carrier email gateway** (free) | Any SMTP mailbox (e.g. Gmail app password) and your carrier's gateway address: T-Mobile `number@tmomail.net`, Verizon `number@vtext.com` | `SMTP_HOST`, `SMTP_USER`, `SMTP_PASSWORD`, `SMS_EMAIL_TO` (optional `SMTP_PORT`) |
+| **Telegram** (free) | Create a bot with @BotFather, send it a message, read your chat id from `getUpdates` | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` |
+
+Notification failures are logged in the run summary but never abort a trade.
+`--no-notify` disables them for local runs.
+
 Scheduled runs are skipped until the `TVM_PAPER_TRADING_ENABLED` variable is
 set, so forking the repo does not start trading by itself. The live Alpaca
 endpoint is refused in code; this can only ever touch a paper account.
@@ -193,9 +215,10 @@ tvm/data.py       yfinance loader with CSV cache
 tvm/broker.py     Broker protocol, AlpacaBroker (REST), FakeBroker
 tvm/trader.py     one daily rebalance: reconstruct state -> signal -> orders
 tvm/report.py     markdown run summary (GitHub step summary) + paper P&L vs VOO
+tvm/notify.py     daily one-liner via Twilio SMS / email-to-SMS / ntfy push / Telegram
 run_backtest.py   report + charts in results/
 paper_trade.py    CLI for the daily run
-tests/            26 unit + integration tests on synthetic data
+tests/            32 unit + integration tests on synthetic data
 ```
 
 The same `strategy.py` code produces both the backtest and the live orders, so
