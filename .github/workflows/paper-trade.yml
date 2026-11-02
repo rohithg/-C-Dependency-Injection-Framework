@@ -1,26 +1,34 @@
 name: TVM paper trade
 
-# Runs once per weekday ~10 minutes before the NYSE close so the regime check
-# sees a near-final price. Cron is UTC: 19:50 UTC = 15:50 ET during EDT,
-# 20:50 UTC = 15:50 ET during EST. Both fire; the script exits quietly when
-# the market is closed or nothing needs rebalancing, so the duplicate is harmless.
+# Everything here runs on GitHub's servers; nothing to install locally.
+#
+# Scheduled runs fire every weekday ~10 minutes before the NYSE close so the
+# regime check sees a near-final price. Cron is UTC: 19:50 UTC = 15:50 ET in
+# summer, 20:50 UTC = 15:50 ET in winter. Both fire; the off-season one is a
+# harmless no-op because the trader is idempotent within a day.
+#
+# Modes (chosen automatically for scheduled runs, manually for "Run workflow"):
+#   preview  - no Alpaca keys needed; shows today's signal on a fake $100k account
+#   dry-run  - real paper account, prints the orders it would send
+#   live     - real paper account, submits the orders
 on:
   schedule:
     - cron: "50 19 * * 1-5"
     - cron: "50 20 * * 1-5"
   workflow_dispatch:
     inputs:
-      dry_run:
-        description: "Print the plan without submitting orders"
-        type: boolean
-        default: true
+      mode:
+        description: "preview (no keys needed) / dry-run / live"
+        type: choice
+        options: [preview, dry-run, live]
+        default: preview
 
 jobs:
   rebalance:
     runs-on: ubuntu-latest
-    # Requires repository secrets ALPACA_PAPER_KEY_ID / ALPACA_PAPER_SECRET_KEY.
-    # Without them the job is skipped rather than failing.
-    if: ${{ vars.TVM_PAPER_TRADING_ENABLED == 'true' }}
+    # Scheduled runs only do anything once the repo variable
+    # TVM_PAPER_TRADING_ENABLED is set to "true"; manual runs always work.
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.TVM_PAPER_TRADING_ENABLED == 'true' }}
     defaults:
       run:
         working-directory: 08-python-paper-trading-strategy
@@ -42,12 +50,8 @@ jobs:
         env:
           APCA_API_KEY_ID: ${{ secrets.ALPACA_PAPER_KEY_ID }}
           APCA_API_SECRET_KEY: ${{ secrets.ALPACA_PAPER_SECRET_KEY }}
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.dry_run }}" = "true" ]; then
-            python paper_trade.py --dry-run
-          else
-            python paper_trade.py
-          fi
+          MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'live' }}
+        run: python paper_trade.py --mode "$MODE"
       - name: Upload trade log
         if: always()
         uses: actions/upload-artifact@v4

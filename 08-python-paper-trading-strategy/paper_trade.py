@@ -6,18 +6,28 @@
     python paper_trade.py                  # submit orders (paper account only)
     python paper_trade.py --fake           # no credentials: simulate with a fake $100k account
 
+Or via --mode (used by the GitHub Actions workflow):
+    --mode preview   same as --fake --dry-run; works without any credentials
+    --mode dry-run   real account, no orders
+    --mode live      real paper account, orders submitted
+
+If --mode is omitted and credentials are missing, falls back to preview so a
+run from a fresh checkout never fails for lack of setup.
+
 Schedule it once per trading day, e.g. 15:50 America/New_York (see
-.github/workflows/paper-trade.yml for a cron example).
+.github/workflows/paper-trade.yml).
 """
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 import warnings
 
 from tvm.config import TVMConfig, DEFAULT
 from tvm.data import load_closes
 from tvm.trader import run_once
+from tvm.report import performance_vs_benchmark, to_markdown, write_step_summary
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
@@ -25,6 +35,7 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--config", help="JSON file overriding TVMConfig fields")
+    ap.add_argument("--mode", choices=["preview", "dry-run", "live"], help="see module docstring")
     ap.add_argument("--dry-run", action="store_true", help="compute and print orders without submitting")
     ap.add_argument("--fake", action="store_true", help="use an in-memory fake broker (no credentials needed)")
     ap.add_argument("--no-live-prices", action="store_true", help="use last daily close only, even if market is open")
@@ -32,18 +43,36 @@ def main() -> int:
     ap.add_argument("--refresh", action="store_true", help="bypass the price cache")
     args = ap.parse_args()
 
-    cfg = TVMConfig.from_json(args.config) if args.config else DEFAULT
-    symbols = sorted({cfg.trend_symbol, *cfg.risk_assets})
-    closes = load_closes(symbols, start="2015-01-01", refresh=args.refresh).dropna()
+    have_keys = bool(os.environ.get("APCA_API_KEY_ID") and os.environ.get("APCA_API_SECRET_KEY"))
+    mode = args.mode
+    if mode is None:
+        if args.fake or not have_keys:
+            mode = "preview"
+        else:
+            mode = "dry-run" if args.dry_run else "live"
+    if mode in ("dry-run", "live") and not have_keys:
+        print(f"--mode {mode} needs APCA_API_KEY_ID / APCA_API_SECRET_KEY; falling back to preview", file=sys.stderr)
+        mode = "preview"
+    fake, dry_run = mode == "preview", mode != "live"
 
-    if args.fake:
+    cfg = TVMConfig.from_json(args.config) if args.config else DEFAULT
+    symbols = sorted({cfg.trend_symbol, *cfg.risk_assets, cfg.benchmark_symbol})
+    closes = load_closes(symbols, start="2015-01-01", refresh=args.refresh)
+    signal_closes = closes[sorted({cfg.trend_symbol, *cfg.risk_assets})].dropna()
+
+    if fake:
         from tvm.broker import FakeBroker
         broker = FakeBroker(is_open=False)
     else:
         from tvm.broker import AlpacaBroker
         broker = AlpacaBroker()
 
-    run_once(broker, closes, cfg, dry_run=args.dry_run, use_live_prices=not args.no_live_prices, force=args.force)
+    report = run_once(broker, signal_closes, cfg, dry_run=dry_run, use_live_prices=not args.no_live_prices, force=args.force)
+    perf = None if fake else performance_vs_benchmark(broker, closes[cfg.benchmark_symbol])
+    md = to_markdown(report, perf, cfg, mode=mode)
+    print("\n" + md)
+    if write_step_summary(md):
+        print("(summary written to GitHub step summary)")
     return 0
 
 

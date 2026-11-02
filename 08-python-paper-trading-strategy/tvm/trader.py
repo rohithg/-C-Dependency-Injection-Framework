@@ -113,9 +113,13 @@ def run_once(broker: Broker, closes: pd.DataFrame, cfg: TVMConfig = DEFAULT, *, 
 
     if orders and not dry_run:
         broker.cancel_open_orders()
+        results = []
         for o in orders:
             res = broker.submit(o)
-            log(f"submitted {o.symbol} {'LIQUIDATE' if o.liquidate else f'{o.notional:+.2f} USD'} -> {res.get('status', res)}")
+            status = res.get("status", res) if isinstance(res, dict) else res
+            results.append(str(status))
+            log(f"submitted {o.symbol} {'LIQUIDATE' if o.liquidate else f'{o.notional:+.2f} USD'} -> {status}")
+        report["order_results"] = results
     if not dry_run:
         save_state(state_path, new_state, as_of)
         _append_log(state_dir / "trade_log.jsonl", report)

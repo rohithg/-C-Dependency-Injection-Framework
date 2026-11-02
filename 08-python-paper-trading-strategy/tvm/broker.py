@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 import os
 from typing import Protocol
 
+import pandas as pd
 import requests
 
 
@@ -36,6 +37,7 @@ class Broker(Protocol):
     def latest_price(self, symbol: str) -> float | None: ...
     def submit(self, order: Order) -> dict: ...
     def cancel_open_orders(self) -> None: ...
+    def equity_history(self) -> "pd.Series": ...
 
 
 class AlpacaBroker:
@@ -104,6 +106,15 @@ class AlpacaBroker:
     def cancel_open_orders(self) -> None:
         self._s.delete(f"{self.base_url}/v2/orders", timeout=self.timeout).raise_for_status()
 
+    def equity_history(self) -> pd.Series:
+        """Daily account equity (end of day) for the past year, indexed by date."""
+        data = self._get(f"{self.base_url}/v2/account/portfolio/history",
+                         period="1A", timeframe="1D", intraday_reporting="market_hours")
+        idx = pd.to_datetime(pd.Series(data.get("timestamp", [])), unit="s").dt.normalize()
+        eq = pd.Series([float(v) if v is not None else float("nan") for v in data.get("equity", [])],
+                       index=idx, name="equity").dropna()
+        return eq[eq > 0]
+
 
 @dataclass
 class FakeBroker:
@@ -136,3 +147,7 @@ class FakeBroker:
 
     def cancel_open_orders(self) -> None:
         pass
+
+    def equity_history(self) -> pd.Series:
+        idx = pd.bdate_range(end=pd.Timestamp.today().normalize(), periods=5)
+        return pd.Series(self.equity, index=idx, name="equity")

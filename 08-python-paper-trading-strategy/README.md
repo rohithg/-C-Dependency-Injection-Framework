@@ -136,10 +136,10 @@ python run_backtest.py --config config.example.json
 python -m pytest -q tests
 
 # Paper trading against Alpaca (https://alpaca.markets, free paper account)
+python paper_trade.py --mode preview     # no credentials: today's signal on a fake $100k account
 export APCA_API_KEY_ID=...  APCA_API_SECRET_KEY=...
-python paper_trade.py --dry-run     # print signal, target weights and orders; submit nothing
-python paper_trade.py               # submit market orders (paper endpoint only; live is refused)
-python paper_trade.py --fake --dry-run   # no credentials: simulate against a fake $100k account
+python paper_trade.py --mode dry-run     # real paper account; print orders, submit nothing
+python paper_trade.py --mode live        # submit market orders (paper endpoint only; live is refused)
 ```
 
 `paper_trade.py` is idempotent: run it once per trading day, ideally in the
@@ -151,13 +151,37 @@ every run, so a failed order or manual intervention self-heals on the next run.
 Only the hold-period counter is persisted in `state/tvm_state.json`; every run
 appends a JSON record to `state/trade_log.jsonl`.
 
-### Scheduling
+### Running it from your phone (no computer needed)
 
 [`.github/workflows/paper-trade.yml`](../.github/workflows/paper-trade.yml)
-runs the trader at 15:50 ET each weekday. To enable it, add repository secrets
-`ALPACA_PAPER_KEY_ID` / `ALPACA_PAPER_SECRET_KEY` and set the repository
-variable `TVM_PAPER_TRADING_ENABLED=true`. Any cron (or a Lambda / Cloud Run
-job) that runs `python paper_trade.py` once a day works equally well.
+runs the whole thing on GitHub's servers. Every run writes a summary (regime,
+target portfolio, orders, paper-account return vs VOO) to the run page, which
+reads fine in the GitHub mobile app or a phone browser.
+
+1. **Try it right now, no accounts needed.** In a phone browser open this repo
+   -> *Actions* -> *TVM paper trade* -> *Run workflow* -> mode `preview`.
+   About a minute later open the run and read the *Summary*. This shows
+   today's signal on a fake $100k account. (The GitHub app can read runs but
+   cannot start them; use the browser for that step. The workflow file must be
+   on the default branch for the button to appear.)
+2. **Get paper-trading keys.** Sign up at [alpaca.markets](https://alpaca.markets)
+   (free, works on phone), switch the dashboard to *Paper*, and generate an API
+   key + secret.
+3. **Store them in GitHub.** Repo -> *Settings* -> *Secrets and variables* ->
+   *Actions*. Add secrets `ALPACA_PAPER_KEY_ID` and `ALPACA_PAPER_SECRET_KEY`.
+   Under *Variables* add `TVM_PAPER_TRADING_ENABLED` = `true`.
+4. **First real run.** *Run workflow* with mode `dry-run` to see the orders
+   against your actual paper account, then once with `live` to place them.
+5. **Done.** From then on it runs itself every weekday at 15:50 ET. Check in
+   whenever you like: the Actions tab shows each day's summary, and the Alpaca
+   app shows positions and P&L.
+
+Scheduled runs are skipped until the `TVM_PAPER_TRADING_ENABLED` variable is
+set, so forking the repo does not start trading by itself. The live Alpaca
+endpoint is refused in code; this can only ever touch a paper account.
+
+Any other cron (a Lambda, Cloud Run job, or a Raspberry Pi) that runs
+`python paper_trade.py` once a day works equally well.
 
 ## Project layout
 
@@ -168,9 +192,10 @@ tvm/backtest.py   execution + cost model, metrics, yearly tables
 tvm/data.py       yfinance loader with CSV cache
 tvm/broker.py     Broker protocol, AlpacaBroker (REST), FakeBroker
 tvm/trader.py     one daily rebalance: reconstruct state -> signal -> orders
+tvm/report.py     markdown run summary (GitHub step summary) + paper P&L vs VOO
 run_backtest.py   report + charts in results/
 paper_trade.py    CLI for the daily run
-tests/            21 unit + integration tests on synthetic data
+tests/            26 unit + integration tests on synthetic data
 ```
 
 The same `strategy.py` code produces both the backtest and the live orders, so
