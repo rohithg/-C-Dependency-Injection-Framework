@@ -2,7 +2,7 @@
 """Is this viable? Replay the trading prompt's rules through the real ledger
 and risk gate over Kraken's public history, and compare with doing nothing.
 
-    python backtest.py                 # 4h candles (Kraken keeps 720 = 120 days) and daily (720 days)
+    python backtest.py                 # 1h candles (Kraken keeps 720 = 30 days) and the same 24-bar logic on 4h (120 days)
     python backtest.py --json out.json
 
 Every run uses the same Ledger/RiskGate as the live rounds (fees, 25% cap,
@@ -43,12 +43,12 @@ def replay(data: dict[str, list[dict]], agent: str, *, entry_fraction=0.25, seed
             return int(min(led.equity(prices) * entry_fraction, led.cash / (1 + led.gate.fee_rate)) * 100) / 100
 
         n = len(data["BTC"])
-        warm = max(strategy.SMA_N, strategy.RSI_N + 1, strategy.MOM_N + 1)
+        warm = strategy.WINDOW
         for i in range(warm, n):
             now = data["BTC"][i]["time"]
             prices = {s: data[s][i]["close"] for s in SYMBOLS}
-            closes = {s: [c["close"] for c in data[s][: i + 1]] for s in SYMBOLS}
-            feats = {s: strategy.features(closes[s]) for s in SYMBOLS}
+            win = {s: data[s][i + 1 - warm: i + 1] for s in SYMBOLS}
+            feats = {s: strategy.features([c["close"] for c in win[s]], [c["high"] for c in win[s]], [c["low"] for c in win[s]]) for s in SYMBOLS}
             pos = led.position
             if agent == "rules":
                 if pos:
@@ -60,6 +60,19 @@ def replay(data: dict[str, list[dict]], agent: str, *, entry_fraction=0.25, seed
                     if pick:
                         sym, f = pick
                         led.buy(sym, size(prices), strategy.describe(sym, f), prices[sym], now)
+            elif agent == "rules-mr":                     # the dip-buying reading of the same prompt
+                if pos:
+                    held = i - pos.get("_bar", i)
+                    why = strategy.exit_reason_mr(pos["entry_price"], prices[pos["symbol"]], held)
+                    if why:
+                        led.sell_all(why, prices, now)
+                else:
+                    pick = strategy.entry_candidate_mr(feats)
+                    if pick:
+                        sym, f = pick
+                        led.buy(sym, size(prices), strategy.describe(sym, f), prices[sym], now)
+                        if led.position:
+                            led.position["_bar"] = i
             elif agent == "random":                       # zero-skill reference: coin flips inside the same gate
                 if pos and rng.random() < 0.25:
                     led.sell_all("random", prices, now)
@@ -91,13 +104,14 @@ def main() -> int:
     ap.add_argument("--json")
     args = ap.parse_args()
     results = {}
-    for tf, label in (("4h", "4-hour candles, every candle is a round (what the 4-hourly schedule does)"),
-                      ("1d", "daily candles (longer history; the prompt's SMA20 / RSI14 / 6-candle momentum applied to days)")):
+    for tf, label in (("1h", "hourly candles, a round every hour, 24-bar window as the prompt gives (all Kraken keeps: 30 days)"),
+                      ("4h", "4-hour candles, same 24-bar logic on a 4-day window, a round every 4 hours (120 days)")):
         data = load(tf)
         days = (data["BTC"][-1]["time"] - data["BTC"][0]["time"]) / 86400
         rows = []
-        r = replay(data, "rules"); rows.append({**r, "label": "Prompt rules, 25% entries (the experiment)"})
-        r = replay(data, "rules", entry_fraction=1.0); rows.append({**r, "label": "Prompt rules, 100% entries (cap removed)"})
+        r = replay(data, "rules"); rows.append({**r, "label": "Prompt 02, momentum reading, 25% entries (the experiment)"})
+        r = replay(data, "rules", entry_fraction=1.0); rows.append({**r, "label": "Prompt 02, momentum reading, 100% entries (cap removed)"})
+        r = replay(data, "rules-mr"); rows.append({**r, "label": "Opposite reading: buy the 24h dip, sell the +2% bounce, 25%"})
         rnd = [replay(data, "random", seed=k) for k in range(20)]
         rows.append({"label": "Random decisions, 25% entries (median of 20)", "return": statistics.median(x["return"] for x in rnd),
                      "max_drawdown": statistics.median(x["max_drawdown"] for x in rnd), "fees_paid": statistics.median(x["fees_paid"] for x in rnd),

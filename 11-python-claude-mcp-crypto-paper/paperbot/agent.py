@@ -44,8 +44,9 @@ async def run_round(state_dir: str, log=print) -> dict:
                 return {"action": "error", "detail": acct["error"]}
             feats = {}
             for sym in SYMBOLS:
-                c = _payload(await s.call_tool("get_candles", {"symbol": sym, "timeframe": "4h", "limit": 60}))
-                feats[sym] = strategy.features([r["close"] for r in c.get("candles", [])]) if "candles" in c else None
+                c = _payload(await s.call_tool("get_candles", {"symbol": sym, "timeframe": "1h", "limit": strategy.WINDOW}))
+                rows = c.get("candles", [])
+                feats[sym] = strategy.features([r["close"] for r in rows], [r["high"] for r in rows], [r["low"] for r in rows]) if rows else None
                 if feats[sym]:
                     log(strategy.describe(sym, feats[sym]))
             pos = acct.get("position")
@@ -66,7 +67,6 @@ async def run_round(state_dir: str, log=print) -> dict:
                     if res.get("status") == "refused":
                         res = _payload(await s.call_tool("hold", {"reason": f"buy refused: {res.get('refused_because')}"}))
                 else:
-                    bits = "; ".join(strategy.describe(s_, f) for s_, f in feats.items() if f) or "no candles"
-                    res = _payload(await s.call_tool("hold", {"reason": f"no entry qualifies ({bits})"}))
+                    res = _payload(await s.call_tool("hold", {"reason": strategy.honest_hold(feats)}))
             acct_after = _payload(await s.call_tool("get_account", {}))
             return {"decision": res, "account": acct_after}

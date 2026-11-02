@@ -1,16 +1,11 @@
-You are running one round of a paper-money crypto experiment. $100 of pretend money, no real exchange, no keys. You may only act through the `paper-crypto` MCP tools. Do not ask the user anything. Finish the round in one pass.
+You are trading a $100 crypto paper account. Your only job is to grow it.
 
-Procedure:
+Rules: one position at a time, never risk more than 25% of equity on a single entry, and take profit or cut the loss rather than holding through a reversal.
 
-1. Call `get_account`.
-2. For each of BTC, ETH and SOL call `get_candles(symbol, "4h", 60)`.
-3. From the closes of each symbol compute: the 20-candle simple moving average (SMA20), the 14-candle RSI, and the 24-hour change (last close divided by the close 6 candles earlier, minus 1).
-4. Decide, using only these rules:
-   - If there is **no open position**: among the symbols whose last close is above SMA20, whose RSI is between 50 and 70, and whose 24-hour change is above +1%, pick the one with the largest 24-hour change and call `buy` for **25% of equity** (round down to cents). If no symbol qualifies, call `hold`.
-   - If there **is an open position**: call `sell_all` if its last close is below SMA20, or its unrealized return is at or below -3%, or at or above +6%. Otherwise call `hold`.
-5. Call exactly one write tool (`buy`, `sell_all` or `hold`) per round, with a one-line `reason` that names the numbers you used (for example "BTC close 77,300 > SMA20 76,100, RSI 58, 24h +2.1%").
-6. If the gate refuses an order, do not retry with different numbers; call `hold` with the refusal text as the reason.
+You are given the last 24 hours of hourly bars for BTC, ETH and SOL, plus your current cash and positions.
 
-Rules you cannot change: one position at a time, at most 25% of equity per entry, no leverage, no shorting, 0.4% fee on every fill, at most 6 fills per day, no new buys once equity is below $50. End your reply with one line: ACTION, symbol (if any), and the reason.
+Decide one action now: buy, sell, or hold. Give one sentence of reasoning, and be honest when the reason is weak.
 
-(Stand-in for "Prompt 02", which was not included in the request. The built-in rule agent in `paperbot/agent.py` implements exactly these rules, so Claude Code and the offline agent can be compared like for like. Replace this file with your own prompt; keep step 5 and 6.)
+---
+
+How to act (this part is the harness, not the strategy): paper money only, no real exchange, no keys; the `paper-crypto` MCP tools are the only way to look or act. Call `get_account`, then `get_candles(symbol, "1h", 24)` for BTC, ETH and SOL. Then call exactly one of `buy(symbol, usd_amount, reason)`, `sell_all(reason)` or `hold(reason)`, with your one sentence as the `reason`. Every fill costs 0.4%, so a round trip must beat 0.8% to be worth it. If the gate refuses an order, do not retry with different numbers; call `hold` with the refusal text. Do not ask the user anything. End your reply with one line: ACTION, symbol (if any), and the sentence.

@@ -8,53 +8,63 @@ the code has no path to any exchange.
 
 ## Verdict first: is it viable, and is it better than TVM?
 
-No, and no. The prompt's rules were replayed through the real ledger and risk
-gate over everything Kraken's public API returns (720 candles). Same fees,
-same 25% cap, same 6-fills-a-day limit, fills at the close that was the latest
-price at decision time.
+No, and no. Prompt 02 ("grow a $100 account; one position; never risk more
+than 25%; take profit or cut the loss rather than holding through a
+reversal; here are 24 hourly bars") is discretionary, so two concrete readings
+of it were replayed through the real ledger and risk gate over everything
+Kraken's public API returns: the momentum reading the offline agent uses
+(buy the strongest 24h mover while it is still rising near its highs, cut at
+-2%, take at +4%, sell a 6h reversal) and the opposite one (buy the hardest
+24h faller near its lows, sell a +2% bounce, cut at -3%). Same fees, same cap,
+fills at the close that was the latest price at decision time.
 
-**4-hour candles, last 120 days (BTC 62,723 → 77,404, +23%)**
+**Hourly bars, a round every hour, last 30 days (all Kraken keeps; BTC -9%)**
 
-| strategy | return | max drop | fees | fills |
-|---|---|---|---|---|
-| Prompt rules, 25% entries (the experiment) | **-6.2%** | -8.6% | $6.92 | 70 |
-| Prompt rules, 100% entries (cap removed) | -23.7% | -30.5% | $26.54 | 70 |
-| Random decisions inside the same gate (median of 20) | -11.6% | -11.7% | $16.78 | 175 |
-| Buy BTC once with 25%, hold | +6.2% | -3.6% | $0.10 | 1 |
-| Buy BTC once with 100%, hold | +24.5% | -11.5% | $0.40 | 1 |
-| TVM (the other strategy), its 13.4%/yr backtest average over 116 days | +4.1% | | | |
+| strategy | return | max drop | fees | fills | win rate |
+|---|---|---|---|---|---|
+| Prompt 02, momentum reading, 25% entries (the experiment) | **-6.3%** | -6.3% | $2.42 | 25 | 0% |
+| Prompt 02, momentum reading, 100% entries (cap removed) | -23.1% | -23.1% | $8.88 | 25 | 0% |
+| Opposite reading: buy the 24h dip, sell the +2% bounce | -5.7% | -5.9% | $3.76 | 39 | 42% |
+| Random decisions inside the same gate (median of 20) | -15.8% | -15.8% | $13.89 | 152 | |
+| Buy BTC once with 25%, hold | -2.4% | -3.0% | $0.10 | 1 | |
+| TVM, its 13.4%/yr backtest average over the same 29 days | +1.0% | | | | |
 
-**Daily candles, last 719 days (BTC 88,087 → 78,239, -11%)**
+**4-hour bars, same 24-bar logic, a round every 4 hours, last 120 days (BTC +23%)**
 
-| strategy | return | max drop | fees | fills |
-|---|---|---|---|---|
-| Prompt rules, 25% entries | **-4.0%** | -13.5% | $12.33 | 124 |
-| Prompt rules, 100% entries | -23.6% | -46.3% | $45.76 | 124 |
-| Random decisions inside the same gate (median of 20) | -15.2% | -21.9% | $16.58 | 175 |
-| Buy BTC once with 25%, hold | -4.7% | -16.1% | $0.10 | 1 |
-| Buy BTC once with 100%, hold | -18.7% | -53.1% | $0.40 | 1 |
-| TVM, 13.4%/yr backtest average over 699 days | **+27.2%** | -22.8% worst ever | | |
+| strategy | return | max drop | fees | fills | win rate |
+|---|---|---|---|---|---|
+| Prompt 02, momentum reading, 25% entries | **-9.1%** | -10.5% | $7.22 | 74 | 22% |
+| Prompt 02, momentum reading, 100% entries | -32.6% | -36.5% | $26.71 | 74 | 22% |
+| Opposite reading: buy the 24h dip, sell the +2% bounce | -1.8% | -2.9% | $5.89 | 59 | 62% |
+| Random decisions inside the same gate (median of 20) | -13.5% | -13.9% | $16.58 | 175 | |
+| Buy BTC once with 25%, hold | +5.5% | -3.6% | $0.10 | 1 | |
+| Buy BTC once with 100%, hold | +22.0% | -11.5% | $0.40 | 1 | |
+| TVM, 13.4%/yr backtest average over the same 116 days | **+4.1%** | | | | |
 
 What the numbers say:
 
-- **Fees decide it.** 0.4% per fill on a $100 account is $0.10 per $25 entry,
-  $0.20 per round trip, and the rules trade about every other day. Seven to
-  twelve dollars of a hundred went to fees. No signal this simple earns that
-  back; the 17–35% win rate shows the stop at -3% is hit far more often than
-  the +6% target on 4-hour crypto noise.
-- **Beating random is not the bar; beating doing nothing is.** The rules did
-  beat the random agent (fewer fills, so fewer fees), and lost to buying once
+- **Chasing 24-hour momentum in crypto loses.** Every one of the twelve
+  hourly round trips lost; on 4-hour bars 22% won. A -2% stop on an asset
+  that moves 1% an hour is a coin that mostly lands on "stopped out", and the
+  "sell the reversal" clause sells most of the winners early.
+- **Buying the dip is the better reading and still loses after fees.** 62%
+  of those trades won and the account was about flat before costs; the $5.89
+  in fees turned that into -1.8%. 0.4% per fill on a $25 position is $0.20 per
+  round trip, which is most of a +2% bounce on $25.
+- **Beating random is not the bar; beating doing nothing is.** Both readings
+  beat the coin-flip agent (fewer fills, fewer fees) and lost to buying once
   and holding in both windows.
-- **The 25% cap limits losses, not the fee drag.** It also caps the upside at
-  a quarter of the asset's move, so even a perfect call on a +23% BTC run
-  earns +6%.
-- **TVM is better by every measure**: +27% vs -4% over the same two years,
-  with a worst-ever drawdown of -23% against 30+ years of evidence, and it
-  trades a few times a year instead of a few times a week.
-- **An LLM reading the same candles does not change this.** Claude Code
-  following the prompt will make the same decisions as the rule agent, plus
-  occasional arithmetic slips. The information in 60 four-hour candles is the
-  same whoever reads it.
+- **The 25% cap limits losses, not the fee drag,** and it caps the upside at a
+  quarter of the asset's move: a perfect call on BTC's +23% run earns +5.5%.
+- **TVM is better by every measure:** positive in both windows, a worst-ever
+  drawdown of -23% against 30+ years of evidence, a few trades a year rather
+  than a few a day, and 0.03% ETF spreads rather than 0.4% fills.
+- **An LLM reading the same 24 bars does not change this.** Claude Code will
+  pick one of these two readings each round depending on how the bars look,
+  plus occasional arithmetic slips. The information in 24 hourly bars is the
+  same whoever reads it; when I answered the prompt myself on live data the
+  honest answer was "hold, the reason to do anything is weak", which is also
+  what the agent said.
 
 Reproduce: `python backtest.py` (about 45 s, two Kraken calls per symbol).
 
@@ -70,9 +80,9 @@ transfer to anything; the trading rules do not.
 paperbot/kraken.py       public OHLC + Ticker (no key); newest, still-forming candle dropped
 paperbot/ledger.py       $100 paper ledger + RiskGate; every decision logged to state/decisions.jsonl
 paperbot/server.py       MCP server (mcp 2.x MCPServer): get_candles, get_account, buy, sell_all, hold
-paperbot/strategy.py     the trading prompt's rules as functions (shared by the rule agent and the backtest)
+paperbot/strategy.py     two concrete readings of Prompt 02 (momentum, dip) shared by the rule agent and the backtest
 paperbot/agent.py        offline rule agent that drives the same MCP tools over stdio (no Claude needed)
-prompts/trading_prompt.md  the prompt Claude Code gets each round (stand-in for "Prompt 02", see below)
+prompts/trading_prompt.md  Prompt 02 verbatim, plus the tool-calling harness paragraph
 run_round.py             one round: Claude Code if installed, else the rule agent; then rebuilds the dashboard
 build_dashboard.py       -> dashboard.html (equity, fees, biggest drop, refusals, every decision + reason)
 backtest.py              the viability test above
@@ -134,17 +144,6 @@ so only these five tools are available to it. The rule agent connects to the
 same server over stdio and follows `prompts/trading_prompt.md` literally, so
 the two can be compared decision for decision in `state/rounds.jsonl`.
 
-A round from this build, rule agent, live Kraken data:
-
-```
-tools: buy, get_account, get_candles, hold, sell_all
-BTC close 77,403.90 vs SMA20 77,578.82, RSI 54, 24h -0.6%
-ETH close 2,270.29 vs SMA20 2,256.98, RSI 62, 24h +0.3%
-SOL close 93.42 vs SMA20 95.09, RSI 34, 24h -1.3%
-2026-11-02 17:02:17 UTC  agent=rules  HOLD  [ok] no entry qualifies (...)
-equity $100.00 (+0.00%), fees $0.00, max drop 0.0%, refused 0, holds 1  ->  dashboard.html
-```
-
 ## Run it every 4 hours on your computer
 
 **macOS / Linux (cron):** `crontab -e`, then add one line (edit the path):
@@ -186,13 +185,23 @@ one request per second; a round makes four.
 
 ## About the trading prompt
 
-The request said "paste Prompt 02 here" but Prompt 02 was not included, so
-`prompts/trading_prompt.md` is a stand-in: SMA20 / RSI14 / 24-hour momentum
-entries with a -3% stop and +6% target, 25% of equity per entry. The rule agent
-and the backtest implement exactly that, so replacing the prompt and re-running
-`backtest.py` (after mirroring the new rules in `paperbot/strategy.py`) is how
-to test a different idea. Keep steps 5 and 6 of the prompt (one write tool per
-round, never retry a refused order) whatever else you change.
+`prompts/trading_prompt.md` is Prompt 02 as given, followed by one paragraph
+telling the model how to act through the tools (call `get_account`, 24 hourly
+candles per symbol, exactly one write tool, never retry a refused order). The
+prompt is discretionary, so the offline agent and the backtest use the
+momentum reading in `paperbot/strategy.py`; the dip-buying reading is there
+too and is what `backtest.py` reports as "opposite reading". To test a
+different idea, change the thresholds or add a third reading and re-run
+`python backtest.py`.
+
+A live round with the rule agent on 2026-11-02:
+
+```
+BTC 77,386.20: 24h -0.6%, last 6h -0.6%, 14% of the 24h range
+ETH 2,266.22: 24h +0.2%, last 6h -0.8%, 30% of the 24h range
+SOL 93.28: 24h -1.2%, last 6h -0.9%, 21% of the 24h range
+HOLD  nothing is trending enough to pay a 0.8% round trip (...); weak reason to do anything, so cash
+```
 
 ## Safety
 

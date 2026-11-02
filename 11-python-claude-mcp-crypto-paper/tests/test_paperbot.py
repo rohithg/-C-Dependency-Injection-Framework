@@ -67,38 +67,43 @@ def test_ledger_round_trip_pnl_and_log(tmp_path):
     assert s["round_trips"] == 1 and s["wins"] == 1 and s["holds"] == 1 and s["fees_paid"] == pytest.approx(0.21)
 
 
-def walk(p0: float, n: int, drift: float = 0.002, vol: float = 0.01) -> list[float]:
-    """Deterministic random walk whose last window qualifies for an entry (first seed that does)."""
+def walk(p0: float, n: int, drift: float = 0.004, vol: float = 0.006) -> list[float]:
+    """Deterministic random walk whose last 24 bars qualify for a momentum entry (first seed that does)."""
     import random
-    for seed in range(200):
+    for seed in range(500):
         rng, xs = random.Random(seed), [p0]
         for _ in range(n - 1):
             xs.append(xs[-1] * (1 + rng.gauss(drift, vol)))
         f = strategy.features(xs)
-        if f and f["close"] > f["sma"] and 50 <= f["rsi"] <= 70 and f["mom"] > 0.01:
+        if f and strategy.entry_candidate({"X": f}):
             return xs
     raise AssertionError("no qualifying walk")
 
 
 def test_strategy_rules():
-    up = [100 + i for i in range(30)]                     # steady uptrend: above SMA, RSI 100, 24h > 1%
-    f = strategy.features(up)
-    assert f["close"] > f["sma"] and f["mom"] > 0.01 and f["rsi"] == 100
-    assert strategy.entry_candidate({"BTC": f}) is None   # RSI 100 is outside 50-70: no chase
-    g = strategy.features(walk(100.0, 31))
+    flat = [100.0] * 24
+    assert strategy.entry_candidate({"BTC": strategy.features(flat)}) is None
+    g = strategy.features(walk(100.0, 24))
+    assert g["mom"] > strategy.MOM_MIN and g["short"] > 0 and g["range_pos"] >= strategy.RANGE_MIN
     assert strategy.entry_candidate({"BTC": g, "ETH": None}) == ("BTC", g)
-    assert strategy.exit_reason(g, entry_price=120.0, last_price=111.0).startswith("stop")
-    assert strategy.exit_reason(g, entry_price=100.0, last_price=111.0).startswith("take-profit")
-    assert strategy.exit_reason(g, entry_price=110.0, last_price=111.0) is None
+    assert strategy.exit_reason(g, entry_price=103.0, last_price=100.0).startswith("cut")
+    assert strategy.exit_reason(g, entry_price=100.0, last_price=104.5).startswith("take")
+    down = {**g, "short": -0.02}
+    assert strategy.exit_reason(down, entry_price=100.0, last_price=101.0).startswith("reversal")
+    assert strategy.exit_reason(g, entry_price=100.0, last_price=101.0) is None
+    dip = strategy.features([100 - i * 0.1 for i in range(24)])          # -2.3%, at the bottom of the range
+    assert strategy.entry_candidate_mr({"SOL": dip}) == ("SOL", dip) and strategy.entry_candidate({"SOL": dip}) is None
+    assert strategy.exit_reason_mr(100.0, 102.1, 3).startswith("bounce") and strategy.exit_reason_mr(100.0, 99.0, 24).startswith("no bounce")
+    assert "weak reason" in strategy.honest_hold({"BTC": strategy.features(flat)})
 
 
 def _fixture(tmp_path: Path) -> Path:
     def series(p0, n=60):
-        return [{"time": int(T0 + i * 14400), "open": c, "high": c, "low": c, "close": c, "volume": 1.0}
+        return [{"time": int(T0 + i * 3600), "open": c, "high": c, "low": c, "close": c, "volume": 1.0}
                 for i, c in enumerate(walk(p0, n))]
-    closes = {s: series(p) for s, p in PX.items()}
+    closes = {s: series(p, 24) for s, p in PX.items()}
     last = {s: closes[s][-1]["close"] for s in PX}
-    fx = {"candles": {s: {"4h": closes[s]} for s in PX}, "prices": last}
+    fx = {"candles": {s: {"1h": closes[s]} for s in PX}, "prices": last}
     path = tmp_path / "fixture.json"
     path.write_text(json.dumps(fx))
     return path
