@@ -72,7 +72,10 @@ def to_markdown(report: dict, mode: str = "") -> str:
         lines.append("")
     whale = _whale(report)
     lines += [f"### Following {len(report['followed'])} wallets" + (" (re-selected this run)" if report.get("reselected") else "")]
-    if whale:
+    show_rate = whale and any("leader_win_rate" in f for f in report["followed"])
+    if show_rate:
+        lines += ["| Wallet | Their win rate | Settled markets | Settled P&L | Buy volume (90d) | Their record |", "|---|---|---|---|---|---|"]
+    elif whale:
         lines += ["| Wallet | Trailing buy volume (90d) | Buys | Their record | Biggest market |", "|---|---|---|---|---|"]
     else:
         lines += ["| Wallet | Copy return (90d, our rules) | Copy max DD | Copied buys | Their record | Biggest market |", "|---|---|---|---|---|---|"]
@@ -80,14 +83,21 @@ def to_markdown(report: dict, mode: str = "") -> str:
         top = (f.get("top_markets") or [{}])[0]
         top_s = f"{top['title'][:40]} (${top['volume']:,.0f}" + (f", {top['pnl']:+,.0f})" if top.get("pnl") is not None else ")") if top.get("title") else ""
         who = f"[{f['name'][:20]}](https://polymarket.com/profile/{f['wallet']})"
-        if whale:
+        if show_rate:
+            lines.append(f"| {who} | {f['leader_win_rate']:.0%} | {f.get('leader_decided', 0)} | ${f.get('leader_pnl', 0):+,.0f} | "
+                         f"${f.get('whale_volume', 0):,.0f} | {f.get('profile', '')} |")
+        elif whale:
             lines.append(f"| {who} | ${f.get('whale_volume', 0):,.0f} | {f['copied_buys']} | {f.get('profile', '')} | {top_s} |")
         else:
             lines.append(f"| {who} | {f['copy_return']:+.1%} | {f['max_dd']:.1%} | {f['copied_buys']} | {f.get('profile', '')} | {top_s} |")
     lines.append("")
-    note = ("'Trailing buy volume' is dollars the wallet spent buying. It is size, not skill. "
-            if whale else
-            "'Copy return' is what following this wallet under our rules would have made. ")
+    if show_rate:
+        note = ("'Their win rate' counts markets that had already closed, using only what was knowable when they were picked. "
+                "A wallet below the bar is not followed. ")
+    elif whale:
+        note = "'Trailing buy volume' is dollars the wallet spent buying. "
+    else:
+        note = "'Copy return' is what following this wallet under our rules would have made. "
     lines.append(f"<sub>paper account simulated against live order books; watching {report['watching']} wallets incl. former leaders with open positions. "
                  f"{note}'their record' is what the wallet itself did.</sub>")
     return "\n".join(lines) + "\n"

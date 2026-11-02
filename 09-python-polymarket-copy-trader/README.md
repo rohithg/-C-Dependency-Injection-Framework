@@ -7,10 +7,10 @@ reports once a day to your phone. Both run on GitHub Actions, need no keys
 and no money, and never place a real order.
 
 The first follows the most *copyable* wallets, sized at 1% of equity. The
-second, `config.aggressive.json`, follows the five wallets that spent the
-most buying and sizes each copy at 5%. On the same six-month history the
-whale account went from $10,000 to $1,635. It runs so that result can be
-watched, not because size is an edge.
+second, `config.aggressive.json`, follows up to five wallets whose own
+settled markets won at least 70% of the time, and sizes each copy at 5%.
+On the same six-month history that book went from $10,000 to $17,223, and
+also to $4,606. 75 of 103 resolved copies paid out. That is one window.
 
 Sibling of the [TVM / Kronos stock paper trader](../08-python-paper-trading-strategy/);
 it reuses that project's notification channels.
@@ -111,51 +111,54 @@ number above uses the pessimistic fill rule in the table.
 ## Aggressive whale account ([`results/polymarket_whale_backtest.md`](results/polymarket_whale_backtest.md))
 
 `config.aggressive.json` keeps the same 60-minute delay, 0.01 slippage, taker
-fees and 0.10 don't-chase rule. It changes who is followed and how hard:
+fees and 0.10 don't-chase rule. It only follows a wallet when three things
+are true on markets that had already closed: win rate at least 70%, at least
+15 of those markets, and positive settled profit. Up to five qualify, ordered
+by that profit. A big buyer who won 50% of the time is left out. If nobody
+clears the bar, that month copies nobody.
 
 | | careful account | whale account |
 |---|---|---|
-| Who | top 10 by copyability | top 5 by dollars spent buying over 90 days |
+| Who | top 10 by copyability | up to 5 with settled win rate >= 70%, highest profit |
 | Size | 1% of equity per copied buy, 5% per market | 5% per copied buy, 25% per market |
 | Smallest leader buy copied | $25 | $100 |
 
-Same window, same screened wallets, same fill rule, $10,000 start.
+Same window, same screened wallets, same fill rule, $10,000 start. Ranking by
+buy size alone, with no win-rate bar, finished this window at $1,635.
 
 | portfolio | total | vol | Sharpe | max DD |
 |---|---|---|---|---|
-| **Copy: walk-forward top-5 by trailing buy volume** | **−79%** | 208% | −0.40 | **−89%** |
-| Copy: today's leaderboard top-5, same 5% size (biased) | −74% | 95% | −2.16 | −78% |
-| Copy: every screened wallet, 1% per trade | −3% | 114% | 0.50 | −68% |
-| VOO buy & hold | +6% | 12% | 0.95 | −5% |
+| **Copy: walk-forward, settled win rate >= 70%** | **+72%** | 149% | 1.38 | **-54%** |
+| Copy: today's leaderboard top-5, same 5% size (biased) | -74% | 95% | -2.16 | -78% |
+| Copy: every screened wallet, 1% per trade | -3% | 114% | 0.50 | -68% |
+| VOO buy & hold | +6% | 12% | 0.95 | -5% |
 
-The −79% is from the first marked day ($7,869 on May 2) to the last ($1,635
-on Nov 2). From the $10,000 deposited, the account finished at **$1,635
-(−84%)**. The worst mark was **$879 on Aug 17**. May alone did most of the
-damage: month-end equity was $2,761. September's bounce to $2,411 gave it
-back and October took it away again.
+$10,000 finished at **$17,223**. The path was $10,000 through May (nobody
+cleared 70% with 15 settled markets), **$4,606 on June 11**, $8,226 at the
+end of June, then $17,708 at the end of October. 392 buys were copied. Of the
+103 that reached resolution, **75 paid out (73%)**. Fees were $1,285. Realised
+P&L was +$7,773, and 27 positions were still open on Nov 2, so the $17,223
+is a mark, not cash in hand.
 
-323 buys were copied, 147 positions resolved and 80 of those paid out. Fees
-were only $347. Realised P&L was −$8,497, so the loss is the bets, not the
-fee schedule. 29,001 leader buys were skipped as under $100, and 6,267 more
-were skipped because the account was already out of cash. The $100 floor did
-not hide a better book of trades underneath; the ones that passed still lost.
-
-The wallets it would follow today each spent $10–20 million buying over 90
-days, almost all of it sports, with win rates of 45–64%. Copying a sports
-whale an hour later, at 5% of a $10k account, is not the trade they made.
-The careful account on this same window was +40% with a −56% drawdown. The
-whale account is the worse of the two, and neither number is a reason to use
-real money.
+73% is the hit rate of the copies that had already settled in this window.
+It is the same window in which the careful account made +40%, on a universe
+that only contains wallets sitting on today's leaderboard. The +194% CAGR in
+the results file is that six-month gain stretched to a year. It is not a
+forecast, and a 73% hit rate still produced a day that cut the account to
+$4,606, because the losses were larger than the wins. The next window can
+miss 70%.
 
 ## Running it from your phone
 
 [`.github/workflows/polymarket-copy.yml`](../.github/workflows/polymarket-copy.yml)
 runs both paper accounts on GitHub's servers every hour, one after the other,
-and re-picks wallets every Monday 06:00 UTC. Nothing to switch on. The careful
-account's +40% came with a −56% drawdown on a survivor-biased universe, and
-the whale account lost about 84% of its $10,000. They run so the daily
-messages show what they actually do. Set the repository variable
-`POLY_COPY_ENABLED` to `false` to pause both.
+and re-picks wallets every Monday 06:00 UTC. Nothing to switch on. The next
+whale run re-picks immediately, because the follow rule changed: only wallets
+whose own settled markets won at least 70%. The careful account's +40% came
+with a -56% drawdown on a survivor-biased universe. The 70% whale book made
++72% on that same window and touched $4,606. They run so the daily messages
+show what they actually do. Set the repository variable `POLY_COPY_ENABLED`
+to `false` to pause both.
 
 State for both lives on the `polymarket-copy-log` branch. The careful account
 is `state.json` plus `fills.jsonl` and `activity.jsonl` at the branch root.
@@ -163,14 +166,15 @@ The whale account is the same files under `aggressive/`. The two jobs run
 sequentially so one push cannot overwrite the other. A manual *Run workflow*
 is only for looking at one hour without waiting; the schedule does not need it.
 
-The daily messages, one issue each:
+The daily messages, one issue each. The whale numbers below are the six-month
+replay's finish, so the first live text will differ:
 
 ```
 Polycopy 11/02: $10,412 (+4.1% since 11-02), 14 open positions, following 10.
 Today: 3 buys, 1 sells, 2 resolved. Fees $6, max DD 2.3%.
 
-Whale copy 11/02: $1,635 (-83.7% since 05-01), 8 open positions, following 5.
-Today: no fills. Fees $347, max DD -89.0%.
+Whale copy 11/02: $17,223 (+72.2% since 05-01), 27 open positions, following 5.
+Today: no fills. Fees $1,285, max DD -53.9%.
 ```
 
 **Default channel, no setup:** a comment on the issue titled *Polymarket copy
@@ -188,7 +192,7 @@ public repo. Change the first cron to `12 */2 * * *` to halve it.
 ```bash
 cd 09-python-polymarket-copy-trader
 pip install -r requirements.txt
-python -m pytest -q                       # 26 tests, offline
+python -m pytest -q                       # 28 tests, offline
 
 python run_backtest.py                    # careful walk-forward; first run fetches ~500 MB of history (20-30 min)
 python run_backtest.py --config config.aggressive.json --no-plot   # whale walk-forward, same cache

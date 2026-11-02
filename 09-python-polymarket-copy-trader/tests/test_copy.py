@@ -138,6 +138,33 @@ def _buy(wallet, ts, usdc, side="BUY"):
     return {"proxyWallet": wallet, "timestamp": ts, "side": side, "usdcSize": usdc}
 
 
+def _market(cid, closed_ts, win=True):
+    return {"resolved": True, "closed_ts": closed_ts, "tokens": [{"token_id": cid, "winner": win}]}
+
+
+def _settled(wallet, cid, ts, usdc, win):
+    """One buy whose market closes a day later. A win pays the shares (size = usdc / 0.5)."""
+    return _buy(wallet, ts, usdc), cid, win
+
+
+def test_rank_whales_keeps_only_wallets_at_the_win_rate_bar():
+    # 16 settled markets each. `good` wins 12 ($100 cost, $200 payout -> +100). `big` wins 8 and bought more.
+    trades = {"good": [], "big": []}
+    markets = {}
+    for i in range(16):
+        ts = 1_000 + i * 86_400
+        for name, win, usdc in (("good", i < 12, 100), ("big", i < 8, 5_000)):
+            cid = f"{name}-{i}"
+            trades[name].append({"proxyWallet": name, "timestamp": ts, "side": "BUY", "usdcSize": usdc,
+                                 "size": usdc / 0.5, "conditionId": cid, "asset": cid})
+            markets[cid] = _market(cid, ts + 86_400, win=win)
+    cfg = CopyConfig(min_copyable_trades=15, follow_n=5, min_win_rate=0.70, min_decided=15)
+    ranked = rank_whales({"good": trades["good"], "big": trades["big"]}, {"good": "Good"}, 0, 1_000 + 20 * 86_400, cfg, markets)
+    assert [s.wallet for s in ranked] == ["good"]
+    assert ranked[0].win_rate == pytest.approx(0.75)
+    assert ranked[0].decided == 16 and ranked[0].realized > 0
+
+
 def test_rank_whales_orders_by_buy_notional_inside_the_window():
     hist = {
         "small": [_buy("small", 100, 50)] * 15,                                          # $750

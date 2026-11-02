@@ -113,7 +113,7 @@ def main() -> None:
         t0 = time.time()
         window0 = m0 - cfg.lookback_days * 86400
         if whale:
-            chosen = rank_whales(histories, names, window0, m0, cfg)
+            chosen = rank_whales(histories, names, window0, m0, cfg, markets, api)
             n_scored = _buyers(histories, window0, m0, cfg.min_copyable_trades)
         else:
             scores = score_wallets(histories, names, markets, prices, cfg, window0, m0, api=api)
@@ -128,8 +128,11 @@ def main() -> None:
         picks.append({"month": month, "scored": n_scored, "followed": [s.name for s in chosen],
                       "volumes": [round(s.notional) for s in chosen] if whale else [],
                       "copied_buys": res.copied_buys, "equity_end": float(res.equity.iloc[-1]) if len(res.equity) else None})
-        how = "whales by buy volume" if whale else "scored wallets"
-        log(f"{month}: {n_scored} {how}, following {len(chosen)}: {', '.join(s.name[:12] for s in chosen)}  "
+        how = "buyers screened" if whale else "scored wallets"
+        rates = ""
+        if whale and chosen and chosen[0].win_rate is not None:
+            rates = " [" + ", ".join(f"{s.win_rate:.0%}" for s in chosen) + "]"
+        log(f"{month}: {n_scored} {how}, following {len(chosen)}{rates}: {', '.join(s.name[:12] for s in chosen)}  "
             f"-> {res.copied_buys} buys copied, equity {res.equity.iloc[-1]:,.0f}  ({time.time()-t0:.0f}s, {api.requests_made} req)")
     wf = pd.concat(wf_equity)
 
@@ -141,7 +144,12 @@ def main() -> None:
     small = CopyConfig(**{**cfg.__dict__, "trade_fraction": cfg.trade_fraction / 5, "max_market_fraction": cfg.max_market_fraction / 2})
     everyone = simulate(all_trades, markets, prices, small, start_ts, end_ts, Portfolio(10_000.0), LeaderBook(), api=api)
 
-    rank_how = "trailing buy volume" if whale else "copyability"
+    if whale and cfg.min_win_rate > 0:
+        rank_how = "settled win rate >= %.0f%%" % (cfg.min_win_rate * 100)
+    elif whale:
+        rank_how = "trailing buy volume"
+    else:
+        rank_how = "copyability"
     curves = {"Cash": pd.Series(10_000.0, index=wf.index),
               "Copy: walk-forward top-%d by %s" % (cfg.follow_n, rank_how): wf,
               "Copy: today's leaderboard top-%d (biased)" % cfg.follow_n: naive.equity.reindex(wf.index).ffill(),
@@ -151,7 +159,12 @@ def main() -> None:
         curves["VOO buy & hold"] = voo * 10_000.0
 
     # ---- report ---------------------------------------------------------------------
-    kind = "whale copy (trailing buy volume)" if whale else "copy trading"
+    if whale and cfg.min_win_rate > 0:
+        kind = f"whale copy (settled win rate >= {cfg.min_win_rate:.0%})"
+    elif whale:
+        kind = "whale copy (trailing buy volume)"
+    else:
+        kind = "copy trading"
     print(f"\nPolymarket {kind}, {args.start} -> {dt.datetime.fromtimestamp(end_ts, dt.timezone.utc).date()}, "
           f"$10,000 start, {cfg.latency_min} min latency, {cfg.slippage:.2f} slippage, taker fees, "
           f"{cfg.trade_fraction:.0%} per buy, min leader buy ${cfg.min_usdc:.0f}\n")
@@ -173,9 +186,14 @@ def main() -> None:
         print(f"   {p['month']}  scored {p['scored']:3d}  copied {p['copied_buys']:4d} buys  equity {p['equity_end']:>9,.0f}  follow: {', '.join(p['followed'])}")
     look0 = end_ts - cfg.lookback_days * 86400
     if whale:
-        chosen_now = rank_whales(histories, names, look0, end_ts, cfg)
+        chosen_now = rank_whales(histories, names, look0, end_ts, cfg, markets, api)
         today = pd.DataFrame([{
-            "wallet": s.name, "trailing buy volume": s.notional, "buys": s.copied_buys,
+            "wallet": s.name,
+            "their win rate": s.win_rate if s.win_rate is not None else "",
+            "settled markets": s.decided,
+            "settled pnl": s.realized,
+            "trailing buy volume": s.notional,
+            "buys": s.copied_buys,
             "their record (90d)": profile_line(wallet_profile(api, [t for t in histories[s.wallet] if t["timestamp"] >= look0], markets)),
         } for s in chosen_now])
     else:
@@ -183,15 +201,25 @@ def main() -> None:
         today = scores_table(scores, 15)
         today["their record (90d)"] = [profile_line(wallet_profile(api, [t for t in histories[s.wallet] if t["timestamp"] >= look0], markets))
                                        for s in scores[:15]]
-    who = "biggest buyers" if whale else "highest copyability"
+    if whale and cfg.min_win_rate > 0:
+        who = f"settled win rate >= {cfg.min_win_rate:.0%}, highest profit"
+    elif whale:
+        who = "biggest buyers"
+    else:
+        who = "highest copyability"
     print(f"\n  Who we would follow today ({who}, trailing {cfg.lookback_days} days):")
     print(today.to_string(index=False, float_format=lambda v: f"{v:,.0f}" if v >= 100 else f"{v:.3f}"))
 
     RESULTS.mkdir(exist_ok=True)
     stem = "polymarket_whale" if whale else "polymarket"
     title = "Polymarket whale-copy walk-forward backtest" if whale else "Polymarket copy-trading walk-forward backtest"
-    rank_blurb = ("re-picked monthly by trailing buy volume (size, not skill)" if whale
-                  else f"re-picked monthly on the trailing {cfg.lookback_days} days by copyability")
+    if whale and cfg.min_win_rate > 0:
+        rank_blurb = (f"re-picked monthly from wallets whose own settled markets won at least {cfg.min_win_rate:.0%} "
+                      f"({cfg.min_decided}+ closed markets, positive settled profit), highest profit first")
+    elif whale:
+        rank_blurb = "re-picked monthly by trailing buy volume"
+    else:
+        rank_blurb = f"re-picked monthly on the trailing {cfg.lookback_days} days by copyability"
     md = [f"# {title}", "",
           f"{args.start} -> {dt.datetime.fromtimestamp(end_ts, dt.timezone.utc).date()}, $10,000 start, "
           f"{len(wallets)} screened wallets, follow top {cfg.follow_n} {rank_blurb}, "

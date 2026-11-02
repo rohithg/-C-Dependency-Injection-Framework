@@ -19,13 +19,14 @@ import datetime as dt
 import statistics
 
 
-def analyze_wallet(trades: list[dict], markets: dict[str, dict]) -> dict:
+def analyze_wallet(trades: list[dict], markets: dict[str, dict], *, resolved_only: bool = False) -> dict:
     """`trades` are the wallet's TRADE activity rows (any order); `markets`
     maps condition_id -> market dict (missing ids are treated as unresolved).
 
     Per market: PnL = sell proceeds - buy cost + payout of what is still held
     if the market resolved. A market counts as *decided* once it resolved or
     the wallet fully exited; win rate is wins / decided markets.
+    `resolved_only` ignores full exits of markets that have not closed.
     """
     if not trades:
         return {"trades": 0}
@@ -58,7 +59,7 @@ def analyze_wallet(trades: list[dict], markets: dict[str, dict]) -> dict:
         held = {tok: s for tok, s in m["net"].items() if s > 1e-6}      # negative = shares from splits/merges
         payout = sum(s for tok, s in held.items() if tok in winners) if resolved else 0.0
         pnl = m["proceeds"] - m["cost"] + payout
-        is_decided = resolved or not held
+        is_decided = resolved or (not resolved_only and not held)
         if is_decided:
             decided += 1
             wins += pnl > 0
@@ -87,6 +88,25 @@ def analyze_wallet(trades: list[dict], markets: dict[str, dict]) -> dict:
         "categories": _categories(rows),
         "first_ts": first, "last_ts": last,
     }
+
+
+def record_as_of(trades: list[dict], markets: dict[str, dict], as_of: int) -> dict:
+    """Win rate knowable at `as_of`, on markets that had already closed.
+
+    A later resolution is hidden, so a walk-forward pick cannot see the future.
+    Open scalps do not count: a win here is a market that had settled.
+    """
+    window = [t for t in trades if int(t["timestamp"]) < as_of]
+    visible: dict[str, dict] = {}
+    for cid in {t["conditionId"] for t in window}:
+        mk = markets.get(cid) or {}
+        closed_ts = int(mk.get("closed_ts") or 0)
+        if mk.get("resolved") and 0 < closed_ts <= as_of:
+            visible[cid] = mk
+        elif mk:
+            visible[cid] = {**mk, "resolved": False, "closed": False,
+                            "tokens": [{**tok, "winner": False} for tok in mk.get("tokens", [])]}
+    return analyze_wallet(window, visible, resolved_only=True)
 
 
 def wallet_profile(api, trades: list[dict], markets: dict[str, dict]) -> dict:

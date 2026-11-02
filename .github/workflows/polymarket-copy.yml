@@ -3,7 +3,7 @@ name: Polymarket copy trade
 # Two paper Polymarket accounts, both simulated, no API keys.
 #
 #   copy   follow the wallets copying actually paid, 1% per buy
-#   whale  follow the 5 wallets that spent the most buying, 5% per buy
+#   whale  follow up to 5 wallets whose own settled markets won >= 70%, 5% per buy
 #
 # Hourly tick, and a wallet re-selection every Monday 06:00 UTC. The two
 # accounts run one after the other (max-parallel 1) and both write into the

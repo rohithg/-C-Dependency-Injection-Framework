@@ -43,6 +43,8 @@ class CopyConfig:
     lookback_days: int = 90            # scoring window
     rebalance_days: int = 30           # how often the followed set is re-picked
     select_by: str = "copyability"     # "copyability" (what copying them earned) or "whale" (trailing buy volume)
+    min_win_rate: float = 0.0          # whale mode: their own settled-market win rate must be at least this (0 = off)
+    min_decided: int = 15              # and they need at least this many markets already closed in the lookback
     skip_slug_parts: tuple[str, ...] = ("updown", "-5m-", "-15m-", "-1h-", "up-or-down")
 
     def to_json(self, path):
@@ -55,6 +57,9 @@ class CopyConfig:
             raw = {k: v for k, v in json.load(f).items() if not k.startswith("_")}
         if raw.get("select_by") not in (None, "copyability", "whale"):
             raise ValueError(f"select_by must be 'copyability' or 'whale', got {raw.get('select_by')!r}")
+        rate = raw.get("min_win_rate")
+        if rate is not None and not (0 <= float(rate) <= 1):
+            raise ValueError(f"min_win_rate must be between 0 and 1, got {rate!r}")
         if "skip_slug_parts" in raw:
             raw["skip_slug_parts"] = tuple(raw["skip_slug_parts"])
         return cls(**raw)

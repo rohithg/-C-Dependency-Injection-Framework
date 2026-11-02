@@ -47,6 +47,7 @@ class PaperState:
         self.last_notified: str = raw.get("last_notified", "")
         self.skipped: dict[str, int] = raw.get("skipped", {})
         self.activity: list[dict] = raw.get("activity", [])
+        self.selection_rule: str = raw.get("selection_rule", "")
 
     def save(self) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -56,15 +57,16 @@ class PaperState:
             "equity_history": self.equity_history[-24 * 400:],
             "leaders": {"|".join(k): v for k, v in self.leaders.shares.items() if v > 0},
             "last_notified": self.last_notified, "skipped": self.skipped,
-            "activity": self.activity[-ACTIVITY_KEEP:],
+            "activity": self.activity[-ACTIVITY_KEEP:], "selection_rule": self.selection_rule,
         }, indent=1))
 
 
 def select_followed(api: PolymarketAPI, cfg: CopyConfig, log=print) -> list[dict]:
     """Full re-selection: leaderboards -> bot/dormancy screen -> top N.
 
-    copyability ranks by what copying the wallet earned. whale ranks by dollars
-    spent buying (size, not skill). Each pick still gets a descriptive profile.
+    copyability ranks by what copying the wallet earned. whale ranks by buy
+    volume, and when min_win_rate is set it keeps only wallets whose own
+    settled markets cleared that win rate and made money.
     """
     now = int(time.time())
     kept, _ = screen_universe(api, build_universe(api), cfg, log=log)
@@ -73,8 +75,12 @@ def select_followed(api: PolymarketAPI, cfg: CopyConfig, log=print) -> list[dict
     names = {w["wallet"]: w["name"] for w in kept}
     markets: dict[str, dict] = {}
     if cfg.select_by == "whale":
-        chosen = rank_whales(histories, names, since, now, cfg)
-        log(f"selected {len(chosen)} whales by trailing buy volume")
+        chosen = rank_whales(histories, names, since, now, cfg, markets, api)
+        if cfg.min_win_rate > 0:
+            log(f"selected {len(chosen)} whales with settled win rate >= {cfg.min_win_rate:.0%} "
+                f"and at least {cfg.min_decided} closed markets")
+        else:
+            log(f"selected {len(chosen)} whales by trailing buy volume")
     else:
         scores = score_wallets(histories, names, markets, PriceSource(api, markets), cfg, since, now, api=api, log=log)
         chosen = choose(scores, cfg)
@@ -89,6 +95,10 @@ def select_followed(api: PolymarketAPI, cfg: CopyConfig, log=print) -> list[dict
                                for r in stats.get("top_markets", [])[:3]]}
         if cfg.select_by == "whale":
             row["whale_volume"] = round(s.notional)
+            if s.win_rate is not None:
+                row["leader_win_rate"] = round(s.win_rate, 4)
+                row["leader_decided"] = s.decided
+                row["leader_pnl"] = round(s.realized)
         out.append(row)
     return out
 
@@ -103,9 +113,11 @@ def run_once(api: PolymarketAPI, cfg: CopyConfig, state_dir: Path = STATE_DIR, *
                     "fills": [], "skipped": {}, "reselected": False, "activity": [], "reviews": []}
 
     # ---- who to follow -----------------------------------------------------------------
-    if reselect or not state.followed or now - state.selected_at > cfg.rebalance_days * 86400:
+    rule = _selection_rule(cfg)
+    if reselect or not state.followed or state.selection_rule != rule or now - state.selected_at > cfg.rebalance_days * 86400:
         state.followed = select_followed(api, cfg, log)
         state.selected_at = now
+        state.selection_rule = rule
         report["reselected"] = True
         for f in state.followed:
             state.cursor.setdefault(f["wallet"], now - 3600)   # start copying from now, not their past
@@ -241,6 +253,13 @@ def run_once(api: PolymarketAPI, cfg: CopyConfig, state_dir: Path = STATE_DIR, *
                 f.write(json.dumps({"run": report["as_of"], "type": "review", **r}) + "\n")
     report["_state"] = state
     return report
+
+
+def _selection_rule(cfg: CopyConfig) -> str:
+    """Empty for the careful account, so a rule change re-picks only the whale book."""
+    if cfg.select_by != "whale" or cfg.min_win_rate <= 0:
+        return ""
+    return f"whale win>={cfg.min_win_rate:.2f} decided>={cfg.min_decided} pnl>0"
 
 
 def _count(report: dict, state: PaperState, why: str) -> None:

@@ -1,7 +1,7 @@
 """Descriptive wallet profile: win rate, sizing, consistency, categories."""
 import pytest
 
-from polycopy.analysis import analyze_wallet, category, profile_line
+from polycopy.analysis import analyze_wallet, category, profile_line, record_as_of
 
 T0 = 1_700_000_000
 
@@ -39,6 +39,15 @@ def test_shares_from_splits_do_not_count_as_short_positions():
     trades = [t("m1", "SELL", 150, 300, T0)]
     s = analyze_wallet(trades, {"m1": {"resolved": True, "tokens": [{"token_id": "m1", "winner": True}]}})
     assert s["realized_pnl"] == pytest.approx(150.0) and s["win_rate"] == 1.0
+
+
+def test_record_as_of_ignores_a_resolution_that_had_not_happened_yet():
+    trades = [t("m1", "BUY", 100, 200, T0)]
+    markets = {"m1": {"resolved": True, "closed_ts": T0 + 10 * 86400, "tokens": [{"token_id": "m1", "winner": True}]}}
+    early = record_as_of(trades, markets, T0 + 86400)
+    assert early["decided_markets"] == 0 and early["win_rate"] is None
+    late = record_as_of(trades, markets, T0 + 11 * 86400)
+    assert late["decided_markets"] == 1 and late["win_rate"] == 1.0 and late["realized_pnl"] == pytest.approx(100)
 
 
 def test_category_from_slug():
