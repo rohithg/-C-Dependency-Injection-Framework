@@ -1,0 +1,17 @@
+{
+  "trend_symbol": "SPY",
+  "risk_assets": ["SPY", "QQQ"],
+  "leveraged_2x": {"SPY": "SSO", "QQQ": "QLD"},
+  "cash_symbol": "BIL",
+  "benchmark_symbol": "VOO",
+  "sma_window": 200,
+  "momentum_window": 126,
+  "min_hold_days": 21,
+  "vol_window": 20,
+  "target_vol": 0.20,
+  "max_leverage": 2.0,
+  "rebalance_band": 0.10,
+  "cost_bps": 2.0,
+  "lev_etf_expense": 0.009,
+  "borrow_spread": 0.005
+}
