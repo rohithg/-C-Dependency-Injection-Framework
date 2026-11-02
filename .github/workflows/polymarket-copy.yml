@@ -1,0 +1,116 @@
+name: Polymarket copy trade
+
+# Hourly paper copy-trading of Polymarket's most copyable wallets. Runs on
+# GitHub's servers; no API keys (Polymarket's data endpoints are public and
+# the account is simulated). Scheduled runs do nothing until the repository
+# variable POLY_COPY_ENABLED is "true"; manual runs always work.
+#
+# Every Monday 06:00 UTC the followed wallets are re-selected (slow, ~15 min
+# of API paging); every other hour the job copies new leader trades against
+# live order books, marks positions and, once per day after 20:00 UTC, sends
+# the status message (GitHub issue @mention by default; same optional
+# Twilio / SMTP / ntfy / Telegram secrets as the TVM workflow).
+#
+# State is committed to the `polymarket-copy-log` branch after each run.
+# Note: hourly runs use ~700 Actions minutes/month; that is free on public
+# repos and about a third of the free quota on private ones.
+on:
+  schedule:
+    - cron: "12 * * * *"        # hourly tick
+    - cron: "0 6 * * 1"         # weekly re-selection (the tick at 06:12 then runs as usual)
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "live (simulated account) / dry-run / notify-test"
+        type: choice
+        options: [live, dry-run, notify-test]
+        default: dry-run
+      reselect:
+        description: "re-pick followed wallets now (slow)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: polymarket-copy
+  cancel-in-progress: false
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.POLY_COPY_ENABLED == 'true' }}
+    permissions:
+      contents: write
+      issues: write
+    defaults:
+      run:
+        working-directory: 09-python-polymarket-copy-trader
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: 09-python-polymarket-copy-trader/requirements.txt
+      - run: pip install -r requirements.txt
+      - name: Cache Polymarket history (makes weekly re-selection minutes instead of an hour)
+        uses: actions/cache@v4
+        with:
+          path: 09-python-polymarket-copy-trader/data_cache
+          # re-selection runs save a fresh copy; hourly ticks reuse the latest one
+          key: polycopy-data-v1-${{ (github.event.schedule == '0 6 * * 1' || inputs.reselect == true) && github.run_id || 'tick' }}
+          restore-keys: polycopy-data-v1-
+      - name: Restore state from polymarket-copy-log branch
+        run: |
+          mkdir -p state
+          if git fetch --depth=1 origin polymarket-copy-log:refs/remotes/origin/polymarket-copy-log 2>/dev/null; then
+            git -C "$(git rev-parse --show-toplevel)" archive origin/polymarket-copy-log | tar -x -C state
+            echo "restored $(find state -type f | tr '\n' ' ')"
+          else
+            echo "no polymarket-copy-log branch yet (first run)"
+          fi
+      - name: Tick
+        env:
+          MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'live' }}
+          RESELECT: ${{ (github.event_name == 'schedule' && github.event.schedule == '0 6 * * 1') || inputs.reselect == true }}
+          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+          TWILIO_FROM: ${{ secrets.TWILIO_FROM }}
+          TWILIO_TO: ${{ secrets.TWILIO_TO }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMS_EMAIL_TO: ${{ secrets.SMS_EMAIL_TO }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TVM_GITHUB_ISSUE_NOTIFY: ${{ vars.TVM_GITHUB_ISSUE_NOTIFY }}
+        run: |
+          flags=""
+          [ "$RESELECT" = "true" ] && flags="--reselect"
+          python paper_trade.py --mode "$MODE" $flags
+      - name: Persist state to polymarket-copy-log branch
+        if: ${{ always() && (github.event_name == 'schedule' || inputs.mode == 'live') }}
+        run: |
+          [ -f state/state.json ] || { echo "nothing to persist"; exit 0; }
+          git config user.name "polycopy-bot"
+          git config user.email "polycopy-bot@users.noreply.github.com"
+          if git rev-parse --verify origin/polymarket-copy-log >/dev/null 2>&1; then
+            git worktree add /tmp/log origin/polymarket-copy-log
+            git -C /tmp/log checkout -B polymarket-copy-log
+          else
+            git worktree add --detach /tmp/log
+            git -C /tmp/log checkout --orphan polymarket-copy-log
+            git -C /tmp/log rm -rfq . || true
+          fi
+          cp -r state/. /tmp/log/
+          git -C /tmp/log add -A
+          git -C /tmp/log commit -qm "polycopy tick $(date -u +%Y-%m-%dT%H:%MZ)" || { echo "no changes"; exit 0; }
+          git -C /tmp/log push origin polymarket-copy-log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: polycopy-${{ github.run_id }}
+          path: 09-python-polymarket-copy-trader/state/
+          if-no-files-found: ignore
