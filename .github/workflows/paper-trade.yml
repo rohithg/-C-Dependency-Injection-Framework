@@ -14,13 +14,14 @@ name: TVM paper trade
 # VOO. Add ALPACA_PAPER_KEY_ID / ALPACA_PAPER_SECRET_KEY to use an Alpaca
 # paper account instead.
 #
-# Two strategies run as a matrix, one after the other:
-#   adaptive  the TVM expert ensemble            -> state/            (ALPACA_PAPER_* secrets, optional)
-#   kronos    Kronos candlestick foundation model -> state/kronos/     (ALPACA_KRONOS_* secrets, optional)
+# Three strategies run as a matrix, one after the other:
+#   adaptive    the TVM expert ensemble                     -> state/             (ALPACA_PAPER_* secrets, optional)
+#   aggressive  fixed TVM rules, 30% vol target, 2x ETFs    -> state/aggressive/  (ALPACA_AGGRESSIVE_* secrets, optional)
+#   kronos      Kronos candlestick foundation model         -> state/kronos/      (ALPACA_KRONOS_* secrets, optional)
 # With Alpaca they need separate paper accounts because each manages the
-# whole account. Only the adaptive leg runs on the schedule: Kronos did not beat
-# VOO out of sample (README, "Walk-forward results") and its model download
-# and inference are the most expensive step in this repo, so it is
+# whole account. The schedule runs adaptive and aggressive. Kronos did not
+# beat VOO out of sample (README, "Walk-forward results") and its model
+# download and inference are the most expensive step in this repo, so it is
 # manual-only ("Run workflow" -> strategy: kronos).
 #
 # After every real run the state files and trade logs are committed to the
@@ -59,15 +60,16 @@ on:
       strategy:
         description: "which strategy leg(s) to run"
         type: choice
-        options: [both, adaptive, kronos]
-        default: both
+        options: [scheduled, adaptive, aggressive, kronos, all]
+        default: scheduled
 
 jobs:
   rebalance:
     runs-on: ubuntu-latest
-    # Scheduled runs only do anything once the repo variable
-    # TVM_PAPER_TRADING_ENABLED is set to "true"; manual runs always work.
-    if: ${{ github.event_name == 'workflow_dispatch' || vars.TVM_PAPER_TRADING_ENABLED == 'true' }}
+    # Scheduled runs are on by default once this file is on the default branch.
+    # Set repo variable TVM_PAPER_TRADING_ENABLED to "false" to pause them;
+    # manual runs always work.
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.TVM_PAPER_TRADING_ENABLED != 'false' }}
     permissions:
       contents: write   # push the paper-trading-log branch
       issues: write     # daily status comment -> GitHub app push notification
@@ -77,11 +79,22 @@ jobs:
       matrix:
         include:
           - strategy: adaptive
+            flags: "--strategy adaptive"
+            scheduled: true
             requirements: requirements.txt
             key_secret: ALPACA_PAPER_KEY_ID
             secret_secret: ALPACA_PAPER_SECRET_KEY
             issue_title: "TVM paper trading: daily status"
+          - strategy: aggressive
+            flags: "--strategy fixed --config config.aggressive.json --state-dir state/aggressive --label 'TVM aggressive'"
+            scheduled: true
+            requirements: requirements.txt
+            key_secret: ALPACA_AGGRESSIVE_KEY_ID
+            secret_secret: ALPACA_AGGRESSIVE_SECRET_KEY
+            issue_title: "TVM aggressive paper trading: daily status"
           - strategy: kronos
+            flags: "--strategy kronos"
+            scheduled: false
             requirements: requirements-kronos.txt
             key_secret: ALPACA_KRONOS_KEY_ID
             secret_secret: ALPACA_KRONOS_SECRET_KEY
@@ -97,12 +110,13 @@ jobs:
           EVENT: ${{ github.event_name }}
           WANTED: ${{ inputs.strategy }}
           LEG: ${{ matrix.strategy }}
+          SCHEDULED: ${{ matrix.scheduled }}
         run: |
           run=false
           if [ "$EVENT" = workflow_dispatch ]; then
-            { [ "$WANTED" = both ] || [ "$WANTED" = "$LEG" ]; } && run=true
+            { [ "$WANTED" = all ] || [ "$WANTED" = "$LEG" ] || { [ "$WANTED" = scheduled ] && [ "$SCHEDULED" = true ]; }; } && run=true
           else
-            [ "$LEG" = adaptive ] && run=true     # scheduled runs: adaptive only
+            [ "$SCHEDULED" = true ] && run=true
           fi
           echo "run=$run" >> "$GITHUB_OUTPUT"
           echo "leg $LEG: run=$run"
@@ -136,7 +150,6 @@ jobs:
       - name: Rebalance
         if: steps.gate.outputs.run == 'true'
         env:
-          TVM_STRATEGY: ${{ matrix.strategy }}
           APCA_API_KEY_ID: ${{ secrets[matrix.key_secret] }}
           APCA_API_SECRET_KEY: ${{ secrets[matrix.secret_secret] }}
           TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
@@ -155,7 +168,7 @@ jobs:
           GITHUB_ISSUE_TITLE: ${{ matrix.issue_title }}
           TVM_GITHUB_ISSUE_NOTIFY: ${{ vars.TVM_GITHUB_ISSUE_NOTIFY }}
           MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'live' }}
-        run: python paper_trade.py --mode "$MODE"
+        run: python paper_trade.py --mode "$MODE" ${{ matrix.flags }}
       - name: Persist state and trade log to paper-trading-log branch
         if: ${{ always() && steps.gate.outputs.run == 'true' && (github.event_name == 'schedule' || inputs.mode == 'live' || inputs.mode == 'paper') }}
         run: |

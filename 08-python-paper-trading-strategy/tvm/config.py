@@ -52,7 +52,7 @@ class TVMConfig:
 
     @classmethod
     def from_json(cls, path: str | Path) -> "TVMConfig":
-        raw = json.loads(Path(path).read_text())
+        raw = {k: v for k, v in json.loads(Path(path).read_text()).items() if not k.startswith("_")}   # "_comment" etc.
         for key in ("risk_assets", "trend_vote_windows"):
             if key in raw:
                 raw[key] = tuple(raw[key])

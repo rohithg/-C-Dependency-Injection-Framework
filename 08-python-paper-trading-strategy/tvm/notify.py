@@ -41,7 +41,7 @@ def to_text(report: dict, perf: dict | None, cfg: TVMConfig = DEFAULT, mode: str
     """Compact status line; stays under ~300 chars so it fits in two SMS segments."""
     sig, after = report["signal"], report["state_after"]
     day = dt.date.fromisoformat(report["as_of"]).strftime("%b %d")
-    head = f"{'Kronos' if report.get('kronos') else 'TVM'} {day}"
+    head = f"{report.get('label') or ('Kronos' if report.get('kronos') else 'TVM')} {day}"
     if mode and mode != "live":
         head += f" [{mode}]"
     if report.get("kronos"):

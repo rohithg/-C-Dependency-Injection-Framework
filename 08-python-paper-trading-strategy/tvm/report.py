@@ -41,7 +41,7 @@ def performance_vs_benchmark(broker: Broker, bench_closes: pd.Series) -> dict | 
 def to_markdown(report: dict, perf: dict | None, cfg: TVMConfig = DEFAULT, mode: str = "") -> str:
     sig, after = report["signal"], report["state_after"]
     regime = "RISK-ON" if sig["risk_on"] else "RISK-OFF (cash)"
-    name = "Kronos" if report.get("kronos") else "TVM"
+    name = report.get("label") or ("Kronos" if report.get("kronos") else "TVM")
     lines = [
         f"## {name} daily run - {report['as_of']}  {('(' + mode + ')') if mode else ''}".rstrip(),
         "",

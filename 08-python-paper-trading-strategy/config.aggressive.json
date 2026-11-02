@@ -1,0 +1,5 @@
+{
+  "_comment": "Aggressive leg: the fixed TVM rules with a 30% volatility target, implemented with 2x ETFs (SSO/QLD) up to 2.0x. Same signal as the default, scaled up: 1994-> 16.5% CAGR / -37% MaxDD / Sharpe 0.67 vs VOO 10.8% / -55% / 0.51; 1999-2010 out of sample +5.0% vs +0.4%; 2010-> 22.2% / -26% vs 14.8% / -34%. Expect a -35% to -45% year at some point.",
+  "target_vol": 0.30,
+  "max_leverage": 2.0
+}

@@ -59,6 +59,7 @@ def main() -> int:
     ap.add_argument("--state-dir", default=os.environ.get("TVM_STATE_DIR"),
                     help="where tvm_state.json / trade_log.jsonl live (default state/, or state/kronos for --strategy kronos)")
     ap.add_argument("--dry-run", action="store_true", help="compute and print orders without submitting")
+    ap.add_argument("--label", default=os.environ.get("TVM_LABEL"), help="name used in the report / text, e.g. 'TVM aggressive'")
     ap.add_argument("--fake", action="store_true", help="use an in-memory fake broker (no credentials needed)")
     ap.add_argument("--no-live-prices", action="store_true", help="use last daily close only, even if market is open")
     ap.add_argument("--force", action="store_true", help="rebalance to target even if inside the band")
@@ -116,6 +117,8 @@ def main() -> int:
 
     report = run_once(broker, signal_closes, cfg, dry_run=dry_run, use_live_prices=not args.no_live_prices,
                       force=args.force, adaptive=adaptive, kronos=kronos, bars=bars, state_dir=state_dir)
+    if args.label:
+        report["label"] = args.label
     if mode == "paper":
         broker.mark()
     perf = None if fake else performance_vs_benchmark(broker, closes[cfg.benchmark_symbol])

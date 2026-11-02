@@ -324,47 +324,66 @@ Only the hold-period counter is persisted in `state/tvm_state.json`; every run
 appends a JSON record to `state/trade_log.jsonl`; the built-in account (cash,
 shares, fills, daily equity) lives in `state/paper_account.json`.
 
-### Running it from your phone (no computer needed)
+### Running it in the cloud (nothing to run yourself)
 
 [`.github/workflows/paper-trade.yml`](../.github/workflows/paper-trade.yml)
-runs the whole thing on GitHub's servers. Every run writes a summary (regime,
-target portfolio, orders, paper-account return vs VOO) to the run page, which
-reads fine in the GitHub mobile app or a phone browser.
+runs the whole thing on GitHub's servers every weekday at 15:40 ET and posts
+the result to your phone. There is nothing to install and no account to open.
 
-1. **Try it right now, no accounts needed.** In a phone browser open this repo
-   -> *Actions* -> *TVM paper trade* -> *Run workflow* -> mode `preview`.
-   About a minute later open the run and read the *Summary*. This shows
-   today's signal on a throwaway $100k account. (The GitHub app can read runs
-   but cannot start them; use the browser for that step. The workflow file
-   must be on the default branch for the button to appear.)
-2. **Switch it on.** Repo -> *Settings* -> *Secrets and variables* ->
-   *Actions* -> *Variables* -> `TVM_PAPER_TRADING_ENABLED` = `true`. That is
-   the whole setup: with no brokerage keys the job keeps its own $100k paper
-   account in `state/paper_account.json` on the `paper-trading-log` branch,
-   fills at each day's close, and reports equity vs VOO in every summary and
-   daily message. (Daily phone notifications need nothing extra; see "Daily
-   text message" below.)
-3. **Done.** From then on it runs itself every weekday at 15:40 ET with no
-   further input. Check in whenever you like: the Actions tab shows each day's
-   summary and the `paper-trading-log` branch holds the account, fills and
-   full trade history.
-4. **Optional: a real brokerage paper account.** If you would rather see the
+1. **Merge the pull request.** GitHub only runs schedules from the default
+   branch, so merging is the on switch. The first scheduled run happens the
+   next weekday afternoon; to see one sooner, *Actions* -> *TVM paper trade*
+   -> *Run workflow* (browser, not the app) with the defaults.
+2. **That is all.** With no brokerage keys each leg keeps its own $100k paper
+   account in `state/.../paper_account.json` on the `paper-trading-log`
+   branch, fills at each day's close, and reports equity vs VOO in every
+   summary and daily message. The daily message arrives as a GitHub
+   notification (see "Daily text message" for SMS / push options).
+3. **Two legs run on the schedule**, each as a separate paper account and a
+   separate daily message:
+   - **TVM** (adaptive ensemble, `state/`): the default, 13.4%/yr fixed rules
+     with the learning layer on top.
+   - **TVM aggressive** (`state/aggressive/`, `config.aggressive.json`): the
+     same rules with a 30% volatility target, held with 2x ETFs up to 2.0x.
+     Since 1994: 16.5%/yr, worst drawdown -37%, Sharpe 0.67 (VOO: 10.8%,
+     -55%, 0.51); 2010->: 22.2%/yr vs 14.8%; out of sample 1999-2010: +5.0%/yr
+     vs +0.4%. It beat VOO in 83% of rolling 3-year windows and every 10-year
+     window. It is the same edge scaled up, not a different bet, so it will
+     also have a -35% to -45% year at some point.
+4. **To pause**, set repo variable `TVM_PAPER_TRADING_ENABLED` = `false`
+   (*Settings* -> *Secrets and variables* -> *Actions* -> *Variables*).
+   Manual runs keep working.
+5. **Optional: a real brokerage paper account.** If you would rather see the
    positions in a broker app, sign up at [alpaca.markets](https://alpaca.markets)
    (free), switch the dashboard to *Paper*, generate a key + secret, and add
-   them as secrets `ALPACA_PAPER_KEY_ID` / `ALPACA_PAPER_SECRET_KEY`. The
-   schedule then trades that account instead (live IEX prices, orders fill at
-   the next open); *Run workflow* -> `dry-run` first to see the orders.
-5. **Scope.** Paper only, either way: the Alpaca client refuses any endpoint
-   without "paper" in its URL, and the built-in account is a JSON file.
-6. **Kronos is manual-only.** It did not beat VOO out of sample (see
+   them as secrets `ALPACA_PAPER_KEY_ID` / `ALPACA_PAPER_SECRET_KEY` (and a
+   second paper account as `ALPACA_AGGRESSIVE_KEY_ID` / `_SECRET_KEY` for the
+   aggressive leg). The schedule then trades those accounts instead (live IEX
+   prices, orders fill at the next open).
+6. **Scope.** Paper only, either way: the Alpaca client refuses any endpoint
+   without "paper" in its URL, and the built-in accounts are JSON files.
+7. **Kronos is manual-only.** It did not beat VOO out of sample (see
    "Walk-forward results"), and its model download and inference are the
-   most expensive step in this repo, so the schedule runs the adaptive leg
-   only. To try Kronos by hand: *Run workflow* -> strategy `kronos`, mode
-   `preview` (no keys needed). To paper trade it for real you would need a
-   *second* Alpaca paper account with its keys in `ALPACA_KRONOS_KEY_ID` /
-   `ALPACA_KRONOS_SECRET_KEY` and a `live` manual run; its state lives in
-   `state/kronos/` on the log branch and reports to *Kronos paper trading:
-   daily status*.
+   most expensive step in this repo. To try it by hand: *Run workflow* ->
+   strategy `kronos`, mode `preview` (no keys needed). Its state lives in
+   `state/kronos/` and it reports to *Kronos paper trading: daily status*.
+
+### About "$5 a day in any market"
+
+Neither leg, nor anything else in this repository, can promise a fixed
+dollar amount per day; nothing that trades can. What the numbers support:
+
+- On the $100k paper account, the aggressive leg's 16.5%/yr backtest averages
+  about **$45 a day**, the default leg's 13.4% about **$37 a day**. Both have
+  daily swings of roughly $1,000-1,500, so most individual days are far from
+  the average and about 45% of them are negative.
+- To average $5 a day you need roughly **$11,000** at the aggressive leg's
+  rate or **$14,000** at the default's; on $1,000 it is 45 cents a day.
+- "Any market" is covered the only way history supports: the trend gate goes
+  to T-bills when SPY is below its 200-day average, which is why both legs
+  made money through 1999-2010 while VOO made nothing. They still lose in
+  whipsaw years (2015, 2018, 2022-23) and in fast crashes before the gate
+  closes (-37% worst case for the aggressive leg since 1994).
 
 ### Daily text message
 
@@ -432,7 +451,8 @@ tvm/report.py     markdown run summary (GitHub step summary) + paper P&L vs VOO
 tvm/notify.py     daily one-liner via GitHub issue (default) / Twilio SMS / email-to-SMS / ntfy / Telegram
 run_backtest.py   report + charts in results/
 run_kronos_backtest.py  walk-forward evaluation of the Kronos rules vs TVM and VOO
-paper_trade.py    CLI for the daily run (--strategy adaptive | fixed | kronos)
+paper_trade.py    CLI for the daily run (--strategy adaptive | fixed | kronos, --config, --state-dir, --label)
+config.aggressive.json  the aggressive leg: target_vol 0.30, max_leverage 2.0
 tests/            60 unit + integration tests on synthetic data (Kronos tests use a stub model)
 ```
 
