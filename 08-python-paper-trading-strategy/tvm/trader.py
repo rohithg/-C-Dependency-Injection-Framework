@@ -191,8 +191,11 @@ def _kronos_decision(broker: Broker, bars: dict[str, pd.DataFrame], as_of: pd.Ti
             tb = getattr(broker, "today_bar", lambda s: None)(sym)
             if tb is None and sym in live:
                 p = live[sym]
-                tb = {"open": p, "high": p, "low": p, "close": p, "volume": float(b["volume"].tail(20).median())}
+                tb = {"open": p, "high": p, "low": p, "close": p}
             if tb is not None:
+                # the broker's free IEX feed sees a few % of consolidated volume, so
+                # use a typical recent day's volume instead of the partial-day figure
+                tb["volume"] = float(b["volume"].tail(20).median())
                 b.loc[today] = tb
         todays_bars[sym] = b
 
