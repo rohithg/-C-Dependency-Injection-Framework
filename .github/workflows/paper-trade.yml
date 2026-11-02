@@ -8,7 +8,14 @@ name: TVM paper trade
 # summer, 20:40 UTC = 15:40 ET in winter. Both fire; the off-season one is a
 # harmless no-op because the trader is idempotent within a day.
 #
-# After every real run the state file and trade log are committed to the
+# Two strategies run as a matrix, one after the other:
+#   adaptive  the TVM expert ensemble            -> state/            (ALPACA_PAPER_* secrets)
+#   kronos    Kronos candlestick foundation model -> state/kronos/     (ALPACA_KRONOS_* secrets)
+# They need separate Alpaca paper accounts because each manages the whole
+# account. The kronos leg only runs on a schedule once repo variable
+# KRONOS_PAPER_TRADING_ENABLED is "true" (manual runs can always pick it).
+#
+# After every real run the state files and trade logs are committed to the
 # `paper-trading-log` branch. That gives a permanent history and, because it
 # counts as repository activity, stops GitHub from auto-disabling this
 # schedule after 60 idle days.
@@ -25,9 +32,9 @@ name: TVM paper trade
 #   Email-to-SMS: SMTP_HOST, SMTP_USER, SMTP_PASSWORD, SMS_EMAIL_TO
 #   ntfy push:    NTFY_TOPIC
 #   Telegram:     TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
-# With no secrets at all, each run still comments on a "TVM paper trading:
-# daily status" issue and @mentions the repo owner, which the GitHub mobile
-# app delivers as a push notification. Set repo variable
+# With no secrets at all, each run still comments on a "... paper trading:
+# daily status" issue (one per strategy) and @mentions the repo owner, which
+# the GitHub mobile app delivers as a push notification. Set repo variable
 # TVM_GITHUB_ISSUE_NOTIFY=false to turn that off.
 on:
   schedule:
@@ -40,6 +47,11 @@ on:
         type: choice
         options: [preview, dry-run, live, notify-test]
         default: preview
+      strategy:
+        description: "which strategy leg(s) to run"
+        type: choice
+        options: [both, adaptive, kronos]
+        default: both
 
 jobs:
   rebalance:
@@ -50,31 +62,75 @@ jobs:
     permissions:
       contents: write   # push the paper-trading-log branch
       issues: write     # daily status comment -> GitHub app push notification
+    strategy:
+      fail-fast: false
+      max-parallel: 1   # both legs commit to the same log branch
+      matrix:
+        include:
+          - strategy: adaptive
+            requirements: requirements.txt
+            key_secret: ALPACA_PAPER_KEY_ID
+            secret_secret: ALPACA_PAPER_SECRET_KEY
+            issue_title: "TVM paper trading: daily status"
+          - strategy: kronos
+            requirements: requirements-kronos.txt
+            key_secret: ALPACA_KRONOS_KEY_ID
+            secret_secret: ALPACA_KRONOS_SECRET_KEY
+            issue_title: "Kronos paper trading: daily status"
     defaults:
       run:
         working-directory: 08-python-paper-trading-strategy
     steps:
+      - name: Decide whether this leg runs
+        id: gate
+        working-directory: .   # runs before checkout
+        env:
+          EVENT: ${{ github.event_name }}
+          WANTED: ${{ inputs.strategy }}
+          LEG: ${{ matrix.strategy }}
+          KRONOS_ENABLED: ${{ vars.KRONOS_PAPER_TRADING_ENABLED }}
+        run: |
+          run=false
+          if [ "$EVENT" = workflow_dispatch ]; then
+            { [ "$WANTED" = both ] || [ "$WANTED" = "$LEG" ]; } && run=true
+          else
+            { [ "$LEG" = adaptive ] || [ "$KRONOS_ENABLED" = true ]; } && run=true
+          fi
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+          echo "leg $LEG: run=$run"
       - uses: actions/checkout@v4
+        if: steps.gate.outputs.run == 'true'
       - uses: actions/setup-python@v5
+        if: steps.gate.outputs.run == 'true'
         with:
           python-version: "3.12"
           cache: pip
-          cache-dependency-path: 08-python-paper-trading-strategy/requirements.txt
-      - run: pip install -r requirements.txt
+          cache-dependency-path: 08-python-paper-trading-strategy/${{ matrix.requirements }}
+      - name: Cache Kronos model weights
+        if: steps.gate.outputs.run == 'true' && matrix.strategy == 'kronos'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: kronos-weights-${{ matrix.strategy }}-v1
+      - if: steps.gate.outputs.run == 'true'
+        run: pip install -r ${{ matrix.requirements }}
       - name: Restore state and trade log from paper-trading-log branch
+        if: steps.gate.outputs.run == 'true'
         run: |
           mkdir -p state
           if git fetch --depth=1 origin paper-trading-log:refs/remotes/origin/paper-trading-log 2>/dev/null; then
             # git archive scopes to the cwd, so run it from the repo root
             git -C "$(git rev-parse --show-toplevel)" archive origin/paper-trading-log | tar -x -C state
-            echo "restored $(ls state | tr '\n' ' ')"
+            echo "restored $(find state -type f | tr '\n' ' ')"
           else
             echo "no paper-trading-log branch yet (first run)"
           fi
       - name: Rebalance
+        if: steps.gate.outputs.run == 'true'
         env:
-          APCA_API_KEY_ID: ${{ secrets.ALPACA_PAPER_KEY_ID }}
-          APCA_API_SECRET_KEY: ${{ secrets.ALPACA_PAPER_SECRET_KEY }}
+          TVM_STRATEGY: ${{ matrix.strategy }}
+          APCA_API_KEY_ID: ${{ secrets[matrix.key_secret] }}
+          APCA_API_SECRET_KEY: ${{ secrets[matrix.secret_secret] }}
           TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
           TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
           TWILIO_FROM: ${{ secrets.TWILIO_FROM }}
@@ -88,13 +144,14 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ISSUE_TITLE: ${{ matrix.issue_title }}
           TVM_GITHUB_ISSUE_NOTIFY: ${{ vars.TVM_GITHUB_ISSUE_NOTIFY }}
           MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'live' }}
         run: python paper_trade.py --mode "$MODE"
       - name: Persist state and trade log to paper-trading-log branch
-        if: ${{ always() && (github.event_name == 'schedule' || inputs.mode == 'live') }}
+        if: ${{ always() && steps.gate.outputs.run == 'true' && (github.event_name == 'schedule' || inputs.mode == 'live') }}
         run: |
-          [ -f state/tvm_state.json ] || { echo "nothing to persist"; exit 0; }
+          [ -n "$(find state -type f 2>/dev/null)" ] || { echo "nothing to persist"; exit 0; }
           git config user.name "tvm-bot"
           git config user.email "tvm-bot@users.noreply.github.com"
           if git rev-parse --verify origin/paper-trading-log >/dev/null 2>&1; then
@@ -107,12 +164,12 @@ jobs:
           fi
           cp -r state/. /tmp/log/
           git -C /tmp/log add -A
-          git -C /tmp/log commit -qm "TVM run $(date -u +%Y-%m-%dT%H:%MZ)" || { echo "no changes"; exit 0; }
+          git -C /tmp/log commit -qm "${{ matrix.strategy }} run $(date -u +%Y-%m-%dT%H:%MZ)" || { echo "no changes"; exit 0; }
           git -C /tmp/log push origin paper-trading-log
       - name: Upload run artifacts
-        if: always()
+        if: ${{ always() && steps.gate.outputs.run == 'true' }}
         uses: actions/upload-artifact@v4
         with:
-          name: tvm-run-${{ github.run_id }}
+          name: tvm-run-${{ github.run_id }}-${{ matrix.strategy }}
           path: 08-python-paper-trading-strategy/state/
           if-no-files-found: ignore

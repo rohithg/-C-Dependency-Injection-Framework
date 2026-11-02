@@ -1,0 +1,9 @@
+# Extra dependencies for the Kronos candlestick forecaster (--strategy kronos,
+# run_kronos_backtest.py). CPU-only torch keeps the download at ~200 MB.
+-r requirements.txt
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch>=2.4
+einops>=0.8
+huggingface_hub>=0.24
+safetensors>=0.4
+tqdm>=4.66

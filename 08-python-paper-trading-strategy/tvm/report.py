@@ -41,8 +41,9 @@ def performance_vs_benchmark(broker: Broker, bench_closes: pd.Series) -> dict | 
 def to_markdown(report: dict, perf: dict | None, cfg: TVMConfig = DEFAULT, mode: str = "") -> str:
     sig, after = report["signal"], report["state_after"]
     regime = "RISK-ON" if sig["risk_on"] else "RISK-OFF (cash)"
+    name = "Kronos" if report.get("kronos") else "TVM"
     lines = [
-        f"## TVM daily run - {report['as_of']}  {('(' + mode + ')') if mode else ''}".rstrip(),
+        f"## {name} daily run - {report['as_of']}  {('(' + mode + ')') if mode else ''}".rstrip(),
         "",
         f"**Regime:** {regime}  |  **Asset:** {after['asset']}  |  **Target exposure:** {after['exposure']:.2f}x  "
         f"|  **Realized vol:** {sig['realized_vol']:.1%}  |  **Equity:** ${report['equity']:,.0f}",
@@ -71,6 +72,17 @@ def to_markdown(report: dict, perf: dict | None, cfg: TVMConfig = DEFAULT, mode:
     else:
         lines.append("### No trades needed today (inside rebalance band)")
     lines.append("")
+    if report.get("kronos"):
+        lines += [f"### {report.get('mode_detail', 'Kronos forecast')} (drift from target {report.get('drift_from_target', 0):.2f})",
+                  "| Symbol | 5d forecast | Paths up | vs own baseline (z) | Worst path low |", "|---|---|---|---|---|"]
+        for s, f in report["kronos"].items():
+            z = f.get("z_ret")
+            lines.append(f"| {s} | {f['exp_ret']:+.2%} +/- {f['std_ret']:.2%} | {f['p_up']:.0%} | "
+                         f"{(f'{z:+.2f}' if z is not None else 'warming up')} | {f['exp_min_low']:+.2%} |")
+        lines.append(f"<sub>calibration history: {report.get('kronos_history_days', 0)} forecast days</sub>")
+        if report.get("tvm_weights"):
+            lines.append(f"<sub>TVM ensemble wanted: {', '.join(f'{k} {v:.0%}' for k, v in report['tvm_weights'].items())}</sub>")
+        lines.append("")
     if report.get("learner"):
         lines += [f"### Learner (adaptive ensemble, drift from target {report.get('drift_from_target', 0):.2f})",
                   "| Expert | Weight | Trailing 1y |", "|---|---|---|"]

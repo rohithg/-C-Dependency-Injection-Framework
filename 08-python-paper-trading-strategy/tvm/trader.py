@@ -23,6 +23,7 @@ from .broker import Broker, Order, Account
 from .config import TVMConfig, DEFAULT
 from .strategy import State, compute_signals, step, target_weights, exposure_from_weights, HOLD_UNKNOWN
 from .adaptive import AdaptiveConfig, latest_allocation, regime_postmortem
+from .kronos_signal import KronosConfig
 
 STATE_DIR = Path(__file__).resolve().parent.parent / "state"
 MIN_ORDER_NOTIONAL = 5.0        # ignore dust rebalances below this (USD)
@@ -84,10 +85,17 @@ def plan_orders(acct: Account, weights: dict[str, float], all_symbols: set[str])
 
 def run_once(broker: Broker, closes: pd.DataFrame, cfg: TVMConfig = DEFAULT, *, dry_run: bool = False,
              use_live_prices: bool = True, state_dir: Path = STATE_DIR, force: bool = False,
-             adaptive: AdaptiveConfig | None = None, log=print) -> dict:
-    """One daily decision. `adaptive=None` runs the fixed TVM rules; passing an
-    AdaptiveConfig runs the expert ensemble and trades toward its blended
-    target whenever it drifts more than `portfolio_band` (L1) from holdings."""
+             adaptive: AdaptiveConfig | None = None, kronos: KronosConfig | None = None,
+             bars: dict[str, pd.DataFrame] | None = None, log=print) -> dict:
+    """One daily decision.
+
+    adaptive=None, kronos=None  fixed TVM rules
+    adaptive=AdaptiveConfig     expert ensemble; trade toward its blended target
+                                when it drifts > portfolio_band (L1) from holdings
+    kronos=KronosConfig         Kronos candlestick forecaster (`bars` = daily OHLCV
+                                per symbol); for rule "tvm-veto" the ensemble
+                                supplies the base weights
+    """
     state_path = state_dir / "tvm_state.json"
     acct = broker.account()
     days_held, saved_asset, saved_as_of = load_days_held(state_path)
@@ -95,7 +103,7 @@ def run_once(broker: Broker, closes: pd.DataFrame, cfg: TVMConfig = DEFAULT, *, 
 
     live = None
     if use_live_prices and broker.market_is_open():
-        wanted = tradable | {cfg.trend_symbol} if adaptive else {cfg.trend_symbol, *cfg.risk_assets}
+        wanted = tradable | {cfg.trend_symbol} if (adaptive or kronos) else {cfg.trend_symbol, *cfg.risk_assets}
         live = {s: p for s in wanted if s in closes.columns and (p := broker.latest_price(s))}
     px = append_live_bar(closes, live)
     sig = compute_signals(px, cfg)
@@ -107,29 +115,37 @@ def run_once(broker: Broker, closes: pd.DataFrame, cfg: TVMConfig = DEFAULT, *, 
     state = reconstruct_state(acct, cfg, days_held, saved_asset)
 
     extra: dict = {}
-    if adaptive is None:
+    if adaptive is None and kronos is None:
         new_state, traded = step(state, row, cfg)
         weights = target_weights(new_state, cfg)
     else:
         cash = pd.Series(0.0, index=px.index)          # BIL column supplies the cash return when present
-        weights, board = latest_allocation(px, cash, cfg, adaptive)
+        tvm_weights, board = None, None
+        if adaptive is not None or (kronos is not None and kronos.rule == "tvm-veto"):
+            acfg = adaptive or AdaptiveConfig(max_leverage=cfg.max_leverage)
+            tvm_weights, board = latest_allocation(px, cash, cfg, acfg)
+        if kronos is None:
+            weights, band = tvm_weights, adaptive.portfolio_band
+            extra["mode_detail"] = "adaptive ensemble"
+        else:
+            weights, kextra = _kronos_decision(broker, bars or {}, as_of, live, kronos, cfg, tvm_weights, state_dir, log)
+            band = kronos.portfolio_band
+            extra.update(kextra)
         cur = {s: w for s, w in acct.weights().items() if s in tradable}
         dist = sum(abs(weights.get(s, 0.0) - cur.get(s, 0.0)) for s in set(weights) | set(cur))
-        traded = dist > adaptive.portfolio_band
+        traded = dist > band
         asset, _ = exposure_from_weights(weights, cfg)
         lev_syms = set(cfg.leveraged_2x.values())
         exposure = sum(w * (2.0 if s in lev_syms else 1.0) for s, w in weights.items() if s != cfg.cash_symbol)
         new_state = State(asset=asset, exposure=round(exposure, 4), days_held=state.days_held + 1, risk_on=exposure > 0)
-        pm = regime_postmortem(px, cfg, last_n=3)
-        extra = {
-            "mode_detail": "adaptive ensemble",
-            "drift_from_target": round(dist, 4),
-            "learner": [{"expert": n, "weight": round(float(r.weight), 4), "trailing_1y": round(float(r.trailing_1y), 4)}
-                        for n, r in board.iterrows()],
-            "postmortem": [{"exit": str(r.exit.date()), "reentry": str(r.reentry.date()) if r.reentry is not None else None,
-                            "days_out": int(r.days_out), "missed": round(float(r.missed), 4), "verdict": r.verdict}
-                           for r in pm.itertuples()],
-        }
+        extra["drift_from_target"] = round(dist, 4)
+        if board is not None:
+            pm = regime_postmortem(px, cfg, last_n=3)
+            extra["learner"] = [{"expert": n, "weight": round(float(r.weight), 4), "trailing_1y": round(float(r.trailing_1y), 4)}
+                                for n, r in board.iterrows()]
+            extra["postmortem"] = [{"exit": str(r.exit.date()), "reentry": str(r.reentry.date()) if r.reentry is not None else None,
+                                    "days_out": int(r.days_out), "missed": round(float(r.missed), 4), "verdict": r.verdict}
+                                   for r in pm.itertuples()]
 
     orders = plan_orders(acct, weights, tradable) if (traded or force) else []
 
@@ -158,6 +174,52 @@ def run_once(broker: Broker, closes: pd.DataFrame, cfg: TVMConfig = DEFAULT, *, 
         save_state(state_path, new_state, as_of)
         _append_log(state_dir / "trade_log.jsonl", report)
     return report
+
+
+def _kronos_decision(broker: Broker, bars: dict[str, pd.DataFrame], as_of: pd.Timestamp, live: dict | None,
+                     kcfg: KronosConfig, cfg: TVMConfig, tvm_weights: dict[str, float] | None,
+                     state_dir: Path, log=print) -> tuple[dict[str, float], dict]:
+    """Forecast today with Kronos, append it to the forecast history (which
+    the calibration needs), and map it to target weights."""
+    from .kronos_signal import forecast, load_predictor, load_forecasts, calibrate, kronos_weights, FORECAST_COLS
+
+    today = as_of.normalize()
+    todays_bars: dict[str, pd.DataFrame] = {}
+    for sym in kcfg.symbols:
+        b = bars[sym].copy()
+        if live and b.index[-1].normalize() < today:
+            tb = getattr(broker, "today_bar", lambda s: None)(sym)
+            if tb is None and sym in live:
+                p = live[sym]
+                tb = {"open": p, "high": p, "low": p, "close": p, "volume": float(b["volume"].tail(20).median())}
+            if tb is not None:
+                b.loc[today] = tb
+        todays_bars[sym] = b
+
+    hist_path = state_dir / "kronos_forecasts.csv"
+    if not hist_path.exists() and kcfg.forecast_cache().exists():
+        hist_path.parent.mkdir(parents=True, exist_ok=True)
+        hist_path.write_bytes(kcfg.forecast_cache().read_bytes())      # seed calibration from the backtest cache
+    hist = load_forecasts(hist_path)
+    hist = hist[pd.to_datetime(hist["date"]).dt.normalize() < today]    # re-running today recomputes today
+    fc = forecast(load_predictor(kcfg.variant), todays_bars, kcfg)
+    new = pd.DataFrame([{"date": today, "symbol": s, **r.to_dict()} for s, r in fc.iterrows()])
+    hist = pd.concat([hist, new], ignore_index=True)
+    hist_path.parent.mkdir(parents=True, exist_ok=True)
+    hist.to_csv(hist_path, index=False)
+    cal = calibrate(hist)
+    fc_today = cal[cal["date"] == today].set_index("symbol")
+
+    weights = kronos_weights(fc_today, kcfg, cfg, tvm_weights)
+    extra = {
+        "mode_detail": f"Kronos-{kcfg.variant} candlestick forecast, rule '{kcfg.rule}'",
+        "kronos": {s: {k: (round(float(v), 4) if pd.notna(v) else None) for k, v in r.items() if k in (*FORECAST_COLS, "z_ret")}
+                   for s, r in fc_today.iterrows()},
+        "kronos_history_days": int(cal["date"].nunique()),
+    }
+    if tvm_weights is not None:
+        extra["tvm_weights"] = tvm_weights
+    return weights, extra
 
 
 def _append_log(path: Path, report: dict) -> None:

@@ -76,6 +76,20 @@ class AlpacaBroker:
         except Exception:
             return None
 
+    def today_bar(self, symbol: str) -> dict | None:
+        """Today's (partial) daily OHLCV candle, for the Kronos forecaster."""
+        try:
+            import datetime as dt
+            start = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT00:00:00Z")
+            data = self._get(f"{self.data_url}/v2/stocks/{symbol}/bars", timeframe="1Day", start=start, feed="iex", limit=1)
+            bar = (data.get("bars") or [None])[-1]
+            if not bar:
+                return None
+            return {"open": float(bar["o"]), "high": float(bar["h"]), "low": float(bar["l"]),
+                    "close": float(bar["c"]), "volume": float(bar["v"])}
+        except Exception:
+            return None
+
     def submit(self, order: Order) -> dict:
         if order.liquidate:
             r = self._s.delete(f"{self.base_url}/v2/positions/{order.symbol}", timeout=self.timeout)
@@ -134,6 +148,9 @@ class FakeBroker:
 
     def latest_price(self, symbol: str) -> float | None:
         return self.prices.get(symbol)
+
+    def today_bar(self, symbol: str) -> dict | None:
+        return None
 
     def submit(self, order: Order) -> dict:
         self.submitted.append(order)

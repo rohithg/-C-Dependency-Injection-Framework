@@ -41,10 +41,15 @@ def to_text(report: dict, perf: dict | None, cfg: TVMConfig = DEFAULT, mode: str
     """Compact status line; stays under ~300 chars so it fits in two SMS segments."""
     sig, after = report["signal"], report["state_after"]
     day = dt.date.fromisoformat(report["as_of"]).strftime("%b %d")
-    head = f"TVM {day}"
+    head = f"{'Kronos' if report.get('kronos') else 'TVM'} {day}"
     if mode and mode != "live":
         head += f" [{mode}]"
-    if sig["risk_on"]:
+    if report.get("kronos"):
+        fc = report["kronos"]
+        view = " ".join(f"{s} {f['exp_ret']:+.1%}" + (f"(z{f['z_ret']:+.1f})" if f.get("z_ret") is not None else "")
+                        for s, f in fc.items())
+        pos = (f"{after['asset']} {after['exposure']:.2f}x" if after["exposure"] > 0 else "cash") + f"; 5d forecast {view}"
+    elif sig["risk_on"]:
         pos = f"RISK-ON {after['asset']} {after['exposure']:.2f}x (vol {sig['realized_vol']:.0%})"
     else:
         pos = "RISK-OFF -> cash (below 200d SMA)"
@@ -125,6 +130,7 @@ def send_github_issue(text: str, env=os.environ, markdown: str | None = None) ->
     token, repo, owner = env.get("GITHUB_TOKEN"), env.get("GITHUB_REPOSITORY"), env.get("GITHUB_REPOSITORY_OWNER")
     if not (token and repo) or env.get("TVM_GITHUB_ISSUE_NOTIFY", "true").lower() == "false":
         return False
+    title = env.get("GITHUB_ISSUE_TITLE", GITHUB_ISSUE_TITLE)   # one issue per strategy
     api = env.get("GITHUB_API_URL", "https://api.github.com").rstrip("/")
     headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json",
                "X-GitHub-Api-Version": "2022-11-28"}
@@ -132,13 +138,13 @@ def send_github_issue(text: str, env=os.environ, markdown: str | None = None) ->
     r = requests.get(f"{api}/repos/{repo}/issues", headers=headers,
                      params={"state": "open", "per_page": 100}, timeout=TIMEOUT)
     r.raise_for_status()
-    issue = next((i for i in r.json() if i.get("title") == GITHUB_ISSUE_TITLE and "pull_request" not in i), None)
+    issue = next((i for i in r.json() if i.get("title") == title and "pull_request" not in i), None)
     if issue is None:
-        body = ("Daily status of the TVM paper-trading strategy, posted automatically by the "
+        body = (f"Daily status of the paper-trading strategy ({title}), posted automatically by the "
                 "`TVM paper trade` workflow. Each comment is one trading day; you are @mentioned so "
                 "the GitHub app notifies you. Close this issue and a new one will be created on the next run.")
         r = requests.post(f"{api}/repos/{repo}/issues", headers=headers,
-                          json={"title": GITHUB_ISSUE_TITLE, "body": body}, timeout=TIMEOUT)
+                          json={"title": title, "body": body}, timeout=TIMEOUT)
         r.raise_for_status()
         issue = r.json()
 

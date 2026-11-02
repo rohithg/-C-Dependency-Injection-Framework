@@ -6,6 +6,12 @@
     python paper_trade.py                  # submit orders (paper account only)
     python paper_trade.py --fake           # no credentials: simulate with a fake $100k account
 
+Strategies (--strategy, or env TVM_STRATEGY):
+    adaptive   TVM expert ensemble (default)
+    fixed      the single fixed TVM rule set
+    kronos     Kronos candlestick foundation model (needs requirements-kronos.txt;
+               rule via --kronos-rule, default "calibrated")
+
 Or via --mode (used by the GitHub Actions workflow):
     --mode preview   same as --fake --dry-run; works without any credentials
     --mode dry-run   real account, no orders
@@ -22,13 +28,15 @@ from __future__ import annotations
 
 import argparse
 import os
+from pathlib import Path
 import sys
 import warnings
 
 from tvm.config import TVMConfig, DEFAULT
 from tvm.adaptive import AdaptiveConfig
-from tvm.data import load_closes
-from tvm.trader import run_once
+from tvm.data import load_closes, load_ohlcv
+from tvm.kronos_signal import KronosConfig, RULES
+from tvm.trader import run_once, STATE_DIR
 from tvm.report import performance_vs_benchmark, to_markdown, write_step_summary
 from tvm.notify import to_text, send_all
 
@@ -40,8 +48,13 @@ def main() -> int:
     ap.add_argument("--config", help="JSON file overriding TVMConfig fields")
     ap.add_argument("--mode", choices=["preview", "dry-run", "live", "notify-test"], help="see module docstring")
     ap.add_argument("--no-notify", action="store_true", help="skip SMS/push notifications")
-    ap.add_argument("--fixed", action="store_true",
-                    help="run the single fixed TVM rule set instead of the adaptive expert ensemble (default)")
+    ap.add_argument("--strategy", choices=["adaptive", "fixed", "kronos"],
+                    default=os.environ.get("TVM_STRATEGY", "adaptive"), help="see module docstring")
+    ap.add_argument("--fixed", action="store_true", help="alias for --strategy fixed")
+    ap.add_argument("--kronos-rule", choices=RULES, default=os.environ.get("KRONOS_RULE", "calibrated"))
+    ap.add_argument("--kronos-variant", choices=["mini", "small", "base"], default=os.environ.get("KRONOS_VARIANT", "small"))
+    ap.add_argument("--state-dir", default=os.environ.get("TVM_STATE_DIR"),
+                    help="where tvm_state.json / trade_log.jsonl live (default state/, or state/kronos for --strategy kronos)")
     ap.add_argument("--dry-run", action="store_true", help="compute and print orders without submitting")
     ap.add_argument("--fake", action="store_true", help="use an in-memory fake broker (no credentials needed)")
     ap.add_argument("--no-live-prices", action="store_true", help="use last daily close only, even if market is open")
@@ -49,8 +62,9 @@ def main() -> int:
     ap.add_argument("--refresh", action="store_true", help="bypass the price cache")
     args = ap.parse_args()
 
+    strategy = "fixed" if args.fixed else args.strategy
     if args.mode == "notify-test":
-        results = send_all("TVM paper trading: test message. Daily updates will arrive here after each run.")
+        results = send_all(f"{strategy} paper trading: test message. Daily updates will arrive here after each run.")
         print(results)
         write_step_summary("## Notification test\n\n" + "\n".join(f"- {k}: {v}" for k, v in results.items()) + "\n")
         return 0 if any(v == "sent" for v in results.values()) else 1
@@ -68,12 +82,18 @@ def main() -> int:
     fake, dry_run = mode == "preview", mode != "live"
 
     cfg = TVMConfig.from_json(args.config) if args.config else DEFAULT
-    adaptive = None if args.fixed else AdaptiveConfig(max_leverage=cfg.max_leverage)
+    adaptive = AdaptiveConfig(max_leverage=cfg.max_leverage) if strategy == "adaptive" else None
+    kronos = bars = None
+    if strategy == "kronos":
+        kronos = KronosConfig(variant=args.kronos_variant, rule=args.kronos_rule,
+                              max_leverage=2.0 if args.kronos_rule == "confidence" else 1.0)
+        bars = {s: load_ohlcv(s, start="2000-01-01", refresh=args.refresh) for s in kronos.symbols}
+    state_dir = Path(args.state_dir) if args.state_dir else (STATE_DIR / "kronos" if strategy == "kronos" else STATE_DIR)
     tradable = {cfg.cash_symbol, *cfg.risk_assets, *cfg.leveraged_2x.values()}
     symbols = sorted({cfg.trend_symbol, *cfg.risk_assets, cfg.benchmark_symbol, *tradable})
     # the ensemble scores experts on realised history, so give it a long window
-    closes = load_closes(symbols, start="2007-01-01" if adaptive else "2015-01-01", refresh=args.refresh)
-    signal_cols = sorted({cfg.trend_symbol, *cfg.risk_assets} | (tradable if adaptive else set()))
+    closes = load_closes(symbols, start="2015-01-01" if strategy == "fixed" else "2007-01-01", refresh=args.refresh)
+    signal_cols = sorted({cfg.trend_symbol, *cfg.risk_assets} | (set() if strategy == "fixed" else tradable))
     signal_closes = closes[signal_cols].dropna(subset=sorted({cfg.trend_symbol, *cfg.risk_assets}))
 
     if fake:
@@ -84,7 +104,7 @@ def main() -> int:
         broker = AlpacaBroker()
 
     report = run_once(broker, signal_closes, cfg, dry_run=dry_run, use_live_prices=not args.no_live_prices,
-                      force=args.force, adaptive=adaptive)
+                      force=args.force, adaptive=adaptive, kronos=kronos, bars=bars, state_dir=state_dir)
     perf = None if fake else performance_vs_benchmark(broker, closes[cfg.benchmark_symbol])
     md = to_markdown(report, perf, cfg, mode=mode)
     text = to_text(report, perf, cfg, mode=mode)

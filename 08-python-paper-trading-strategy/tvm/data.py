@@ -50,6 +50,34 @@ def _download(sym: str, start: str, end: str | None) -> pd.Series:
     return close.dropna()
 
 
+OHLCV_COLS = ["open", "high", "low", "close", "volume"]
+
+
+def load_ohlcv(symbol: str, start: str = "2000-01-01", end: str | None = None,
+               cache_dir: Path = CACHE_DIR, refresh: bool = False) -> pd.DataFrame:
+    """Daily adjusted OHLCV bars (columns open/high/low/close/volume) for one
+    symbol; used as the K-line input to the Kronos forecaster."""
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    path = cache_dir / f"{symbol.replace('^', '_')}_ohlcv.csv"
+    if path.exists() and not refresh and _is_fresh(path):
+        df = pd.read_csv(path, index_col=0, parse_dates=True)
+    else:
+        import yfinance as yf
+
+        raw = yf.download(symbol, start=start, end=end, progress=False, auto_adjust=True)
+        if raw.empty:
+            raise RuntimeError(f"no data returned for {symbol}")
+        if isinstance(raw.columns, pd.MultiIndex):
+            raw.columns = raw.columns.get_level_values(0)
+        df = raw.rename(columns=str.lower)[OHLCV_COLS].astype(float)
+        df.index = pd.to_datetime(df.index).tz_localize(None)
+        df = df.dropna()
+        df.to_csv(path)
+    if end:
+        df = df.loc[:end]
+    return df.loc[start:]
+
+
 def tbill_daily_return(closes: pd.DataFrame, irx_col: str = "^IRX") -> pd.Series:
     """Approximate daily cash return from the 13-week T-bill yield (^IRX, in %)."""
     if irx_col not in closes:
