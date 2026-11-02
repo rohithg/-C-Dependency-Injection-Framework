@@ -1,0 +1,114 @@
+name: Solana token scanner
+
+# Paper-only Solana new-token scanner (10-python-solana-grok-scanner). Every
+# 15 minutes it pulls the newest DEX Screener profiles, runs the hard rules
+# (liquidity, pool age, holder concentration, mint/freeze authority, LP lock,
+# rugcheck signals), asks Grok for a risk read when XAI_API_KEY is set, and
+# paper-trades the survivors. There is no wallet, no private key and no
+# signing code; MODE is forced to "paper".
+#
+# Scheduled runs do nothing until the repository variable
+# SOLANA_SCANNER_ENABLED is "true"; manual runs always work. The daily status
+# message goes out on the first run after 20:00 UTC (GitHub issue @mention by
+# default; same optional Twilio / SMTP / ntfy / Telegram secrets as the other
+# paper-trading workflows). State (data/, logs/) is committed to the
+# `solana-scanner-log` branch after each run.
+#
+# Cost: 15-minute runs are ~2,900 Actions minutes/month. Free on public repos;
+# on a private repo that exceeds the 2,000-minute free quota, so change the
+# cron to "*/30 * * * *" or "7 * * * *" there.
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "paper (writes state) / dry-run (scan and print only) / notify (paper + send status now)"
+        type: choice
+        options: [paper, dry-run, notify]
+        default: dry-run
+
+concurrency:
+  group: solana-scanner
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.SOLANA_SCANNER_ENABLED == 'true' }}
+    permissions:
+      contents: write
+      issues: write
+    defaults:
+      run:
+        working-directory: 10-python-solana-grok-scanner
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: 10-python-solana-grok-scanner/requirements.txt
+      - run: pip install -r requirements.txt
+      - name: Restore state from solana-scanner-log branch
+        run: |
+          mkdir -p data logs
+          if git fetch --depth=1 origin solana-scanner-log:refs/remotes/origin/solana-scanner-log 2>/dev/null; then
+            git -C "$(git rev-parse --show-toplevel)" archive origin/solana-scanner-log | tar -x -C .
+            echo "restored $(find data logs -type f | tr '\n' ' ')"
+          else
+            echo "no solana-scanner-log branch yet (first run)"
+          fi
+      - name: Scan
+        env:
+          MODE: paper
+          RUN_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'paper' }}
+          XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
+          SOLANA_RPC_URL: ${{ secrets.SOLANA_RPC_URL }}
+          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+          TWILIO_FROM: ${{ secrets.TWILIO_FROM }}
+          TWILIO_TO: ${{ secrets.TWILIO_TO }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMS_EMAIL_TO: ${{ secrets.SMS_EMAIL_TO }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TVM_GITHUB_ISSUE_NOTIFY: ${{ vars.TVM_GITHUB_ISSUE_NOTIFY }}
+        run: |
+          flags=""
+          [ "$RUN_MODE" = "dry-run" ] && flags="--dry-run --no-notify"
+          [ "$RUN_MODE" = "notify" ] && flags="--notify"
+          python src/main.py --mode paper --once $flags
+      - name: Persist state to solana-scanner-log branch
+        if: ${{ always() && (github.event_name == 'schedule' || inputs.mode != 'dry-run') }}
+        run: |
+          [ -f data/paper_state.json ] || { echo "nothing to persist"; exit 0; }
+          git config user.name "solana-scanner-bot"
+          git config user.email "solana-scanner-bot@users.noreply.github.com"
+          if git rev-parse --verify origin/solana-scanner-log >/dev/null 2>&1; then
+            git worktree add /tmp/log origin/solana-scanner-log
+            git -C /tmp/log checkout -B solana-scanner-log
+          else
+            git worktree add --detach /tmp/log
+            git -C /tmp/log checkout --orphan solana-scanner-log
+            git -C /tmp/log rm -rfq . || true
+          fi
+          mkdir -p /tmp/log/data /tmp/log/logs
+          cp -r data/. /tmp/log/data/
+          cp -r logs/. /tmp/log/logs/
+          git -C /tmp/log add -A
+          git -C /tmp/log commit -qm "scanner tick $(date -u +%Y-%m-%dT%H:%MZ)" || { echo "no changes"; exit 0; }
+          git -C /tmp/log push origin solana-scanner-log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: solana-scanner-${{ github.run_id }}
+          path: |
+            10-python-solana-grok-scanner/data/
+            10-python-solana-grok-scanner/logs/
+          if-no-files-found: ignore
