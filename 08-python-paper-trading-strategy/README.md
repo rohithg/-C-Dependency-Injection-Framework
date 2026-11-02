@@ -2,7 +2,9 @@
 
 An automated paper-trading strategy designed to beat buy-and-hold VOO over a
 full market cycle, with roughly half the drawdown. Python, daily bars, ETFs only,
-runs against an Alpaca paper account.
+runs against an Alpaca paper account. A second strategy built on the open-source
+[Kronos](https://github.com/shiyu-coder/Kronos) candlestick foundation model can
+be paper traded alongside it (see [below](#kronos-an-ai-candlestick-forecaster-as-a-second-strategy)).
 
 ![Equity curve](results/equity_curve.png)
 
@@ -199,6 +201,87 @@ python paper_trade.py --mode preview   # adaptive by default
 python paper_trade.py --mode preview --fixed
 ```
 
+## Kronos: an AI candlestick forecaster as a second strategy
+
+[Kronos](https://github.com/shiyu-coder/Kronos) (Shi et al., AAAI 2026,
+[arXiv:2508.02739](https://arxiv.org/abs/2508.02739)) is an open-source,
+MIT-licensed foundation model for candlesticks: a decoder-only transformer
+pre-trained on ~12 billion OHLCV bars from 45 exchanges that, given a window
+of candles, *samples* plausible future candles. `--strategy kronos` runs
+paper trading on it, side by side with TVM, so the two can be compared on
+the same days with real paper money.
+
+How it is wired in (`tvm/kronos_signal.py`):
+
+1. Each trading day the last **400 daily SPY and QQQ candles** go into
+   `Kronos-small` (24.7M parameters; the inference code is vendored under
+   `tvm/kronos_vendor/`, weights come from the Hugging Face Hub). It samples
+   **8 five-day candle paths per symbol** (~3 s on a 4-core CPU, no GPU).
+2. The paths are summarised as expected 5-day return, dispersion, share of
+   paths finishing up, and the mean worst low (`exp_ret`, `std_ret`, `p_up`,
+   `exp_min_low`).
+3. A simple rule maps that to ETF weights. Default `calibrated`: compare
+   today's expected return with the model's own forecasts over the previous
+   126 days (a z-score using *prior* days only) and hold the better of
+   SPY/QQQ when z > 0, else BIL. Other rules: `direction` (raw sign),
+   `relative` (always invested, Kronos only picks SPY vs QQQ), `confidence`
+   (sized by z, up to 2x via SSO/QLD), `tvm-veto` (TVM ensemble, but to cash
+   when Kronos sees < 35% of paths up).
+
+Why the calibration step exists: zero-shot Kronos has a **persistent bearish
+drift** on trending US index data. Over 2022-2026 its mean 5-day forecast was
+-2% to -5% against a realised +0.3%, and it was outright bullish on only
+8-13% of days out of sample. Its *positive* forecasts arrive almost
+exclusively after a 20-day decline (average -1.7%) and were followed by +0.55%
+over the next week versus +0.15% otherwise, so the raw signal is a
+**dip-buying / mean-reversion detector**, not a trend model. The z-score strips
+the drift out without peeking.
+
+### Walk-forward results (Kronos-small, 2022-01 -> 2026-10)
+
+Each day's forecast uses only candles up to that close; the target decided at
+the close earns the next day's ETF return, net of 2 bps per dollar traded.
+Because the public checkpoint was **pre-trained on data through June 2024**,
+the window is split; only the right-hand block is genuinely out of sample for
+the model. Full tables: [`results/kronos_backtest_small.md`](results/kronos_backtest_small.md);
+chart: `results/kronos_equity_small.png`. Regenerate with
+`python run_kronos_backtest.py` (about an hour for the first full run; the
+forecasts are cached in `results/kronos_forecasts_*.csv`).
+
+| strategy | 2022-01 -> 2024-06 (in training data) CAGR / MaxDD / Sharpe | **2024-07 -> 2026-10 (out of sample)** CAGR / MaxDD / Sharpe | invested |
+|---|---|---|---|
+| VOO buy & hold | 7.3% / -24.5% / 0.27 | **16.5% / -18.7% / 0.79** | 100% |
+| TVM adaptive ensemble | 13.1% / -15.2% / 0.66 | 6.2% / -17.3% / 0.20 | 100% (avg 0.9x) |
+| **Kronos calibrated (z>0)** (paper-trading default) | 15.6% / -17.5% / 0.74 | **14.4% / -18.8% / 0.63** | 47% -> 68% |
+| Kronos direction (raw sign) | 14.3% / -13.7% / 0.62 | 12.9% / -14.9% / 0.72 | 43% -> 15% |
+| Kronos calibrated (z>0.5) | 12.8% / -11.9% / 0.68 | 13.3% / -18.8% / 0.59 | |
+| Kronos relative (SPY vs QQQ) | 4.4% / -26.5% / 0.13 | 15.6% / -18.4% / 0.67 | 100% |
+| Kronos confidence (<=2x) | 17.8% / -17.0% / 0.74 | 10.5% / -33.5% / 0.35 | |
+| TVM ensemble + Kronos veto | 9.5% / -6.4% / 0.66 | 7.0% / -8.8% / 0.46 | |
+| max(TVM, Kronos direction) *(rejected)* | 21.4% / -14.6% / 0.82 | 11.6% / -23.4% / 0.43 | |
+
+Reading it honestly:
+
+- Over the whole window the calibrated Kronos rule beat VOO (15.0% vs 11.7%
+  CAGR, Sharpe 0.69 vs 0.50) while invested only 57% of the time. In the
+  clean out-of-sample stretch it **did not** beat VOO's 16.5%, though it
+  earned 14.4% while in the market two-thirds of the time, and the raw
+  `direction` rule made 12.9% while invested just 15% of the time. The
+  forecasts carry real information (rank IC of the raw 5-day forecast vs the
+  realised return: 0.19-0.22 out of sample), but mostly about rebounds.
+- Kronos and TVM are complementary in *character* (TVM rides trends and gets
+  hurt by V-shaped reversals such as April 2025; Kronos buys those dips), yet
+  the naive combinations tested here did not beat either alone out of
+  sample, so they are reported and not used.
+- 2.5 years is a short record and 2024-26 contained one real crash. Treat the
+  table as "worth paper trading", not as a demonstrated edge. The paper
+  account is the actual test.
+
+Running it needs the extra ML dependencies (`pip install -r
+requirements-kronos.txt`, CPU-only torch, ~200 MB) and ~150 MB of weights
+downloaded on first use. Everything else about the paper trader (idempotent
+daily run, state rebuilt from the broker, daily text) is shared with TVM.
+
 ## Running it
 
 ```bash
@@ -218,6 +301,11 @@ python paper_trade.py --mode preview     # no credentials: today's signal on a f
 export APCA_API_KEY_ID=...  APCA_API_SECRET_KEY=...
 python paper_trade.py --mode dry-run     # real paper account; print orders, submit nothing
 python paper_trade.py --mode live        # submit market orders (paper endpoint only; live is refused)
+
+# Kronos candlestick model as the strategy (separate paper account recommended)
+pip install -r requirements-kronos.txt
+python paper_trade.py --strategy kronos --mode preview
+python run_kronos_backtest.py            # walk-forward report; ~1h on first run, cached afterwards
 ```
 
 `paper_trade.py` is idempotent: run it once per trading day, ideally in the
@@ -255,6 +343,14 @@ reads fine in the GitHub mobile app or a phone browser.
    further input. Check in whenever you like: the Actions tab shows each day's
    summary, the `paper-trading-log` branch holds the full trade history, and
    the Alpaca app shows positions and P&L.
+6. **Optional: paper trade Kronos as well.** Each strategy manages a whole
+   account, so create a *second* paper account in Alpaca (the dashboard
+   allows several), add its keys as secrets `ALPACA_KRONOS_KEY_ID` /
+   `ALPACA_KRONOS_SECRET_KEY`, and set variable `KRONOS_PAPER_TRADING_ENABLED`
+   = `true`. The workflow then runs both legs every day (Kronos's state lives
+   in `state/kronos/` on the log branch) and reports to a separate issue,
+   *Kronos paper trading: daily status*. To try it without keys: *Run
+   workflow* -> strategy `kronos`, mode `preview`.
 
 ### Daily text message
 
@@ -263,6 +359,7 @@ channel that has its secrets set (see [`tvm/notify.py`](tvm/notify.py)):
 
 ```
 TVM Nov 03: RISK-ON SPY 0.88x (vol 23%). No trades. Paper $100,412 +0.4% vs VOO +0.1% since Nov 03.
+Kronos Nov 03: QQQ 1.00x; 5d forecast QQQ +0.8%(z+0.4) SPY +0.3%(z-0.1). No trades. Paper $99,870 -0.1% vs VOO +0.1% since Nov 03.
 ```
 
 **On by default, no setup:** inside GitHub Actions each run comments on an
@@ -312,14 +409,17 @@ tvm/config.py     parameters (dataclass, JSON-overridable)
 tvm/strategy.py   pure signal logic: compute_signals / step / target_weights
 tvm/backtest.py   execution + cost model, metrics, yearly tables
 tvm/adaptive.py   expert pool, Hedge learner, blended execution, regime post-mortem
-tvm/data.py       yfinance loader with CSV cache
+tvm/kronos_signal.py  Kronos forecaster: sampled candle paths -> signal, calibration, decision rules, walk-forward cache
+tvm/kronos_vendor/    vendored Kronos model code (MIT, shiyu-coder/Kronos)
+tvm/data.py       yfinance loader with CSV cache (closes + OHLCV)
 tvm/broker.py     Broker protocol, AlpacaBroker (REST), FakeBroker
 tvm/trader.py     one daily rebalance: reconstruct state -> signal -> orders
 tvm/report.py     markdown run summary (GitHub step summary) + paper P&L vs VOO
 tvm/notify.py     daily one-liner via GitHub issue (default) / Twilio SMS / email-to-SMS / ntfy / Telegram
 run_backtest.py   report + charts in results/
-paper_trade.py    CLI for the daily run
-tests/            49 unit + integration tests on synthetic data
+run_kronos_backtest.py  walk-forward evaluation of the Kronos rules vs TVM and VOO
+paper_trade.py    CLI for the daily run (--strategy adaptive | fixed | kronos)
+tests/            60 unit + integration tests on synthetic data (Kronos tests use a stub model)
 ```
 
 The same `strategy.py` code produces both the backtest and the live orders, so
@@ -341,6 +441,13 @@ there is no backtest/live divergence to debug.
   short-term; in a taxable account this strategy's after-tax edge over VOO
   shrinks substantially. It suits tax-advantaged accounts or, as here, paper
   trading.
+- **Kronos is a research model with a 2.5-year walk-forward record here**, of
+  which only ~2.3 years post-date its training data, and it did not beat VOO
+  in that clean window. Its forecasts are sampled, so decisions are seeded
+  for reproducibility but a different seed can flip a marginal day. The
+  daily input candle during market hours comes from Alpaca's free IEX feed
+  (prices) with a typical day's volume substituted, which differs slightly
+  from the consolidated bars used in the backtest.
 - **The adaptive layer is a robustness device, not a crystal ball.** See
   "Learning from mistakes" above for what it does and does not improve.
 - **Gap risk.** Exiting at the close after a cross means a 2x position can sit

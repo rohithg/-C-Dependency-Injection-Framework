@@ -146,8 +146,8 @@ def main() -> None:
                 continue
             smry = summarize(rr, cash)
             print("  " + format_summary(name, smry))
-            report_lines.append(f"| {name} | {smry['CAGR']:.1%} | {smry['Vol']:.1%} | {smry['Sharpe']:.2f} | {smry['MaxDD']:.1%} | "
-                                f"{turnover.get(name, float('nan')):.1f} |")
+            to = f"{turnover[name]:.1f}" if name in turnover else "-"
+            report_lines.append(f"| {name} | {smry['CAGR']:.1%} | {smry['Vol']:.1%} | {smry['Sharpe']:.2f} | {smry['MaxDD']:.1%} | {to} |")
         print()
 
     RESULTS.mkdir(exist_ok=True)
