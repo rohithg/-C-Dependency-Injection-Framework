@@ -169,7 +169,8 @@ reads fine in the GitHub mobile app or a phone browser.
    key + secret.
 3. **Store them in GitHub.** Repo -> *Settings* -> *Secrets and variables* ->
    *Actions*. Add secrets `ALPACA_PAPER_KEY_ID` and `ALPACA_PAPER_SECRET_KEY`.
-   Under *Variables* add `TVM_PAPER_TRADING_ENABLED` = `true`.
+   Under *Variables* add `TVM_PAPER_TRADING_ENABLED` = `true`. (Daily phone
+   notifications need nothing extra; see "Daily text message" below.)
 4. **First real run.** *Run workflow* with mode `dry-run` to see the orders
    against your actual paper account, then once with `live` to place them.
 5. **Done.** From then on it runs itself every weekday at 15:40 ET with no
@@ -186,11 +187,19 @@ channel that has its secrets set (see [`tvm/notify.py`](tvm/notify.py)):
 TVM Nov 03: RISK-ON SPY 0.88x (vol 23%). No trades. Paper $100,412 +0.4% vs VOO +0.1% since Nov 03.
 ```
 
-Pick one and add its values as repository secrets (same place as the Alpaca
-keys), then *Run workflow* with mode `notify-test` to confirm it arrives:
+**On by default, no setup:** inside GitHub Actions each run comments on an
+issue titled *TVM paper trading: daily status* and @mentions the repo owner.
+With the GitHub mobile app installed that arrives as a push notification, and
+the issue doubles as a scrollable history. Turn it off with the repository
+variable `TVM_GITHUB_ISSUE_NOTIFY=false`.
+
+For a literal SMS or a different app, pick one of these, add its values as
+repository secrets (same place as the Alpaca keys), then *Run workflow* with
+mode `notify-test` to confirm it arrives:
 
 | Channel | What you need | Secrets |
 |---|---|---|
+| **GitHub app push** (default) | Nothing; GitHub app notifications enabled for mentions | none |
 | **ntfy push** (free, 2 minutes, recommended) | Install the ntfy app, subscribe to a hard-to-guess topic name like `tvm-7f3a9c` | `NTFY_TOPIC` |
 | **Real SMS via Twilio** | Twilio account + phone number (US numbers need A2P 10DLC registration for reliable delivery) | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM`, `TWILIO_TO` |
 | **SMS via carrier email gateway** (free) | Any SMTP mailbox (e.g. Gmail app password) and your carrier's gateway address: T-Mobile `number@tmomail.net`, Verizon `number@vtext.com` | `SMTP_HOST`, `SMTP_USER`, `SMTP_PASSWORD`, `SMS_EMAIL_TO` (optional `SMTP_PORT`) |
@@ -228,10 +237,10 @@ tvm/data.py       yfinance loader with CSV cache
 tvm/broker.py     Broker protocol, AlpacaBroker (REST), FakeBroker
 tvm/trader.py     one daily rebalance: reconstruct state -> signal -> orders
 tvm/report.py     markdown run summary (GitHub step summary) + paper P&L vs VOO
-tvm/notify.py     daily one-liner via Twilio SMS / email-to-SMS / ntfy push / Telegram
+tvm/notify.py     daily one-liner via GitHub issue (default) / Twilio SMS / email-to-SMS / ntfy / Telegram
 run_backtest.py   report + charts in results/
 paper_trade.py    CLI for the daily run
-tests/            32 unit + integration tests on synthetic data
+tests/            35 unit + integration tests on synthetic data
 ```
 
 The same `strategy.py` code produces both the backtest and the live orders, so

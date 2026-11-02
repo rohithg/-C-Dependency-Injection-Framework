@@ -25,6 +25,10 @@ name: TVM paper trade
 #   Email-to-SMS: SMTP_HOST, SMTP_USER, SMTP_PASSWORD, SMS_EMAIL_TO
 #   ntfy push:    NTFY_TOPIC
 #   Telegram:     TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+# With no secrets at all, each run still comments on a "TVM paper trading:
+# daily status" issue and @mentions the repo owner, which the GitHub mobile
+# app delivers as a push notification. Set repo variable
+# TVM_GITHUB_ISSUE_NOTIFY=false to turn that off.
 on:
   schedule:
     - cron: "40 19 * * 1-5"
@@ -44,7 +48,8 @@ jobs:
     # TVM_PAPER_TRADING_ENABLED is set to "true"; manual runs always work.
     if: ${{ github.event_name == 'workflow_dispatch' || vars.TVM_PAPER_TRADING_ENABLED == 'true' }}
     permissions:
-      contents: write
+      contents: write   # push the paper-trading-log branch
+      issues: write     # daily status comment -> GitHub app push notification
     defaults:
       run:
         working-directory: 08-python-paper-trading-strategy
@@ -82,6 +87,8 @@ jobs:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TVM_GITHUB_ISSUE_NOTIFY: ${{ vars.TVM_GITHUB_ISSUE_NOTIFY }}
           MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'live' }}
         run: python paper_trade.py --mode "$MODE"
       - name: Persist state and trade log to paper-trading-log branch

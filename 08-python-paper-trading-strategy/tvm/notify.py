@@ -17,6 +17,11 @@ notification could not be sent. Configure one or several:
 
   Telegram (free; create a bot with @BotFather, message it once, get chat id)
       TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+
+  GitHub issue comment (zero config inside GitHub Actions; @mentions the repo
+  owner so the GitHub mobile app pushes a notification)
+      GITHUB_TOKEN, GITHUB_REPOSITORY (set automatically by Actions);
+      TVM_GITHUB_ISSUE_NOTIFY=false to disable
 """
 from __future__ import annotations
 
@@ -108,15 +113,63 @@ def send_telegram(text: str, env=os.environ) -> bool:
     return True
 
 
-CHANNELS = {"twilio": send_twilio, "email-sms": send_email_sms, "ntfy": send_ntfy, "telegram": send_telegram}
+GITHUB_ISSUE_TITLE = "TVM paper trading: daily status"
 
 
-def send_all(text: str, env=os.environ, log=print) -> dict[str, str]:
+def send_github_issue(text: str, env=os.environ, markdown: str | None = None) -> bool:
+    """Post the status as a comment on a pinned-by-title issue, @mentioning the
+    repo owner. Inside GitHub Actions this needs no configuration at all: the
+    default GITHUB_TOKEN is enough, and the mention produces a push
+    notification in the GitHub mobile app. Set TVM_GITHUB_ISSUE_NOTIFY=false
+    to turn it off."""
+    token, repo, owner = env.get("GITHUB_TOKEN"), env.get("GITHUB_REPOSITORY"), env.get("GITHUB_REPOSITORY_OWNER")
+    if not (token and repo) or env.get("TVM_GITHUB_ISSUE_NOTIFY", "true").lower() == "false":
+        return False
+    api = env.get("GITHUB_API_URL", "https://api.github.com").rstrip("/")
+    headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json",
+               "X-GitHub-Api-Version": "2022-11-28"}
+
+    r = requests.get(f"{api}/repos/{repo}/issues", headers=headers,
+                     params={"state": "open", "per_page": 100}, timeout=TIMEOUT)
+    r.raise_for_status()
+    issue = next((i for i in r.json() if i.get("title") == GITHUB_ISSUE_TITLE and "pull_request" not in i), None)
+    if issue is None:
+        body = ("Daily status of the TVM paper-trading strategy, posted automatically by the "
+                "`TVM paper trade` workflow. Each comment is one trading day; you are @mentioned so "
+                "the GitHub app notifies you. Close this issue and a new one will be created on the next run.")
+        r = requests.post(f"{api}/repos/{repo}/issues", headers=headers,
+                          json={"title": GITHUB_ISSUE_TITLE, "body": body}, timeout=TIMEOUT)
+        r.raise_for_status()
+        issue = r.json()
+
+    mention = f"@{owner} " if owner else ""
+    run_url = ""
+    if env.get("GITHUB_SERVER_URL") and env.get("GITHUB_RUN_ID"):
+        run_url = f"\n\n[workflow run]({env['GITHUB_SERVER_URL']}/{repo}/actions/runs/{env['GITHUB_RUN_ID']})"
+    comment = f"{mention}{text}"
+    if markdown:
+        comment += "\n\n<details><summary>details</summary>\n\n" + markdown + "\n</details>"
+    comment += run_url
+    r = requests.post(f"{api}/repos/{repo}/issues/{issue['number']}/comments", headers=headers,
+                      json={"body": comment}, timeout=TIMEOUT)
+    r.raise_for_status()
+    return True
+
+
+CHANNELS = {"twilio": send_twilio, "email-sms": send_email_sms, "ntfy": send_ntfy, "telegram": send_telegram,
+            "github-issue": send_github_issue}
+
+
+def send_all(text: str, env=os.environ, log=print, markdown: str | None = None) -> dict[str, str]:
     """Try every configured channel. Returns {channel: 'sent' | 'skipped' | 'error: ...'}."""
     results: dict[str, str] = {}
     for name, fn in CHANNELS.items():
         try:
-            results[name] = "sent" if fn(text, env) else "skipped"
+            if name == "github-issue":
+                ok = fn(text, env, markdown)
+            else:
+                ok = fn(text, env)
+            results[name] = "sent" if ok else "skipped"
         except Exception as exc:  # a broken notifier must never break the trading run
             results[name] = f"error: {exc}"
             log(f"notification via {name} failed: {exc}")

@@ -83,7 +83,7 @@ def main() -> int:
     print("\n" + md)
     print(text)
     if not args.no_notify:
-        results = send_all(text)
+        results = send_all(text, markdown=md)
         sent = [k for k, v in results.items() if v == "sent"]
         errors = {k: v for k, v in results.items() if v.startswith("error")}
         md += f"\n<sub>notifications: sent via {', '.join(sent) or 'none configured'}" + (f"; errors: {errors}" if errors else "") + "</sub>\n"

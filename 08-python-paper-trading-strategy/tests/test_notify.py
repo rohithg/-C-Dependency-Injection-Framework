@@ -61,3 +61,42 @@ def test_channel_errors_do_not_raise():
     with mock.patch.object(notify.requests, "post", side_effect=RuntimeError("down")):
         res = notify.send_all("hello", env=env, log=lambda *_: None)
     assert res["ntfy"].startswith("error: down")
+
+
+def _gh_env(**extra):
+    return {"GITHUB_TOKEN": "ghs_x", "GITHUB_REPOSITORY": "me/repo", "GITHUB_REPOSITORY_OWNER": "me",
+            "GITHUB_SERVER_URL": "https://github.com", "GITHUB_RUN_ID": "99", **extra}
+
+
+def test_github_issue_creates_issue_then_comments():
+    with mock.patch.object(notify.requests, "get") as get, mock.patch.object(notify.requests, "post") as post:
+        get.return_value.raise_for_status = lambda: None
+        get.return_value.json.return_value = [{"title": "something else", "number": 1}]
+        post.return_value.raise_for_status = lambda: None
+        post.return_value.json.return_value = {"number": 7}
+        assert notify.send_github_issue("status line", env=_gh_env(), markdown="## md")
+    create, comment = post.call_args_list
+    assert create.args[0] == "https://api.github.com/repos/me/repo/issues"
+    assert create.kwargs["json"]["title"] == notify.GITHUB_ISSUE_TITLE
+    assert comment.args[0] == "https://api.github.com/repos/me/repo/issues/7/comments"
+    body = comment.kwargs["json"]["body"]
+    assert body.startswith("@me status line") and "## md" in body and "actions/runs/99" in body
+    assert create.kwargs["headers"]["Authorization"] == "Bearer ghs_x"
+
+
+def test_github_issue_reuses_existing_and_skips_prs():
+    with mock.patch.object(notify.requests, "get") as get, mock.patch.object(notify.requests, "post") as post:
+        get.return_value.raise_for_status = lambda: None
+        get.return_value.json.return_value = [
+            {"title": notify.GITHUB_ISSUE_TITLE, "number": 3, "pull_request": {}},
+            {"title": notify.GITHUB_ISSUE_TITLE, "number": 5},
+        ]
+        post.return_value.raise_for_status = lambda: None
+        assert notify.send_github_issue("x", env=_gh_env())
+    assert post.call_count == 1 and post.call_args.args[0].endswith("/issues/5/comments")
+
+
+def test_github_issue_skipped_outside_actions_or_when_disabled():
+    assert not notify.send_github_issue("x", env={})
+    assert not notify.send_github_issue("x", env=_gh_env(TVM_GITHUB_ISSUE_NOTIFY="false"))
+    assert notify.send_all("x", env={})["github-issue"] == "skipped"
