@@ -1,10 +1,16 @@
 # Paper copy-trading Polymarket's top wallets
 
-A simulated account that follows the most *copyable* wallets on Polymarket:
-every hour it reads their new trades from Polymarket's public data API, mirrors
-the ones that pass a set of rules into a paper portfolio priced off the live
-order book, and reports once a day to your phone. It runs on GitHub Actions,
-needs no keys and no money, and never places a real order.
+Two simulated accounts follow Polymarket wallets. Every hour each one reads
+new trades from Polymarket's public data API, mirrors the ones that pass a
+set of rules into its own paper portfolio priced off the live order book, and
+reports once a day to your phone. Both run on GitHub Actions, need no keys
+and no money, and never place a real order.
+
+The first follows the most *copyable* wallets, sized at 1% of equity. The
+second, `config.aggressive.json`, follows the five wallets that spent the
+most buying and sizes each copy at 5%. On the same six-month history the
+whale account went from $10,000 to $1,635. It runs so that result can be
+watched, not because size is an edge.
 
 Sibling of the [TVM / Kronos stock paper trader](../08-python-paper-trading-strategy/);
 it reuses that project's notification channels.
@@ -102,51 +108,94 @@ model: it had assumed we could buy $500 of a token at a 0.016 hourly print
 that lasted one hour in a market that then resolved in our favour. Every
 number above uses the pessimistic fill rule in the table.
 
+## Aggressive whale account ([`results/polymarket_whale_backtest.md`](results/polymarket_whale_backtest.md))
+
+`config.aggressive.json` keeps the same 60-minute delay, 0.01 slippage, taker
+fees and 0.10 don't-chase rule. It changes who is followed and how hard:
+
+| | careful account | whale account |
+|---|---|---|
+| Who | top 10 by copyability | top 5 by dollars spent buying over 90 days |
+| Size | 1% of equity per copied buy, 5% per market | 5% per copied buy, 25% per market |
+| Smallest leader buy copied | $25 | $100 |
+
+Same window, same screened wallets, same fill rule, $10,000 start.
+
+| portfolio | total | vol | Sharpe | max DD |
+|---|---|---|---|---|
+| **Copy: walk-forward top-5 by trailing buy volume** | **−79%** | 208% | −0.40 | **−89%** |
+| Copy: today's leaderboard top-5, same 5% size (biased) | −74% | 95% | −2.16 | −78% |
+| Copy: every screened wallet, 1% per trade | −3% | 114% | 0.50 | −68% |
+| VOO buy & hold | +6% | 12% | 0.95 | −5% |
+
+The −79% is from the first marked day ($7,869 on May 2) to the last ($1,635
+on Nov 2). From the $10,000 deposited, the account finished at **$1,635
+(−84%)**. The worst mark was **$879 on Aug 17**. May alone did most of the
+damage: month-end equity was $2,761. September's bounce to $2,411 gave it
+back and October took it away again.
+
+323 buys were copied, 147 positions resolved and 80 of those paid out. Fees
+were only $347. Realised P&L was −$8,497, so the loss is the bets, not the
+fee schedule. 29,001 leader buys were skipped as under $100, and 6,267 more
+were skipped because the account was already out of cash. The $100 floor did
+not hide a better book of trades underneath; the ones that passed still lost.
+
+The wallets it would follow today each spent $10–20 million buying over 90
+days, almost all of it sports, with win rates of 45–64%. Copying a sports
+whale an hour later, at 5% of a $10k account, is not the trade they made.
+The careful account on this same window was +40% with a −56% drawdown. The
+whale account is the worse of the two, and neither number is a reason to use
+real money.
+
 ## Running it from your phone
 
 [`.github/workflows/polymarket-copy.yml`](../.github/workflows/polymarket-copy.yml)
-runs the paper account on GitHub's servers every hour, and re-picks wallets
-every Monday 06:00 UTC. Nothing to switch on. A +40% backtest with a -56%
-drawdown over six months on a survivor-biased universe is not a result to
-size money around; the account runs so the daily message shows what it
-actually does. Set the repository variable `POLY_COPY_ENABLED` to `false`
-to pause it.
+runs both paper accounts on GitHub's servers every hour, one after the other,
+and re-picks wallets every Monday 06:00 UTC. Nothing to switch on. The careful
+account's +40% came with a −56% drawdown on a survivor-biased universe, and
+the whale account lost about 84% of its $10,000. They run so the daily
+messages show what they actually do. Set the repository variable
+`POLY_COPY_ENABLED` to `false` to pause both.
 
-State lives on the `polymarket-copy-log` branch (`state.json`, `fills.jsonl`,
-`activity.jsonl`). Hourly ticks use about 700 Actions minutes a month, free
-on a public repo. A manual *Run workflow* is only for looking at one hour
-without waiting; the schedule does not need it.
+State for both lives on the `polymarket-copy-log` branch. The careful account
+is `state.json` plus `fills.jsonl` and `activity.jsonl` at the branch root.
+The whale account is the same files under `aggressive/`. The two jobs run
+sequentially so one push cannot overwrite the other. A manual *Run workflow*
+is only for looking at one hour without waiting; the schedule does not need it.
 
-The daily message:
+The daily messages, one issue each:
 
 ```
 Polycopy 11/02: $10,412 (+4.1% since 11-02), 14 open positions, following 10.
 Today: 3 buys, 1 sells, 2 resolved. Fees $6, max DD 2.3%.
+
+Whale copy 11/02: $1,635 (-83.7% since 05-01), 8 open positions, following 5.
+Today: no fills. Fees $347, max DD -89.0%.
 ```
 
-**Default channel, no setup:** a comment on an issue titled *Polymarket copy
-trading: daily status* that @mentions the repo owner, a push notification in
-the GitHub app. Optional real SMS / ntfy / Telegram use the same secrets as the
+**Default channel, no setup:** a comment on the issue titled *Polymarket copy
+trading: daily status*, and a second comment on *Polymarket whale copy: daily
+status*. Each @mentions the repo owner, which is a push notification in the
+GitHub app. Optional real SMS / ntfy / Telegram use the same secrets as the
 TVM project; see its [Daily text message](../08-python-paper-trading-strategy/README.md#daily-text-message)
-section. `TVM_GITHUB_ISSUE_NOTIFY=false` turns the issue comments off for both
-projects.
+section. `TVM_GITHUB_ISSUE_NOTIFY=false` turns the issue comments off.
 
-Hourly runs use roughly 700 Actions minutes a month: free on a public repo,
-about a third of the free quota on a private one. Change the first cron to
-`12 */2 * * *` to halve it; latency in the backtest is a parameter if you want
-to see what that costs.
+The two hourly jobs use roughly 1,400 Actions minutes a month: free on a
+public repo. Change the first cron to `12 */2 * * *` to halve it.
 
 ## Running it locally
 
 ```bash
 cd 09-python-polymarket-copy-trader
 pip install -r requirements.txt
-python -m pytest -q                       # 23 tests, offline
+python -m pytest -q                       # 26 tests, offline
 
-python run_backtest.py                    # walk-forward backtest; first run fetches ~500 MB of history (20-30 min)
+python run_backtest.py                    # careful walk-forward; first run fetches ~500 MB of history (20-30 min)
+python run_backtest.py --config config.aggressive.json --no-plot   # whale walk-forward, same cache
 python run_backtest.py --start 2026-07-01 --follow 5 --no-plot
 
 python paper_trade.py --mode dry-run      # one hourly tick against live books, nothing saved
+python paper_trade.py --config config.aggressive.json --state-dir state/aggressive --mode dry-run
 python paper_trade.py --mode live --reselect --no-notify   # real tick into ./state/
 ```
 
@@ -161,7 +210,8 @@ polycopy/copy.py       CopyConfig, filters, sizing, Portfolio, LeaderBook, copy_
 polycopy/universe.py   leaderboard universe and the trade-rate / dormancy screen
 polycopy/analysis.py   wallet profile: win rate, PnL, sizing, consistency, market categories
 polycopy/backtest.py   hourly-price replay, bulk prefetch, metrics
-polycopy/selection.py  copyability scoring and the follow set
+polycopy/selection.py  copyability scoring, whale ranking by buy volume, and the follow set
+config.aggressive.json whale account: top 5 by buy volume, 5% size, $100 minimum
 polycopy/review.py     the per-trade checklist (liquidity, volume, spread, chase, size, ...)
 polycopy/paper.py      the hourly live tick (activity monitor, review, live books, marks, resolutions)
 polycopy/report.py     markdown / text status and notification plumbing

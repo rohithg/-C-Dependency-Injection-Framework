@@ -20,7 +20,7 @@ from .api import PolymarketAPI
 from .backtest import PriceSource, resolution_payout
 from .copy import CopyConfig, Portfolio, LeaderBook, copy_trade, precheck, fill_from_book, Fill
 from .review import review_buy, review_to_dict
-from .selection import score_wallets, choose, WalletScore
+from .selection import score_wallets, choose, rank_whales
 from .universe import build_universe, screen_universe, fetch_history
 
 STATE_DIR = Path(__file__).resolve().parent.parent / "state"
@@ -61,25 +61,35 @@ class PaperState:
 
 
 def select_followed(api: PolymarketAPI, cfg: CopyConfig, log=print) -> list[dict]:
-    """Full re-selection: leaderboards -> bot/dormancy screen -> trailing copy score -> top N,
-    each with a descriptive profile (win rate, sizing, favourite markets)."""
+    """Full re-selection: leaderboards -> bot/dormancy screen -> top N.
+
+    copyability ranks by what copying the wallet earned. whale ranks by dollars
+    spent buying (size, not skill). Each pick still gets a descriptive profile.
+    """
     now = int(time.time())
     kept, _ = screen_universe(api, build_universe(api), cfg, log=log)
     since = now - cfg.lookback_days * 86400
     histories = {w["wallet"]: fetch_history(api, w["wallet"], since, now) for w in kept}
     names = {w["wallet"]: w["name"] for w in kept}
     markets: dict[str, dict] = {}
-    scores = score_wallets(histories, names, markets, PriceSource(api, markets), cfg, since, now, api=api, log=log)
-    chosen = choose(scores, cfg)
-    log(f"selected {len(chosen)} of {len(scores)} scored wallets")
+    if cfg.select_by == "whale":
+        chosen = rank_whales(histories, names, since, now, cfg)
+        log(f"selected {len(chosen)} whales by trailing buy volume")
+    else:
+        scores = score_wallets(histories, names, markets, PriceSource(api, markets), cfg, since, now, api=api, log=log)
+        chosen = choose(scores, cfg)
+        log(f"selected {len(chosen)} of {len(scores)} scored wallets")
     out = []
     for s in chosen:
         stats = wallet_profile(api, histories[s.wallet], markets)
-        out.append({"wallet": s.wallet, "name": s.name, "copy_return": round(s.copy_return, 4), "max_dd": round(s.max_dd, 4),
-                    "copied_buys": s.copied_buys, "since": now, "profile": profile_line(stats),
-                    "stats": {k: v for k, v in stats.items() if k not in ("top_markets",)},
-                    "top_markets": [{"title": r["title"], "volume": round(r["volume"]), "pnl": None if r["pnl"] is None else round(r["pnl"])}
-                                    for r in stats.get("top_markets", [])[:3]]})
+        row = {"wallet": s.wallet, "name": s.name, "copy_return": round(s.copy_return, 4), "max_dd": round(s.max_dd, 4),
+               "copied_buys": s.copied_buys, "since": now, "profile": profile_line(stats),
+               "stats": {k: v for k, v in stats.items() if k not in ("top_markets",)},
+               "top_markets": [{"title": r["title"], "volume": round(r["volume"]), "pnl": None if r["pnl"] is None else round(r["pnl"])}
+                               for r in stats.get("top_markets", [])[:3]]}
+        if cfg.select_by == "whale":
+            row["whale_volume"] = round(s.notional)
+        out.append(row)
     return out
 
 

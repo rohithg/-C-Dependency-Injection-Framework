@@ -14,8 +14,16 @@ import sys
 ISSUE_TITLE = "Polymarket copy trading: daily status"
 
 
+def _label() -> str:
+    return os.environ.get("POLY_LABEL") or "Polycopy"
+
+
+def _whale(report: dict) -> bool:
+    return any("whale_volume" in f for f in report.get("followed") or [])
+
+
 def to_markdown(report: dict, mode: str = "") -> str:
-    lines = [f"## Polymarket copy trading - {report['as_of']}" + (f" ({mode})" if mode else ""), "",
+    lines = [f"## {_label()} - {report['as_of']}" + (f" ({mode})" if mode else ""), "",
              f"**Equity:** ${report['equity']:,.2f} ({report['return']:+.2%} since {report['started']}, start ${report['start_cash']:,.0f})  |  "
              f"**Cash:** ${report['cash']:,.0f}  |  **Realised P&L:** ${report['realized']:+,.0f}  |  **Fees paid:** ${report['fees_paid']:,.0f}  |  "
              f"**Max DD:** {report['max_dd']:.1%}", ""]
@@ -62,16 +70,26 @@ def to_markdown(report: dict, mode: str = "") -> str:
         if len(acts) > 40:
             lines.append(f"| ... | | | {len(acts) - 40} more | | | | |")
         lines.append("")
-    lines += [f"### Following {len(report['followed'])} wallets" + (" (re-selected this run)" if report.get("reselected") else ""),
-              "| Wallet | Copy return (90d, our rules) | Copy max DD | Copied buys | Their record | Biggest market |", "|---|---|---|---|---|---|"]
+    whale = _whale(report)
+    lines += [f"### Following {len(report['followed'])} wallets" + (" (re-selected this run)" if report.get("reselected") else "")]
+    if whale:
+        lines += ["| Wallet | Trailing buy volume (90d) | Buys | Their record | Biggest market |", "|---|---|---|---|---|"]
+    else:
+        lines += ["| Wallet | Copy return (90d, our rules) | Copy max DD | Copied buys | Their record | Biggest market |", "|---|---|---|---|---|---|"]
     for f in report["followed"]:
         top = (f.get("top_markets") or [{}])[0]
         top_s = f"{top['title'][:40]} (${top['volume']:,.0f}" + (f", {top['pnl']:+,.0f})" if top.get("pnl") is not None else ")") if top.get("title") else ""
-        lines.append(f"| [{f['name'][:20]}](https://polymarket.com/profile/{f['wallet']}) | {f['copy_return']:+.1%} | {f['max_dd']:.1%} | "
-                     f"{f['copied_buys']} | {f.get('profile', '')} | {top_s} |")
+        who = f"[{f['name'][:20]}](https://polymarket.com/profile/{f['wallet']})"
+        if whale:
+            lines.append(f"| {who} | ${f.get('whale_volume', 0):,.0f} | {f['copied_buys']} | {f.get('profile', '')} | {top_s} |")
+        else:
+            lines.append(f"| {who} | {f['copy_return']:+.1%} | {f['max_dd']:.1%} | {f['copied_buys']} | {f.get('profile', '')} | {top_s} |")
     lines.append("")
+    note = ("'Trailing buy volume' is dollars the wallet spent buying. It is size, not skill. "
+            if whale else
+            "'Copy return' is what following this wallet under our rules would have made. ")
     lines.append(f"<sub>paper account simulated against live order books; watching {report['watching']} wallets incl. former leaders with open positions. "
-                 "'Copy return' is what following this wallet under our rules would have made; 'their record' is what the wallet itself did.</sub>")
+                 f"{note}'their record' is what the wallet itself did.</sub>")
     return "\n".join(lines) + "\n"
 
 
@@ -81,7 +99,7 @@ def _hhmm(ts: int) -> str:
 
 
 def to_text(report: dict, mode: str = "") -> str:
-    head = "Polycopy " + report["as_of"][5:10].replace("-", "/")
+    head = _label() + " " + report["as_of"][5:10].replace("-", "/")
     if mode and mode != "live":
         head += f" [{mode}]"
     fills = report["fills"]

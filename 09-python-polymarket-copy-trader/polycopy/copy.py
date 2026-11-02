@@ -42,6 +42,7 @@ class CopyConfig:
     min_copyable_trades: int = 15      # for scoring a wallet
     lookback_days: int = 90            # scoring window
     rebalance_days: int = 30           # how often the followed set is re-picked
+    select_by: str = "copyability"     # "copyability" (what copying them earned) or "whale" (trailing buy volume)
     skip_slug_parts: tuple[str, ...] = ("updown", "-5m-", "-15m-", "-1h-", "up-or-down")
 
     def to_json(self, path):
@@ -51,7 +52,9 @@ class CopyConfig:
     @classmethod
     def from_json(cls, path) -> "CopyConfig":
         with open(path) as f:
-            raw = json.load(f)
+            raw = {k: v for k, v in json.load(f).items() if not k.startswith("_")}
+        if raw.get("select_by") not in (None, "copyability", "whale"):
+            raise ValueError(f"select_by must be 'copyability' or 'whale', got {raw.get('select_by')!r}")
         if "skip_slug_parts" in raw:
             raw["skip_slug_parts"] = tuple(raw["skip_slug_parts"])
         return cls(**raw)

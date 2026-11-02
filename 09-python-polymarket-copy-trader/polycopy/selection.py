@@ -1,10 +1,12 @@
-"""Pick who to follow by *copyability*, not by headline PnL.
+"""Pick who to follow.
 
-For every candidate wallet we replay its trades over the trailing
-`lookback_days` through the exact copy rules (latency, fees, slippage, size
-caps) and rank wallets by what that copy portfolio returned. A wallet whose
-edge disappears an hour later - or whose trades mostly get filtered out -
-scores low no matter how rich it is.
+Copyability replays each candidate's trades over the trailing `lookback_days`
+through the exact copy rules (latency, fees, slippage, size caps) and ranks
+wallets by what that copy portfolio returned. A wallet whose edge disappears
+an hour later scores low no matter how rich it is.
+
+Whale ranking ignores that replay and sorts by dollars spent buying. That is
+size, not skill: a wallet that lost money trading huge is still a whale.
 """
 from __future__ import annotations
 
@@ -26,6 +28,7 @@ class WalletScore:
     copied_buys: int
     seen: int
     skipped: dict[str, int]
+    notional: float = 0.0       # trailing BUY volume, set by rank_whales
 
     @property
     def score(self) -> float:
@@ -55,6 +58,24 @@ def score_wallets(histories: dict[str, list[dict]], names: dict[str, str], marke
 def choose(scores: list[WalletScore], cfg: CopyConfig) -> list[WalletScore]:
     """Top-N with a positive copy return; fewer than N if not enough qualify."""
     return [s for s in scores if s.copy_return > 0][: cfg.follow_n]
+
+
+def rank_whales(histories: dict[str, list[dict]], names: dict[str, str], start_ts: int, end_ts: int,
+                cfg: CopyConfig) -> list[WalletScore]:
+    """Biggest traders in the window, by dollars they spent buying.
+
+    This is size, not skill: a wallet that lost money trading huge is still a
+    whale. Bot and dormancy screening happens before this is called.
+    """
+    ranked = []
+    for w, trades in histories.items():
+        buys = [t for t in trades if start_ts <= int(t["timestamp"]) < end_ts and t.get("side") == "BUY"]
+        if len(buys) < cfg.min_copyable_trades:
+            continue
+        notional = sum(float(t.get("usdcSize") or 0) for t in buys)
+        ranked.append(WalletScore(w, names.get(w, w[:10]), 0.0, 0.0, len(buys), len(buys), {}, notional))
+    ranked.sort(key=lambda s: -s.notional)
+    return ranked[: cfg.follow_n]
 
 
 def scores_table(scores: list[WalletScore], n: int = 20) -> pd.DataFrame:

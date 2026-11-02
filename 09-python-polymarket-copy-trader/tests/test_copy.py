@@ -1,8 +1,11 @@
 """Copy rules, portfolio accounting, book walking - pure logic, no network."""
+import json
+
 import pytest
 
 from polycopy.copy import (CopyConfig, Portfolio, LeaderBook, copy_trade, copyable, precheck, taker_fee,
                            fill_from_book, clip_price)
+from polycopy.selection import rank_whales
 
 CFG = CopyConfig()
 T0 = 1_700_000_000
@@ -129,3 +132,47 @@ def test_config_json_roundtrip(tmp_path):
     cfg = CopyConfig(follow_n=3, skip_slug_parts=("a", "b"))
     cfg.to_json(tmp_path / "c.json")
     assert CopyConfig.from_json(tmp_path / "c.json") == cfg
+
+
+def _buy(wallet, ts, usdc, side="BUY"):
+    return {"proxyWallet": wallet, "timestamp": ts, "side": side, "usdcSize": usdc}
+
+
+def test_rank_whales_orders_by_buy_notional_inside_the_window():
+    hist = {
+        "small": [_buy("small", 100, 50)] * 15,                                          # $750
+        "big": [_buy("big", 100, 1000)] * 15,                                            # $15,000
+        "seller": [_buy("seller", 100, 5000, side="SELL")] * 20 + [_buy("seller", 100, 10)] * 15,
+        "old": [_buy("old", 10, 99_999)] * 20,                                           # before the window
+        "few": [_buy("few", 100, 99_999)] * 3,                                           # under min_copyable_trades
+    }
+    cfg = CopyConfig(min_copyable_trades=15, follow_n=2)
+    ranked = rank_whales(hist, {"big": "Big"}, 50, 200, cfg)
+    assert [s.wallet for s in ranked] == ["big", "small"]
+    assert ranked[0].name == "Big" and ranked[0].notional == 15_000
+    assert ranked[1].notional == 750
+
+
+def test_from_json_ignores_comment_and_rejects_bad_select_by(tmp_path):
+    path = tmp_path / "c.json"
+    path.write_text(json.dumps({"_comment": "size is not skill", "select_by": "whale", "follow_n": 5}))
+    cfg = CopyConfig.from_json(path)
+    assert cfg.select_by == "whale" and cfg.follow_n == 5 and cfg.trade_fraction == CopyConfig().trade_fraction
+    path.write_text(json.dumps({"select_by": "pnl"}))
+    with pytest.raises(ValueError):
+        CopyConfig.from_json(path)
+
+
+def test_report_shows_whale_volume_and_label(monkeypatch):
+    from polycopy.report import to_markdown, to_text
+    report = {
+        "as_of": "2026-11-02 12:00 UTC", "equity": 10_000.0, "return": 0.0, "started": "2026-11-02",
+        "start_cash": 10_000, "cash": 5_000.0, "realized": 0.0, "fees_paid": 12.0, "max_dd": -0.02,
+        "fills": [], "skipped": {}, "positions": [], "watching": 5,
+        "followed": [{"wallet": "0xabc", "name": "whale", "copy_return": 0.0, "max_dd": 0.0, "copied_buys": 20,
+                      "whale_volume": 1_250_000, "profile": "mostly politics", "top_markets": []}],
+    }
+    md = to_markdown(report)
+    assert "Trailing buy volume" in md and "$1,250,000" in md and "Copy return" not in md
+    monkeypatch.setenv("POLY_LABEL", "Whale copy")
+    assert to_text(report).startswith("Whale copy 11/02")
