@@ -1,0 +1,5 @@
+state/
+dashboard.html
+__pycache__/
+.pytest_cache/
+*.pyc

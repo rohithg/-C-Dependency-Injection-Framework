@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "paper-crypto": {
+      "command": "python",
+      "args": ["-m", "paperbot.server"],
+      "env": { "PAPERBOT_STATE_DIR": "state" }
+    }
+  }
+}
