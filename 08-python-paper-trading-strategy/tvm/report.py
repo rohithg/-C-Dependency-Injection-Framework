@@ -71,6 +71,19 @@ def to_markdown(report: dict, perf: dict | None, cfg: TVMConfig = DEFAULT, mode:
     else:
         lines.append("### No trades needed today (inside rebalance band)")
     lines.append("")
+    if report.get("learner"):
+        lines += [f"### Learner (adaptive ensemble, drift from target {report.get('drift_from_target', 0):.2f})",
+                  "| Expert | Weight | Trailing 1y |", "|---|---|---|"]
+        for e in report["learner"][:6]:
+            lines.append(f"| {e['expert']} | {e['weight']:.1%} | {e['trailing_1y']:+.1%} |")
+        if len(report["learner"]) > 6:
+            lines.append(f"| ... {len(report['learner']) - 6} more | | |")
+        lines.append("")
+    if report.get("postmortem"):
+        lines += ["### Recent regime exits (lessons)", "| Exit | Re-entry | Days out | Market moved | Verdict |", "|---|---|---|---|---|"]
+        for r in report["postmortem"]:
+            lines.append(f"| {r['exit']} | {r['reentry'] or '-'} | {r['days_out']} | {r['missed']:+.1%} | {r['verdict']} |")
+        lines.append("")
     if perf:
         lines += [
             f"### Paper account vs {cfg.benchmark_symbol} since {perf['since']} ({perf['days']} trading days)",

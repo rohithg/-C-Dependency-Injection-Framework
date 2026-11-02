@@ -121,6 +121,84 @@ Takeaways:
   shrinks noticeably. Alpaca is commission-free and SPY/QQQ/BIL spreads are
   ~1 bp, SSO/QLD ~2-3 bp, so 2 bps is a realistic all-in number.
 
+## Learning from mistakes: the adaptive ensemble
+
+`paper_trade.py` runs an **adaptive ensemble** by default (`--fixed` opts out).
+It is built so the strategy can get things wrong and recover, without giving
+it the freedom to curve-fit:
+
+1. **A pool of 16 experts** runs as virtual portfolios every day: the TVM
+   rules with trend windows 150/200/250 x momentum horizons 3/6/12 months,
+   risk budgets 15/20/25%, a no-leverage variant, a SPY-only variant, two
+   mistake-aware variants (below), and plain **buy-and-hold** as a safety net.
+2. **A Hedge learner** (multiplicative weights with a 6-month forgetting
+   half-life) scores each expert on its realised, cost-adjusted returns and
+   shifts the real portfolio toward the experts that have been right and away
+   from those that just lost. This has a regret bound: over time the blend
+   does about as well as the best expert in hindsight. Because buy-and-hold is
+   in the pool, the worst case is "drift toward VOO", never "drift toward
+   something broken".
+3. **Whipsaw memory** (`whipsaw_penalty`): every regime exit that is later
+   re-entered at a higher price was a mistake. Each one in the trailing year
+   raises the bar for the next entry by 0.5% (capped at 3%). Exits are never
+   delayed; leaving late is the costlier error.
+4. **Graded trend vote** (`trend_vote_windows`): exposure scaled by the share
+   of 100/150/200/250/300-day SMAs the price is above, instead of a single
+   200-day switch.
+5. **Post-mortem in every report**: the last regime exits are scored
+   ("whipsaw (mistake)" or "avoided loss") and the expert leaderboard is
+   printed, so you can see what the learner is reacting to.
+
+Everything is recomputed from price history on each run. There is no trained
+model to drift, and nothing persisted that could corrupt the decision.
+
+### What the learning did and did not buy (CAGR / MaxDD / Sharpe)
+
+| Variant | 1994-> | 1999-04 -> 2010-09 (OOS) | 2010-09 -> |
+|---|---|---|---|
+| VOO buy & hold | 10.8% / -55.2% / 0.51 | 0.4% / -55.2% / 0.01 | 14.7% / -34.0% / 0.81 |
+| TVM fixed default (in-sample pick) | 13.4% / -22.8% / 0.67 | 4.7% / -22.8% / 0.21 | 16.9% / -20.6% / 0.85 |
+| **Adaptive ensemble (live default)** | 12.4% / -22.3% / 0.65 | 4.6% / -22.3% / 0.20 | 15.2% / -19.7% / 0.80 |
+| Uniform average of experts (no learning) | 12.3% / -23.1% / 0.65 | 4.0% / -23.1% / 0.16 | 15.3% / -18.7% / 0.83 |
+| Whipsaw-aware TVM alone | 13.3% / -24.9% / 0.67 | 6.0% / -19.6% / 0.30 | 16.2% / -22.9% / 0.82 |
+| Graded SMA vote TVM alone | 13.3% / -21.7% / 0.68 | 5.6% / -21.3% / 0.27 | 15.9% / -21.7% / 0.82 |
+| Aggressive learner (eta=40) | 11.7% / -22.7% / 0.59 | 4.1% / -22.7% / 0.17 | 13.9% / -22.0% / 0.72 |
+| 2-expert chase: TVM vs buy-and-hold | 11.5% / -32.9% / 0.62 | 2.8% / -32.9% / 0.08 | 14.4% / -20.8% / 0.81 |
+
+Read this honestly:
+
+- The ensemble beats VOO in every period with lower volatility and roughly
+  60% less drawdown, but it does **not** beat the fixed default's backtest.
+  It should not: the fixed default's parameters were chosen on this data,
+  so its numbers are optimistic. The ensemble's number is what you get when
+  you refuse to make that bet.
+- The learner adds only a little over a plain average. Experts that are
+  variants of the same idea are highly correlated, and recent relative
+  performance among them is mostly noise. Pushing the learning rate up
+  (eta=40) chases that noise and loses ~1%/yr.
+- Chasing between TVM and buy-and-hold with only those two experts is
+  actively harmful (drawdown -33%): after a crash the learner piles into TVM
+  just as the V-recovery punishes it, and after a long bull run it piles into
+  buy-and-hold just before the next bear. Performance-chasing between
+  strategies with opposite crisis behaviour is the classic mistake, and the
+  wide pool keeps buy-and-hold's weight small enough (~5-15%) to act as a
+  hedge rather than a bet.
+- The two mistake-aware rules are the real improvement: they give up a
+  little in the tuned 2010-2026 window and gain clearly out of sample, which
+  is the signature of less overfitting. They are in the pool and can also be
+  switched on for the fixed strategy via config.
+
+What "best possible decisions" means here is therefore: robust to the
+parameter choice, degrading gracefully toward VOO when trend-following keeps
+failing, and provably not far behind the best expert in hindsight. No
+system can promise more than that on financial data without lying about it.
+
+```bash
+python run_backtest.py --adaptive      # adds the ensemble, learner weights and post-mortem to the report
+python paper_trade.py --mode preview   # adaptive by default
+python paper_trade.py --mode preview --fixed
+```
+
 ## Running it
 
 ```bash
@@ -233,6 +311,7 @@ Any other cron (a Lambda, Cloud Run job, or a Raspberry Pi) that runs
 tvm/config.py     parameters (dataclass, JSON-overridable)
 tvm/strategy.py   pure signal logic: compute_signals / step / target_weights
 tvm/backtest.py   execution + cost model, metrics, yearly tables
+tvm/adaptive.py   expert pool, Hedge learner, blended execution, regime post-mortem
 tvm/data.py       yfinance loader with CSV cache
 tvm/broker.py     Broker protocol, AlpacaBroker (REST), FakeBroker
 tvm/trader.py     one daily rebalance: reconstruct state -> signal -> orders
@@ -240,7 +319,7 @@ tvm/report.py     markdown run summary (GitHub step summary) + paper P&L vs VOO
 tvm/notify.py     daily one-liner via GitHub issue (default) / Twilio SMS / email-to-SMS / ntfy / Telegram
 run_backtest.py   report + charts in results/
 paper_trade.py    CLI for the daily run
-tests/            35 unit + integration tests on synthetic data
+tests/            49 unit + integration tests on synthetic data
 ```
 
 The same `strategy.py` code produces both the backtest and the live orders, so
@@ -262,6 +341,8 @@ there is no backtest/live divergence to debug.
   short-term; in a taxable account this strategy's after-tax edge over VOO
   shrinks substantially. It suits tax-advantaged accounts or, as here, paper
   trading.
+- **The adaptive layer is a robustness device, not a crystal ball.** See
+  "Learning from mistakes" above for what it does and does not improve.
 - **Gap risk.** Exiting at the close after a cross means a 2x position can sit
   through an overnight gap. The vol target shrinks exposure quickly when
   volatility spikes, but not before the first bad day.

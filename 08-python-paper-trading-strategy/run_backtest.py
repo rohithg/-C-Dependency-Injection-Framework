@@ -15,7 +15,8 @@ import pandas as pd
 
 from tvm.config import TVMConfig, DEFAULT
 from tvm.data import load_closes, tbill_daily_return
-from tvm.backtest import run_backtest, summarize, yearly_table, rolling_win_rate, format_summary
+from tvm.backtest import run_backtest, summarize, yearly_table, rolling_win_rate, format_summary, BacktestResult
+from tvm.adaptive import run_adaptive, AdaptiveConfig, regime_postmortem
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
@@ -35,6 +36,7 @@ def main() -> None:
     ap.add_argument("--start"); ap.add_argument("--end")
     ap.add_argument("--no-plot", action="store_true")
     ap.add_argument("--refresh", action="store_true", help="ignore the data cache")
+    ap.add_argument("--adaptive", action="store_true", help="also report the adaptive expert ensemble")
     args = ap.parse_args()
 
     cfg = TVMConfig.from_json(args.config) if args.config else DEFAULT
@@ -62,7 +64,22 @@ def main() -> None:
         exp = res.positions["exposure"]
         print(f"  avg exposure {exp.mean():.2f}x   time in cash {(exp == 0).mean():.0%}   "
               f"time in QQQ {((res.positions['asset'] == 'QQQ') & (exp > 0)).mean():.0%}\n")
+        if args.adaptive:
+            ares = run_adaptive(closes, cash, cfg, AdaptiveConfig(max_leverage=cfg.max_leverage))
+            a_ret = ares.returns.loc[res.returns.index[0]:res.returns.index[-1]].fillna(0.0)
+            a = summarize(a_ret, cash)
+            ares_bt = BacktestResult(a_ret, res.benchmark, res.positions, ares.held.loc[a_ret.index], ares.trades)
+            print("  " + format_summary("TVM adaptive ensemble", a))
+            print(f"  ensemble rolling 5y win rate vs VOO: {rolling_win_rate(ares_bt, 5):.0%}   10y: {rolling_win_rate(ares_bt, 10):.0%}\n")
         last = res
+
+    if args.adaptive:
+        ares = run_adaptive(closes, cash, cfg, AdaptiveConfig(max_leverage=cfg.max_leverage))
+        print("Learner weights today:")
+        print(ares.learner_weights.iloc[-1].sort_values(ascending=False).to_string(float_format=lambda v: f"{v:.1%}"))
+        print("\nRecent regime exits of the base rules:")
+        print(regime_postmortem(closes, cfg, 5).to_string(index=False))
+        print()
 
     if last is not None:
         yt = yearly_table(last)
