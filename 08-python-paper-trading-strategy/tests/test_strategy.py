@@ -23,7 +23,7 @@ def make_closes(n=400, spy_drift=0.0004, qqq_drift=0.0006, vol=0.01, seed=0):
 def test_signals_shape_and_warmup():
     closes = make_closes()
     sig = compute_signals(closes, CFG)
-    assert list(sig.columns) == ["risk_on", "realized_vol", "exposure_target", "mom_SPY", "mom_QQQ"]
+    assert set(sig.columns) == {"risk_on", "entry_threshold", "realized_vol", "exposure_target", "mom_SPY", "mom_QQQ"}
     assert sig["risk_on"].iloc[: CFG.sma_window - 1].isna().all()
     assert sig["risk_on"].iloc[CFG.sma_window:].notna().all()
     assert (sig["exposure_target"].dropna() <= CFG.max_leverage).all()

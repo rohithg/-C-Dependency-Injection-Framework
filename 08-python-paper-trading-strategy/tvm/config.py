@@ -30,6 +30,18 @@ class TVMConfig:
     max_leverage: float = 2.0            # hard cap; 2x ETFs make this implementable
     rebalance_band: float = 0.10         # trade only if |target - current| exposure > band
 
+    # Mistake-aware refinements (both off by default; used by the adaptive pool)
+    # Graded gate: exposure scaled by the fraction of these SMAs price is above
+    # (empty tuple = plain binary gate on sma_window).
+    trend_vote_windows: tuple[int, ...] = ()
+    # Whipsaw memory: after a regime exit that is later re-entered at a higher
+    # price (the exit lost money), the entry threshold rises by
+    # whipsaw_penalty per such mistake in the trailing whipsaw_lookback days,
+    # capped at whipsaw_max. 0 disables.
+    whipsaw_penalty: float = 0.0
+    whipsaw_lookback: int = 252
+    whipsaw_max: float = 0.03
+
     # Cost model (backtest only) ------------------------------------------
     cost_bps: float = 2.0                # one-way cost per unit of notional traded
     lev_etf_expense: float = 0.009       # annual expense ratio of 2x ETFs
@@ -41,8 +53,9 @@ class TVMConfig:
     @classmethod
     def from_json(cls, path: str | Path) -> "TVMConfig":
         raw = json.loads(Path(path).read_text())
-        if "risk_assets" in raw:
-            raw["risk_assets"] = tuple(raw["risk_assets"])
+        for key in ("risk_assets", "trend_vote_windows"):
+            if key in raw:
+                raw[key] = tuple(raw[key])
         return cls(**raw)
 
 

@@ -66,16 +66,55 @@ def compute_signals(close: pd.DataFrame, cfg: TVMConfig = DEFAULT) -> pd.DataFra
     trend_px = close[cfg.trend_symbol]
     sma = trend_px.rolling(cfg.sma_window).mean()
     out = pd.DataFrame(index=close.index)
-    out["risk_on"] = (trend_px > sma).where(sma.notna())
+    if cfg.whipsaw_penalty > 0:
+        out["risk_on"], out["entry_threshold"] = _regime_with_whipsaw_memory(trend_px, sma, cfg)
+    else:
+        out["risk_on"] = (trend_px > sma).where(sma.notna())
+        out["entry_threshold"] = 0.0
 
     rets = close[list(cfg.risk_assets)].pct_change()
     realized = rets.rolling(cfg.vol_window).std().max(axis=1) * math.sqrt(TRADING_DAYS)
     out["realized_vol"] = realized
-    out["exposure_target"] = (cfg.target_vol / realized).clip(upper=cfg.max_leverage)
+    exposure = (cfg.target_vol / realized).clip(upper=cfg.max_leverage)
+    if cfg.trend_vote_windows:
+        votes = sum((trend_px > trend_px.rolling(w).mean()).astype(float) for w in cfg.trend_vote_windows)
+        votes = (votes / len(cfg.trend_vote_windows)).where(trend_px.rolling(max(cfg.trend_vote_windows)).mean().notna())
+        out["trend_vote"] = votes
+        exposure = exposure * votes
+        # the gate is "any SMA says up"; the vote scales how much
+        out["risk_on"] = (votes > 0).where(votes.notna())
+    out["exposure_target"] = exposure
 
     for sym in cfg.risk_assets:
         out[f"mom_{sym}"] = close[sym].pct_change(cfg.momentum_window)
     return out
+
+
+def _regime_with_whipsaw_memory(px: pd.Series, sma: pd.Series, cfg: TVMConfig) -> tuple[pd.Series, pd.Series]:
+    """Binary regime whose *entry* threshold rises after recent whipsaws.
+
+    A whipsaw is a regime exit followed by a re-entry at a higher price: the
+    exit cost money. Each one inside the trailing lookback lifts the bar for
+    the next entry to SMA * (1 + penalty * n_whipsaws), capped. Exits are never
+    delayed; being slow to leave is the costlier mistake.
+    """
+    risk_on = np.full(len(px), np.nan)
+    threshold = np.zeros(len(px))
+    on, exit_px, whipsaws = False, None, []
+    for i, (p, s) in enumerate(zip(px.values, sma.values)):
+        if np.isnan(s) or np.isnan(p):
+            continue
+        whipsaws = [w for w in whipsaws if i - w < cfg.whipsaw_lookback]
+        h = min(cfg.whipsaw_max, cfg.whipsaw_penalty * len(whipsaws))
+        threshold[i] = h
+        if on and p < s:
+            on, exit_px = False, p
+        elif not on and p > s * (1 + h):
+            on = True
+            if exit_px is not None and p > exit_px:
+                whipsaws.append(i)
+        risk_on[i] = float(on)
+    return pd.Series(risk_on, index=px.index), pd.Series(threshold, index=px.index)
 
 
 def best_asset(row: pd.Series, cfg: TVMConfig = DEFAULT) -> str | None:
