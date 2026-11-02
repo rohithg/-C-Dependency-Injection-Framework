@@ -172,9 +172,10 @@ reads fine in the GitHub mobile app or a phone browser.
    Under *Variables* add `TVM_PAPER_TRADING_ENABLED` = `true`.
 4. **First real run.** *Run workflow* with mode `dry-run` to see the orders
    against your actual paper account, then once with `live` to place them.
-5. **Done.** From then on it runs itself every weekday at 15:50 ET. Check in
-   whenever you like: the Actions tab shows each day's summary, and the Alpaca
-   app shows positions and P&L.
+5. **Done.** From then on it runs itself every weekday at 15:40 ET with no
+   further input. Check in whenever you like: the Actions tab shows each day's
+   summary, the `paper-trading-log` branch holds the full trade history, and
+   the Alpaca app shows positions and P&L.
 
 ### Daily text message
 
@@ -201,6 +202,18 @@ Notification failures are logged in the run summary but never abort a trade.
 Scheduled runs are skipped until the `TVM_PAPER_TRADING_ENABLED` variable is
 set, so forking the repo does not start trading by itself. The live Alpaca
 endpoint is refused in code; this can only ever touch a paper account.
+
+What keeps it running unattended:
+
+- Each real run commits `state/` to the `paper-trading-log` branch. GitHub
+  auto-disables cron workflows after 60 days without a commit; the daily
+  commit prevents that and doubles as a permanent, inspectable trade log.
+- The trader rebuilds its position state from the broker every run, so a
+  missed day (GitHub outage, yfinance hiccup) is simply picked up the next
+  day. A failed run emails the repo owner by default.
+- The cron fires 20 minutes before the close to absorb GitHub's best-effort
+  scheduling delay; if it still runs after the bell, orders fill at the next
+  open, which the backtest execution model tolerates.
 
 Any other cron (a Lambda, Cloud Run job, or a Raspberry Pi) that runs
 `python paper_trade.py` once a day works equally well.

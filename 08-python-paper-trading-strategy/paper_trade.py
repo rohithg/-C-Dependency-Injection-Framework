@@ -15,7 +15,7 @@ Or via --mode (used by the GitHub Actions workflow):
 If --mode is omitted and credentials are missing, falls back to preview so a
 run from a fresh checkout never fails for lack of setup.
 
-Schedule it once per trading day, e.g. 15:50 America/New_York (see
+Schedule it once per trading day, e.g. 15:40 America/New_York (see
 .github/workflows/paper-trade.yml).
 """
 from __future__ import annotations
