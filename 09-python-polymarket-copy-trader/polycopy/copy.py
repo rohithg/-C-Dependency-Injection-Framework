@@ -33,6 +33,11 @@ class CopyConfig:
     max_market_fraction: float = 0.05  # cap on cost basis in one market
     max_leader_multiple: float = 1.0   # our notional per copied buy <= leader's notional x this (0 = no cap)
     slippage: float = 0.01             # price paid above/below the reference on each side
+    max_chase: float = 0.10            # skip a buy if the price already moved this far above the leader's fill
+    # live-only market-quality checks (no historical values exist, so the backtest cannot apply them)
+    min_liquidity_usd: float = 1000.0  # Gamma 'liquidity' of the market
+    min_volume_24h_usd: float = 500.0  # Gamma 'volume24hr'
+    max_spread: float = 0.05           # best ask - best bid on the token we would buy
     max_trades_per_day: float = 100.0  # wallets busier than this are bots we cannot follow
     min_copyable_trades: int = 15      # for scoring a wallet
     lookback_days: int = 90            # scoring window
@@ -268,7 +273,7 @@ def copy_trade(trade: dict, market: dict | None, portfolio: Portfolio, leaders: 
         px = exec_price(token, "BUY", ts, leader_px)
         if px is None:
             return None, "no price"
-        if px > cfg.max_price:
+        if px > cfg.max_price or px - leader_px > cfg.max_chase:
             return None, f"moved to {px:.2f}"
         budget = cfg.trade_fraction * equity
         if cfg.max_leader_multiple > 0:          # we cannot take more liquidity than the leader did

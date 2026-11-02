@@ -15,14 +15,17 @@ import json
 from pathlib import Path
 import time
 
+from .analysis import wallet_profile, profile_line
 from .api import PolymarketAPI
 from .backtest import PriceSource, resolution_payout
 from .copy import CopyConfig, Portfolio, LeaderBook, copy_trade, precheck, fill_from_book, Fill
+from .review import review_buy, review_to_dict
 from .selection import score_wallets, choose, WalletScore
 from .universe import build_universe, screen_universe, fetch_history
 
 STATE_DIR = Path(__file__).resolve().parent.parent / "state"
 MAX_COPY_AGE_H = 3.0          # a leader trade older than this when we first see it is a miss, not a copy
+ACTIVITY_KEEP = 300           # recent watched-wallet events kept in state for the report
 
 
 class PaperState:
@@ -43,6 +46,7 @@ class PaperState:
         self.leaders.shares = {tuple(k.split("|")): v for k, v in raw.get("leaders", {}).items()}
         self.last_notified: str = raw.get("last_notified", "")
         self.skipped: dict[str, int] = raw.get("skipped", {})
+        self.activity: list[dict] = raw.get("activity", [])
 
     def save(self) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -52,11 +56,13 @@ class PaperState:
             "equity_history": self.equity_history[-24 * 400:],
             "leaders": {"|".join(k): v for k, v in self.leaders.shares.items() if v > 0},
             "last_notified": self.last_notified, "skipped": self.skipped,
+            "activity": self.activity[-ACTIVITY_KEEP:],
         }, indent=1))
 
 
 def select_followed(api: PolymarketAPI, cfg: CopyConfig, log=print) -> list[dict]:
-    """Full re-selection: leaderboards -> bot/dormancy screen -> trailing copy score -> top N."""
+    """Full re-selection: leaderboards -> bot/dormancy screen -> trailing copy score -> top N,
+    each with a descriptive profile (win rate, sizing, favourite markets)."""
     now = int(time.time())
     kept, _ = screen_universe(api, build_universe(api), cfg, log=log)
     since = now - cfg.lookback_days * 86400
@@ -66,8 +72,16 @@ def select_followed(api: PolymarketAPI, cfg: CopyConfig, log=print) -> list[dict
     scores = score_wallets(histories, names, markets, PriceSource(api, markets), cfg, since, now, api=api, log=log)
     chosen = choose(scores, cfg)
     log(f"selected {len(chosen)} of {len(scores)} scored wallets")
-    return [{"wallet": s.wallet, "name": s.name, "copy_return": round(s.copy_return, 4), "max_dd": round(s.max_dd, 4),
-             "copied_buys": s.copied_buys, "since": now} for s in chosen]
+    out = []
+    for s in chosen:
+        stats = wallet_profile(api, histories[s.wallet], markets)
+        out.append({"wallet": s.wallet, "name": s.name, "copy_return": round(s.copy_return, 4), "max_dd": round(s.max_dd, 4),
+                    "copied_buys": s.copied_buys, "since": now, "profile": profile_line(stats),
+                    "stats": {k: v for k, v in stats.items() if k not in ("top_markets",)},
+                    "top_markets": [{"title": r["title"], "volume": round(r["volume"]), "pnl": None if r["pnl"] is None else round(r["pnl"])}
+                                    for r in stats.get("top_markets", [])[:3]]})
+    return out
+
 
 
 def run_once(api: PolymarketAPI, cfg: CopyConfig, state_dir: Path = STATE_DIR, *, start_cash: float = 10_000.0,
@@ -76,7 +90,7 @@ def run_once(api: PolymarketAPI, cfg: CopyConfig, state_dir: Path = STATE_DIR, *
     state = PaperState(state_dir / "state.json", start_cash)
     port = state.portfolio
     report: dict = {"as_of": dt.datetime.fromtimestamp(now, dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
-                    "fills": [], "skipped": {}, "reselected": False}
+                    "fills": [], "skipped": {}, "reselected": False, "activity": [], "reviews": []}
 
     # ---- who to follow -----------------------------------------------------------------
     if reselect or not state.followed or now - state.selected_at > cfg.rebalance_days * 86400:
@@ -107,6 +121,29 @@ def run_once(api: PolymarketAPI, cfg: CopyConfig, state_dir: Path = STATE_DIR, *
             got = fill_from_book(b, "SELL", shares=pos.shares if pos else 0.0) if pos else None
         return got[1] if got else None
 
+    names = {f["wallet"]: f["name"] for f in state.followed}
+
+    def classify(tr: dict) -> str:
+        """new position / added / reduced / closed, judged before the trade is applied to LeaderBook."""
+        had = state.leaders.shares.get((tr["proxyWallet"], tr["asset"]), 0.0)
+        if tr["side"] == "BUY":
+            return "new position" if had <= 1e-6 else "added"
+        return "closed" if had - float(tr.get("size", 0) or 0) <= 1e-6 else "reduced"
+
+    def event(tr: dict, decision: str) -> None:
+        """Activity-monitor entry: what the watched wallet did and what we did about it."""
+        report["activity"].append({
+            "ts": int(tr["timestamp"]), "wallet": tr["proxyWallet"], "name": names.get(tr["proxyWallet"], tr["proxyWallet"][:8]),
+            "kind": tr["_kind"], "side": tr["side"], "title": tr.get("title", ""), "outcome": tr.get("outcome", ""),
+            "usdc": round(float(tr.get("usdcSize", 0) or 0), 2), "price": float(tr["price"]), "decision": decision})
+
+    def skip(tr: dict, why: str, review: dict | None = None) -> None:
+        event(tr, f"skipped: {why}")
+        state.leaders.apply(tr)
+        _count(report, state, why)
+        if review:
+            report["reviews"].append(review)
+
     for wallet in sorted(watching):
         since = state.cursor.get(wallet, now - 3600)
         try:
@@ -116,32 +153,47 @@ def run_once(api: PolymarketAPI, cfg: CopyConfig, state_dir: Path = STATE_DIR, *
             continue
         for tr in trades:
             tr["proxyWallet"] = tr["proxyWallet"].lower()
+            tr["_kind"] = classify(tr)
             state.cursor[wallet] = max(state.cursor.get(wallet, 0), int(tr["timestamp"]))
             if wallet not in followed and tr["side"] == "BUY":
-                state.leaders.apply(tr); continue
+                event(tr, "not followed"); state.leaders.apply(tr); continue
             if tr["side"] == "SELL" and tr["asset"] not in port.positions:
-                state.leaders.apply(tr); continue
+                event(tr, "not holding"); state.leaders.apply(tr); continue
             if now - tr["timestamp"] > MAX_COPY_AGE_H * 3600:
-                state.leaders.apply(tr); _count(report, state, "stale"); continue
+                skip(tr, "stale"); continue
             why = precheck(tr, cfg)
             if why:
-                state.leaders.apply(tr); _count(report, state, why); continue
+                skip(tr, why); continue
             m = markets.get(tr["conditionId"])
             if m is None:
                 m = markets[tr["conditionId"]] = api.market(tr["conditionId"])
             frac = None
-            if tr["side"] == "SELL":
+            if tr["side"] == "BUY":
+                approved, checks = review_buy(tr, m, book(tr["asset"]), cfg, port, now, MAX_COPY_AGE_H)
+                if not approved:
+                    failed = [c for c in checks if not c.ok]
+                    why = failed[0].name + (f" {failed[0].value}" if failed[0].value else "")
+                    skip(tr, why, review_to_dict(tr, m, False, checks, "rejected: " + ", ".join(c.name for c in failed)))
+                    continue
+            else:
                 remaining = api.position(wallet, tr["conditionId"]).get(tr["asset"], 0.0)
                 frac = min(1.0, float(tr["size"]) / (float(tr["size"]) + remaining)) if remaining >= 0 else 1.0
             fill, why = copy_trade(tr, m, port, state.leaders, cfg, exec_price, fraction_override=frac)
             if fill:
                 fill.note = f"leader {tr['proxyWallet'][:8]} @ {float(tr['price']):.3f}"
                 report["fills"].append(asdict(fill))
+                event(tr, f"copied {fill.shares:.0f} @ {fill.price:.3f}")
+                if tr["side"] == "BUY":
+                    report["reviews"].append(review_to_dict(tr, m, True, checks, f"copied {fill.shares:.0f} shares @ {fill.price:.3f}"))
                 log(f"{fill.side} {fill.shares:.1f} x {fill.price:.3f} {fill.title[:50]} [{fill.outcome}] copying {wallet[:8]}")
             else:
+                event(tr, f"skipped: {why}")
                 _count(report, state, why)
+                if tr["side"] == "BUY":
+                    report["reviews"].append(review_to_dict(tr, m, True, checks, "approved but not filled: " + why))
         if not trades:
             state.cursor[wallet] = max(state.cursor.get(wallet, 0), now - 3600)
+    state.activity = (state.activity + report["activity"])[-ACTIVITY_KEEP:]
 
     # ---- mark, resolve ---------------------------------------------------------------
     mids = api.midpoints([t for t in port.positions])
@@ -172,6 +224,11 @@ def run_once(api: PolymarketAPI, cfg: CopyConfig, state_dir: Path = STATE_DIR, *
         with (state_dir / "fills.jsonl").open("a") as f:
             for fl in report["fills"]:
                 f.write(json.dumps({"run": report["as_of"], **fl}, default=str) + "\n")
+        with (state_dir / "activity.jsonl").open("a") as f:     # the activity monitor + every trade review, forever
+            for a in report["activity"]:
+                f.write(json.dumps({"run": report["as_of"], "type": "activity", **a}) + "\n")
+            for r in report["reviews"]:
+                f.write(json.dumps({"run": report["as_of"], "type": "review", **r}) + "\n")
     report["_state"] = state
     return report
 

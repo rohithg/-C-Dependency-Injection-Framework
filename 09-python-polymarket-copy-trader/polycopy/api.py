@@ -193,7 +193,8 @@ class PolymarketAPI:
             path = self._cache_path(f"market:{cid}")
             if path.exists():
                 cached = json.loads(path.read_text()) or {}
-                if cached.get("resolved") or now - cached.get("fetched_at", 0) < 3600:
+                fresh = now - cached.get("fetched_at", 0) < 3600 and ("liquidity" in cached or cached.get("missing"))
+                if cached.get("resolved") or fresh:
                     if not cached.get("missing"):
                         out[cid] = cached
                     continue
@@ -306,7 +307,20 @@ def _market_from_gamma(g: dict) -> dict | None:
         "closed_ts": _iso_ts(g.get("closedTime")), "fee_rate": fee_rate, "tokens": tokens,
         "resolved": closed and any(t["winner"] for t in tokens),
         "neg_risk": bool(g.get("negRisk")), "fetched_at": int(time.time()),
+        # live market-quality fields (current values only; meaningless for closed markets)
+        "liquidity": _num(g.get("liquidityNum", g.get("liquidity"))),
+        "volume_24h": _num(g.get("volume24hr")),
+        "volume": _num(g.get("volumeNum", g.get("volume"))),
+        "change_1h": _num(g.get("oneHourPriceChange")),
+        "spread": _num(g.get("spread")),
     }
+
+
+def _num(v) -> float | None:
+    try:
+        return None if v is None else float(v)
+    except (TypeError, ValueError):
+        return None
 
 
 def _iso_ts(iso: str | None) -> int | None:

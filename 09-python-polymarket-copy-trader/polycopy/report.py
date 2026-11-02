@@ -38,13 +38,46 @@ def to_markdown(report: dict, mode: str = "") -> str:
             lines.append(f"| {p['title'][:60]} | {p['outcome']} | {p['shares']:.1f} | ${p['cost']:,.0f} | {mark} | ${val:,.0f} | "
                          f"{val - p['cost']:+,.0f} | {p['end']} | {', '.join(w[:8] for w in p['leaders'])} |")
     lines.append("")
+    if report.get("reviews"):
+        lines += ["### Trade review", ""]
+        for r in report["reviews"][:12]:
+            verdict = "APPROVED" if r["approved"] else "REJECTED"
+            lines.append(f"**{verdict}** - {r['name'][:16]} bought ${r['usdc']:,.0f} of *{r['title'][:60]}* [{r['outcome']}] @ {r['price']:.3f} "
+                         f"({_hhmm(r['ts'])}) -> {r['result']}")
+            lines.append("")
+            lines.append("| Check | Value | | Rule |")
+            lines.append("|---|---|---|---|")
+            for c in r["checks"]:
+                lines.append(f"| {c['name']} | {c['value']} | {'ok' if c['ok'] else '**fail**'} | {c['note']} |")
+            lines.append("")
+        if len(report["reviews"]) > 12:
+            lines.append(f"<sub>{len(report['reviews']) - 12} more reviews in state/activity.jsonl</sub>")
+            lines.append("")
+    if report.get("activity"):
+        acts = sorted(report["activity"], key=lambda a: -a["ts"])
+        lines += [f"### Wallet activity this run ({len(acts)} trades by watched wallets)",
+                  "| Time (UTC) | Wallet | Action | Market | Outcome | Size | Price | What we did |", "|---|---|---|---|---|---|---|---|"]
+        for a in acts[:40]:
+            lines.append(f"| {_hhmm(a['ts'])} | {a['name'][:14]} | {a['kind']} | {a['title'][:50]} | {a['outcome'][:12]} | ${a['usdc']:,.0f} | {a['price']:.3f} | {a['decision']} |")
+        if len(acts) > 40:
+            lines.append(f"| ... | | | {len(acts) - 40} more | | | | |")
+        lines.append("")
     lines += [f"### Following {len(report['followed'])} wallets" + (" (re-selected this run)" if report.get("reselected") else ""),
-              "| Wallet | Trailing copy return | Max DD | Copied buys |", "|---|---|---|---|"]
+              "| Wallet | Copy return (90d, our rules) | Copy max DD | Copied buys | Their record | Biggest market |", "|---|---|---|---|---|---|"]
     for f in report["followed"]:
-        lines.append(f"| [{f['name'][:20]}](https://polymarket.com/profile/{f['wallet']}) | {f['copy_return']:+.1%} | {f['max_dd']:.1%} | {f['copied_buys']} |")
+        top = (f.get("top_markets") or [{}])[0]
+        top_s = f"{top['title'][:40]} (${top['volume']:,.0f}" + (f", {top['pnl']:+,.0f})" if top.get("pnl") is not None else ")") if top.get("title") else ""
+        lines.append(f"| [{f['name'][:20]}](https://polymarket.com/profile/{f['wallet']}) | {f['copy_return']:+.1%} | {f['max_dd']:.1%} | "
+                     f"{f['copied_buys']} | {f.get('profile', '')} | {top_s} |")
     lines.append("")
-    lines.append(f"<sub>paper account simulated against live order books; watching {report['watching']} wallets incl. former leaders with open positions</sub>")
+    lines.append(f"<sub>paper account simulated against live order books; watching {report['watching']} wallets incl. former leaders with open positions. "
+                 "'Copy return' is what following this wallet under our rules would have made; 'their record' is what the wallet itself did.</sub>")
     return "\n".join(lines) + "\n"
+
+
+def _hhmm(ts: int) -> str:
+    import datetime as dt
+    return dt.datetime.fromtimestamp(ts, dt.timezone.utc).strftime("%m-%d %H:%M")
 
 
 def to_text(report: dict, mode: str = "") -> str:
@@ -56,6 +89,9 @@ def to_text(report: dict, mode: str = "") -> str:
     sells = sum(1 for f in fills if f["side"] == "SELL")
     res = sum(1 for f in fills if f["side"] == "RESOLVE")
     act = f"{buys} buys, {sells} sells, {res} resolved" if fills else "no fills"
+    seen = len(report.get("activity") or [])
+    if seen:
+        act += f" from {seen} leader trades"
     return (f"{head}: ${report['equity']:,.0f} ({report['return']:+.1%} since {report['started'][5:]}), "
             f"{len(report['positions'])} open positions, following {len(report['followed'])}. Today: {act}. "
             f"Fees ${report['fees_paid']:,.0f}, max DD {report['max_dd']:.1%}.")

@@ -16,9 +16,10 @@ CFG = CopyConfig(min_copyable_trades=2, follow_n=2)
 class FakeAPI:
     """Two markets. 'good' resolves YES (our token wins), 'bad' resolves NO."""
 
-    def __init__(self, resolved=True):
+    def __init__(self, resolved=True, liquidity=50_000.0, volume_24h=20_000.0):
         self.requests_made = 0
         self.resolved = resolved
+        self.liquidity, self.volume_24h = liquidity, volume_24h
         self.books = {"good": {"asks": [(0.42, 1000)], "bids": [(0.40, 1000)]},
                       "bad": {"asks": [(0.62, 1000)], "bids": [(0.60, 1000)]}}
         self.activity_rows = {}
@@ -27,6 +28,7 @@ class FakeAPI:
     def market(self, cid):
         res = self.resolved and cid in ("good", "bad")
         return {"condition_id": cid, "slug": cid, "closed": res, "resolved": res, "end_ts": T0 + 10 * 86400, "fee_rate": 0.02,
+                "liquidity": self.liquidity, "volume_24h": self.volume_24h,
                 "tokens": [{"token_id": cid, "outcome": "Yes", "winner": cid == "good"},
                            {"token_id": cid + "-no", "outcome": "No", "winner": cid == "bad"}]}
 
@@ -113,6 +115,10 @@ def test_paper_tick_copies_marks_and_persists(tmp_path, monkeypatch):
     assert rep["reselected"] and [f["side"] for f in rep["fills"]] == ["BUY"]
     fill = rep["fills"][0]
     assert fill["price"] == pytest.approx(0.42)                        # walked the live ask
+    assert rep["activity"][0]["kind"] == "new position" and rep["activity"][0]["decision"].startswith("copied")
+    review = rep["reviews"][0]
+    assert review["approved"] and all(c["ok"] for c in review["checks"])
+    assert {c["name"] for c in review["checks"]} >= {"liquidity", "24h volume", "spread", "price since leader", "position size"}
     assert rep["positions"][0]["mark"] == pytest.approx(0.41)
     assert (tmp_path / "state.json").exists() and (tmp_path / "fills.jsonl").exists()
 
@@ -126,6 +132,31 @@ def test_paper_tick_copies_marks_and_persists(tmp_path, monkeypatch):
     assert len(sells) == 1 and sells[0]["price"] == pytest.approx(0.40)
     assert sells[0]["shares"] == pytest.approx(fill["shares"] * 0.4, rel=1e-3)
     assert len(rep2["_state"].equity_history) == 2
+    assert rep2["activity"][0]["kind"] == "reduced"
+
+
+def test_trade_review_rejects_illiquid_market_and_chased_price(tmp_path):
+    api = FakeAPI(resolved=False, liquidity=200.0)                    # below the $1,000 floor
+    now = T0 + 2 * 3600
+    api.activity_rows = {"0xgood": [tr("0xgood", "good", ts=now - 600)]}
+    st = paper.PaperState(tmp_path / "state.json", 10_000.0)
+    st.followed = [{"wallet": "0xgood", "name": "good", "copy_return": 0.1, "max_dd": -0.02, "copied_buys": 5, "since": now}]
+    st.selected_at, st.cursor = now, {"0xgood": now - 3600}
+    st.save()
+    rep = run_once(api, CopyConfig(), tmp_path, now=now, dry_run=True, log=lambda *_: None)
+    assert rep["fills"] == []
+    review = rep["reviews"][0]
+    assert not review["approved"]
+    failed = {c["name"]: c for c in review["checks"] if not c["ok"]}
+    assert set(failed) == {"liquidity"} and failed["liquidity"]["value"] == "$200"
+    assert rep["activity"][0]["decision"].startswith("skipped: liquidity")
+
+    # liquid market, but the leader paid 0.25 and the ask is now 0.42: that is chasing
+    api2 = FakeAPI(resolved=False)
+    api2.activity_rows = {"0xgood": [tr("0xgood", "good", ts=now - 600, price=0.25, usdc=500)]}
+    rep2 = run_once(api2, CopyConfig(), tmp_path, now=now, dry_run=True, log=lambda *_: None)
+    failed2 = {c["name"] for c in rep2["reviews"][0]["checks"] if not c["ok"]}
+    assert failed2 == {"price since leader"} and rep2["fills"] == []
 
 
 def test_paper_tick_ignores_stale_and_dry_run_writes_nothing(tmp_path):
