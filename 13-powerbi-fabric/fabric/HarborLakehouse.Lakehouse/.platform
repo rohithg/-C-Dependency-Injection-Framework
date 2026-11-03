@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Lakehouse",
+    "displayName": "HarborLakehouse",
+    "description": "Files hold the raw export. Tables hold the star schema the semantic model reads."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "3f6a1c84-0b2e-4d77-9a15-2c8e5b70d441"
+  }
+}

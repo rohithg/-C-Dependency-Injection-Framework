@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "Harbor",
+    "description": "Blank report bound to the Harbor semantic model. The first visual is part of the lesson."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "6e2b8a45-1d90-4f73-95c6-3a8d0e17b452"
+  }
+}

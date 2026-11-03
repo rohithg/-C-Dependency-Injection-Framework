@@ -1,0 +1,5 @@
+/// Seattle and Portland only. Static on purpose, so View as role works with no login.
+role 'West stores'
+	modelPermission: read
+
+	tablePermission DimStore = [Region] = "West"

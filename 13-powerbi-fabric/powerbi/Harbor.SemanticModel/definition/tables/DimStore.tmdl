@@ -1,0 +1,52 @@
+table DimStore
+
+	column StoreKey
+		dataType: int64
+		isHidden
+		isKey
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: StoreKey
+
+	column Store
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Store
+
+	column City
+		dataType: string
+		summarizeBy: none
+		sourceColumn: City
+
+	column State
+		dataType: string
+		summarizeBy: none
+		sourceColumn: State
+
+	column Region
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Region
+
+	hierarchy Geography
+
+		level Region
+			column: Region
+
+		level State
+			column: State
+
+		level City
+			column: City
+
+		level Store
+			column: Store
+
+	partition DimStore = m
+		mode: import
+		source =
+				let
+					Source = LoadCsv("dim_store.csv"),
+					Typed = Table.TransformColumnTypes(Source, {{"StoreKey", Int64.Type}})
+				in
+					Typed

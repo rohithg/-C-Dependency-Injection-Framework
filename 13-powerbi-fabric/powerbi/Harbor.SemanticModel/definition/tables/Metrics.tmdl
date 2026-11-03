@@ -1,0 +1,131 @@
+/// Every business number lives here. A measure has no row of its own. Filter context decides which fact rows it sees.
+table Metrics
+
+	/// Sum of line net amount after discount.
+	measure Revenue = SUM(FactSales[Net Amount])
+		formatString: $#,##0.00
+		displayFolder: Core
+
+	/// Sum of line cost. Quantity times unit cost, stored on the fact so the measure stays a sum.
+	measure Cost = SUM(FactSales[Cost Amount])
+		formatString: $#,##0.00
+		displayFolder: Core
+
+	measure Margin = [Revenue] - [Cost]
+		formatString: $#,##0.00
+		displayFolder: Core
+
+	measure 'Margin %' = DIVIDE([Margin], [Revenue])
+		formatString: 0.00%
+		displayFolder: Core
+
+	measure Units = SUM(FactSales[Quantity])
+		formatString: #,##0
+		displayFolder: Core
+
+	measure Orders = DISTINCTCOUNT(FactSales[OrderId])
+		formatString: #,##0
+		displayFolder: Core
+
+	measure 'Average order value' = DIVIDE([Revenue], [Orders])
+		formatString: $#,##0.00
+		displayFolder: Core
+
+	/// From 1 January of the year in context through the last date in context.
+	measure 'Revenue YTD' = CALCULATE([Revenue], DATESYTD(DimDate[Date]))
+		formatString: $#,##0.00
+		displayFolder: 'Time intelligence'
+
+	/// The same dates shifted back one year. Blank when that year was not loaded.
+	measure 'Revenue PY' = CALCULATE([Revenue], SAMEPERIODLASTYEAR(DimDate[Date]))
+		formatString: $#,##0.00
+		displayFolder: 'Time intelligence'
+
+	measure 'Revenue YoY' = [Revenue] - [Revenue PY]
+		formatString: $#,##0.00
+		displayFolder: 'Time intelligence'
+
+	measure 'Revenue YoY %' = DIVIDE([Revenue] - [Revenue PY], [Revenue PY])
+		formatString: 0.00%
+		displayFolder: 'Time intelligence'
+
+	/// Uses the inactive ship-date relationship for this measure only.
+	measure 'Revenue by ship date' = ```
+			CALCULATE(
+				[Revenue],
+				USERELATIONSHIP(FactSales[ShipDate], DimDate[Date])
+			)
+			```
+		formatString: $#,##0.00
+		displayFolder: Comparison
+
+	/// Month plan. Customer filters do not apply: nothing relates customers to this fact.
+	measure Budget = ```
+			CALCULATE(
+				SUM(FactBudget[Budget Amount]),
+				REMOVEFILTERS(DimDate),
+				TREATAS(VALUES(DimDate[Year Month]), FactBudget[Year Month])
+			)
+			```
+		formatString: $#,##0.00
+		displayFolder: Comparison
+
+	measure 'Budget variance' = [Revenue] - [Budget]
+		formatString: $#,##0.00
+		displayFolder: Comparison
+
+	measure 'Budget variance %' = DIVIDE([Budget variance], [Budget])
+		formatString: 0.00%
+		displayFolder: Comparison
+
+	/// This product's revenue divided by its category. The product filter is removed. The category filter stays.
+	measure 'Share of category' = ```
+			DIVIDE(
+				[Revenue],
+				CALCULATE([Revenue], ALLEXCEPT(DimProduct, DimProduct[Category]))
+			)
+			```
+		formatString: 0.00%
+		displayFolder: Comparison
+
+	/// Last snapshot in the current dates, summed across stores and products. Do not sum this fact across dates.
+	measure 'Inventory units' = ```
+			CALCULATE(
+				SUM(FactInventory[Units On Hand]),
+				LASTNONBLANK(
+					DimDate[Date],
+					CALCULATE(SUM(FactInventory[Units On Hand]))
+				)
+			)
+			```
+		formatString: #,##0
+		displayFolder: Inventory
+
+	/// Trailing 28 days of units, divided by 4. Customer filters are removed: the shelf is not a customer attribute.
+	measure 'Weekly units' = ```
+			DIVIDE(
+				CALCULATE(
+					[Units],
+					REMOVEFILTERS(DimCustomer),
+					DATESINPERIOD(DimDate[Date], MAX(DimDate[Date]), -28, DAY)
+				),
+				4
+			)
+			```
+		formatString: #,##0.00
+		displayFolder: Inventory
+
+	measure 'Weeks of supply' = DIVIDE([Inventory units], [Weekly units])
+		formatString: 0.00
+		displayFolder: Inventory
+
+	column Dummy
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: [Dummy]
+
+	partition Metrics = calculated
+		mode: import
+		source = ROW("Dummy", 1)

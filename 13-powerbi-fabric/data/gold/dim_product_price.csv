@@ -1,0 +1,15 @@
+ProductPriceKey,ProductKey,Product,List Price,Valid From,Valid To,Is Current
+1,1,House Blend,12.00,2024-01-01,2025-02-28,false
+2,1,House Blend,13.00,2025-03-01,9999-12-31,true
+3,2,Espresso Beans,18.00,2024-01-01,9999-12-31,true
+4,3,Cold Brew,5.00,2024-01-01,9999-12-31,true
+5,4,Loose Tea,8.00,2024-01-01,9999-12-31,true
+6,5,Mug,14.00,2024-01-01,9999-12-31,true
+7,6,Grinder,89.00,2024-01-01,2025-05-31,false
+8,6,Grinder,99.00,2025-06-01,9999-12-31,true
+9,7,Kettle,45.00,2024-01-01,9999-12-31,true
+10,8,Filters,6.00,2024-01-01,9999-12-31,true
+11,9,Croissant,4.50,2024-01-01,9999-12-31,true
+12,10,Cookie,3.00,2024-01-01,9999-12-31,true
+13,11,Sandwich,9.00,2024-01-01,9999-12-31,true
+14,12,Granola,7.00,2024-01-01,9999-12-31,true

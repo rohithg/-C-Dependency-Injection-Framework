@@ -1,0 +1,25 @@
+/// The same time math as the explicit measures, applied to whichever measure is on the visual.
+table 'Time intelligence'
+
+	calculationGroup
+
+		calculationItem Current = SELECTEDMEASURE()
+
+		calculationItem YTD = CALCULATE(SELECTEDMEASURE(), DATESYTD(DimDate[Date]))
+
+		calculationItem 'Prior year' = CALCULATE(SELECTEDMEASURE(), SAMEPERIODLASTYEAR(DimDate[Date]))
+
+		calculationItem 'YoY %' = ```
+				DIVIDE(
+					SELECTEDMEASURE() - CALCULATE(SELECTEDMEASURE(), SAMEPERIODLASTYEAR(DimDate[Date])),
+					CALCULATE(SELECTEDMEASURE(), SAMEPERIODLASTYEAR(DimDate[Date]))
+				)
+				```
+			formatStringDefinition: 0.00%
+
+	column 'Time intelligence'
+		dataType: string
+		summarizeBy: none
+
+	partition 'Time intelligence' = calculationGroup
+		mode: import

@@ -1,0 +1,4 @@
+order_id,order_date,ship_date,store,product,customer,segment,qty,unit_price,discount,unit_cost,reason
+9,2024-01-01,2024-01-01,Seattle Pike,Filters,Eve Nguyen,Regular,,6.00,0.00,1.50,quantity is blank or not positive
+8,2024-01-01,2024-01-01,Seattle Pike,House Blend,Eve Nguyen,Regular,-3,12.00,0.00,4.00,quantity is blank or not positive
+1002,2024-01-01,2024-01-01,Seattle Pike,House Blend,Gia Rossi,Regular,4,12.00,4.80,4.00,duplicate line

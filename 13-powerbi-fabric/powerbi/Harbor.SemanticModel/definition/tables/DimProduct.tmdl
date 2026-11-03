@@ -1,0 +1,53 @@
+table DimProduct
+
+	column ProductKey
+		dataType: int64
+		isHidden
+		isKey
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: ProductKey
+
+	column Product
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Product
+
+	column Category
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Category
+
+	column 'Unit Cost'
+		dataType: decimal
+		formatString: $#,##0.00
+		summarizeBy: none
+		sourceColumn: Unit Cost
+
+	column 'List Price'
+		dataType: decimal
+		formatString: $#,##0.00
+		summarizeBy: none
+		sourceColumn: List Price
+
+	/// An attribute of the product row. It does not change when a visual filters the fact table.
+	column 'Price band' = IF([List Price] >= 20, "Premium", "Value")
+		dataType: string
+		summarizeBy: none
+
+	hierarchy Products
+
+		level Category
+			column: Category
+
+		level Product
+			column: Product
+
+	partition DimProduct = m
+		mode: import
+		source =
+				let
+					Source = LoadCsv("dim_product.csv"),
+					Typed = Table.TransformColumnTypes(Source, {{"ProductKey", Int64.Type}, {"Unit Cost", type number}, {"List Price", type number}})
+				in
+					Typed

@@ -1,0 +1,10 @@
+expression DataRoot = "/workspace/13-powerbi-fabric/data/gold" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+
+expression LoadCsv =
+		(fileName as text) as table =>
+		let
+			Path = #"DataRoot" & "/" & fileName,
+			Source = Csv.Document(File.Contents(Path), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+			Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true])
+		in
+			Promoted

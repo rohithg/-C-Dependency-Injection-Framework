@@ -1,0 +1,45 @@
+/// One row per store, product, and month-end count. Sum across store and product. Do not sum across dates.
+table FactInventory
+
+	column DateKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: DateKey
+
+	column StoreKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: StoreKey
+
+	column ProductKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: ProductKey
+
+	column 'Units On Hand'
+		dataType: int64
+		isHidden
+		formatString: #,##0
+		summarizeBy: sum
+		sourceColumn: Units On Hand
+
+	column 'Batch Id'
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: Batch Id
+
+	partition FactInventory = m
+		mode: import
+		source =
+				let
+					Source = LoadCsv("fact_inventory.csv"),
+					Typed = Table.TransformColumnTypes(Source, {{"DateKey", Int64.Type}, {"StoreKey", Int64.Type}, {"ProductKey", Int64.Type}, {"Units On Hand", Int64.Type}})
+				in
+					Typed

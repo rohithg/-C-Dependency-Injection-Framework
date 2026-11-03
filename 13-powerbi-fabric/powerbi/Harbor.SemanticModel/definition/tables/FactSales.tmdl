@@ -1,0 +1,101 @@
+/// One row per order line. Amounts are additive. The measures live on Metrics, not here.
+table FactSales
+
+	column OrderId
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: OrderId
+
+	column OrderDate
+		dataType: dateTime
+		isHidden
+		formatString: yyyy-MM-dd
+		summarizeBy: none
+		sourceColumn: OrderDate
+
+	column ShipDate
+		dataType: dateTime
+		isHidden
+		formatString: yyyy-MM-dd
+		summarizeBy: none
+		sourceColumn: ShipDate
+
+	column DateKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: DateKey
+
+	column ProductKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: ProductKey
+
+	column ProductPriceKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: ProductPriceKey
+
+	column StoreKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: StoreKey
+
+	column CustomerKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: CustomerKey
+
+	column Quantity
+		dataType: int64
+		isHidden
+		formatString: #,##0
+		summarizeBy: sum
+		sourceColumn: Quantity
+
+	column 'Net Amount'
+		dataType: decimal
+		isHidden
+		formatString: $#,##0.00
+		summarizeBy: sum
+		sourceColumn: Net Amount
+
+	column 'Cost Amount'
+		dataType: decimal
+		isHidden
+		formatString: $#,##0.00
+		summarizeBy: sum
+		sourceColumn: Cost Amount
+
+	column 'Discount Amount'
+		dataType: decimal
+		isHidden
+		formatString: $#,##0.00
+		summarizeBy: sum
+		sourceColumn: Discount Amount
+
+	column 'Batch Id'
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: Batch Id
+
+	partition FactSales = m
+		mode: import
+		source =
+				let
+					Source = LoadCsv("fact_sales.csv"),
+					Typed = Table.TransformColumnTypes(Source, {{"OrderId", Int64.Type}, {"OrderDate", type date}, {"ShipDate", type date}, {"DateKey", Int64.Type}, {"ProductKey", Int64.Type}, {"ProductPriceKey", Int64.Type}, {"StoreKey", Int64.Type}, {"CustomerKey", Int64.Type}, {"Quantity", Int64.Type}, {"Net Amount", type number}, {"Cost Amount", type number}, {"Discount Amount", type number}})
+				in
+					Typed

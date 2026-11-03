@@ -1,0 +1,215 @@
+{
+  "counts": {
+    "bronze_rows": 9216,
+    "sales_rows": 9213,
+    "quarantine_rows": 3,
+    "planted_bad_rows": 3,
+    "budget_rows": 1152,
+    "inventory_rows": 1152,
+    "price_rows": 14,
+    "date_rows": 736,
+    "products": 12,
+    "stores": 4,
+    "customers": 22
+  },
+  "slices": {
+    "counts": {
+      "sales_rows": 9213,
+      "dates": 736,
+      "budget_rows": 1152
+    },
+    "company_2024": {
+      "revenue": "266163.60",
+      "cost": "104583.30",
+      "margin": "161580.30",
+      "margin_pct": "60.71",
+      "units": 14616,
+      "orders": 2180,
+      "average_order_value": "122.09",
+      "revenue_ytd": "266163.60",
+      "revenue_py": "0.00",
+      "revenue_yoy": "266163.60",
+      "revenue_yoy_pct": null,
+      "budget": "242348.68",
+      "revenue_by_ship_date": "265792.60",
+      "inventory_units": 1940,
+      "inventory_if_you_sum_dates": 22319,
+      "weekly_units": "305.00",
+      "weeks_of_supply": "6.36"
+    },
+    "company_2025": {
+      "revenue": "328659.80",
+      "cost": "124260.30",
+      "margin": "204399.50",
+      "margin_pct": "62.19",
+      "units": 18270,
+      "orders": 2673,
+      "average_order_value": "122.96",
+      "revenue_ytd": "328659.80",
+      "revenue_py": "266163.60",
+      "revenue_yoy": "62496.20",
+      "revenue_yoy_pct": "23.48",
+      "budget": "261736.50",
+      "revenue_by_ship_date": "328447.55",
+      "inventory_units": 1890,
+      "inventory_if_you_sum_dates": 22308,
+      "weekly_units": "356.25",
+      "weeks_of_supply": "5.31"
+    },
+    "seattle_march_2025": {
+      "revenue": "6737.00",
+      "cost": "2537.90",
+      "margin": "4199.10",
+      "margin_pct": "62.33",
+      "units": 414,
+      "orders": 68,
+      "average_order_value": "99.07",
+      "revenue_ytd": "20226.65",
+      "revenue_py": "3151.00",
+      "revenue_yoy": "3586.00",
+      "revenue_yoy_pct": "113.81",
+      "budget": "6024.95",
+      "revenue_by_ship_date": "6674.80",
+      "inventory_units": 470,
+      "inventory_if_you_sum_dates": 470,
+      "weekly_units": "96.50",
+      "weeks_of_supply": "4.87"
+    },
+    "west_2025": {
+      "revenue": "170577.15",
+      "cost": "64205.80",
+      "margin": "106371.35",
+      "margin_pct": "62.36",
+      "units": 9440,
+      "orders": 1356,
+      "average_order_value": "125.79",
+      "revenue_ytd": "170577.15",
+      "revenue_py": "136369.20",
+      "revenue_yoy": "34207.95",
+      "revenue_yoy_pct": "25.08",
+      "budget": "137579.53",
+      "revenue_by_ship_date": "170524.90",
+      "inventory_units": 945,
+      "inventory_if_you_sum_dates": 11219,
+      "weekly_units": "186.75",
+      "weeks_of_supply": "5.06"
+    },
+    "house_blend_2025": {
+      "revenue": "19576.80",
+      "cost": "6212.00",
+      "margin": "13364.80",
+      "margin_pct": "68.27",
+      "units": 1553,
+      "orders": 447,
+      "average_order_value": "43.80",
+      "revenue_ytd": "19576.80",
+      "revenue_py": "16083.60",
+      "revenue_yoy": "3493.20",
+      "revenue_yoy_pct": "21.72",
+      "budget": "14900.40",
+      "revenue_by_ship_date": "19576.80",
+      "inventory_units": 164,
+      "inventory_if_you_sum_dates": 2072,
+      "weekly_units": "39.50",
+      "weeks_of_supply": "4.15",
+      "share_of_coffee": "28.62"
+    },
+    "coffee_shares_2025": [
+      {
+        "product": "House Blend",
+        "share": "28.62",
+        "revenue": "19576.80"
+      },
+      {
+        "product": "Espresso Beans",
+        "share": "41.21",
+        "revenue": "28188.00"
+      },
+      {
+        "product": "Cold Brew",
+        "share": "11.60",
+        "revenue": "7937.00"
+      },
+      {
+        "product": "Loose Tea",
+        "share": "18.57",
+        "revenue": "12702.40"
+      }
+    ],
+    "wholesale_march_2025": {
+      "revenue": "15998.15",
+      "cost": "6240.80",
+      "margin": "9757.35",
+      "margin_pct": "60.99",
+      "units": 863,
+      "orders": 72,
+      "average_order_value": "222.20",
+      "revenue_ytd": "38381.90",
+      "revenue_py": "6693.10",
+      "revenue_yoy": "9305.05",
+      "revenue_yoy_pct": "139.02",
+      "budget": "20432.42",
+      "revenue_by_ship_date": "14950.45",
+      "inventory_units": 1875,
+      "inventory_if_you_sum_dates": 1875,
+      "weekly_units": "362.50",
+      "weeks_of_supply": "5.17"
+    },
+    "harbor_hotels_march_2025": {
+      "revenue": "3818.20",
+      "cost": "1413.50",
+      "margin": "2404.70",
+      "margin_pct": "62.98",
+      "units": 257,
+      "orders": 18,
+      "average_order_value": "212.12",
+      "revenue_ytd": "8353.30",
+      "revenue_py": "1141.95",
+      "revenue_yoy": "2676.25",
+      "revenue_yoy_pct": "234.36",
+      "budget": "20432.42",
+      "revenue_by_ship_date": "3818.20",
+      "inventory_units": 1875,
+      "inventory_if_you_sum_dates": 1875,
+      "weekly_units": "362.50",
+      "weeks_of_supply": "5.17"
+    },
+    "march_2025_budget_ignores_customer": {
+      "budget_all_customers": "20432.42",
+      "budget_one_customer": "20432.42",
+      "revenue_all_customers": "28957.90",
+      "revenue_one_customer": "3818.20"
+    },
+    "stores_2025": [
+      {
+        "store": "Seattle Pike",
+        "region": "West",
+        "revenue": "84920.35",
+        "budget": "77178.77"
+      },
+      {
+        "store": "Portland Pearl",
+        "region": "West",
+        "revenue": "85656.80",
+        "budget": "60400.76"
+      },
+      {
+        "store": "Austin Congress",
+        "region": "South",
+        "revenue": "79189.70",
+        "budget": "67111.93"
+      },
+      {
+        "store": "Denver LoHi",
+        "region": "Mountain",
+        "revenue": "78892.95",
+        "budget": "57045.04"
+      }
+    ],
+    "price_lift_2025": {
+      "House Blend": "1261.20",
+      "All": "9022.20",
+      "Grinder": "7761.00"
+    }
+  }
+}

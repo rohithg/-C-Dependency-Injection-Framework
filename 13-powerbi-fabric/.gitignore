@@ -1,0 +1,6 @@
+.pbi/
+*.abf
+localSettings.json
+cache.abf
+__pycache__/
+*.pyc
