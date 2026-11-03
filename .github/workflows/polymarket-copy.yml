@@ -5,16 +5,12 @@ name: Polymarket copy trade
 #   copy   follow the wallets copying actually paid, 1% per buy
 #   whale  follow up to 5 wallets whose own settled markets won >= 70%, 5% per buy
 #
-# Hourly tick, and a wallet re-selection every Monday 06:00 UTC. The two
-# accounts run one after the other (max-parallel 1) and both write into the
-# polymarket-copy-log branch, so neither clobber the other's state. Each
-# sends its own daily status after 20:00 UTC. Set POLY_COPY_ENABLED to
-# "false" to pause both. The careful backtest was +40% with a -56% drawdown;
-# the whale account is larger and is not a claim that size is skill.
+# Automatic runs are off. Nothing here is on a schedule. A run starts only
+# from the Actions "Run workflow" button. The two accounts run one after the
+# other (max-parallel 1) and both write into the polymarket-copy-log branch,
+# so neither clobber the other's state. The careful backtest was +40% with a
+# -56% drawdown; the whale account is larger and is not a claim that size is skill.
 on:
-  schedule:
-    - cron: "12 * * * *"
-    - cron: "0 6 * * 1"
   workflow_dispatch:
     inputs:
       mode:
@@ -34,7 +30,7 @@ concurrency:
 jobs:
   tick:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || vars.POLY_COPY_ENABLED != 'false' }}
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     strategy:
       fail-fast: false
       max-parallel: 1

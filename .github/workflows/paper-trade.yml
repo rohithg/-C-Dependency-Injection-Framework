@@ -2,11 +2,8 @@ name: TVM paper trade
 
 # Everything here runs on GitHub's servers; nothing to install locally.
 #
-# Scheduled runs fire every weekday ~20 minutes before the NYSE close so the
-# regime check sees a near-final price even if GitHub starts the job a few
-# minutes late (cron is best-effort). Cron is UTC: 19:40 UTC = 15:40 ET in
-# summer, 20:40 UTC = 15:40 ET in winter. Both fire; the off-season one is a
-# harmless no-op because the trader is idempotent within a day.
+# Automatic runs are off. Nothing in this file is on a schedule. A run starts
+# only when someone clicks "Run workflow" in the Actions tab.
 #
 # No brokerage account is needed: without Alpaca secrets the job keeps its
 # own $100k paper account in state/paper_account.json (fills at the daily
@@ -21,21 +18,17 @@ name: TVM paper trade
 #   moonshot    BTC/ETH/SOL trend rotation, $100 account    -> state/moonshot/    (ALPACA_MOONSHOT_* secrets, optional)
 #   kronos      Kronos candlestick foundation model         -> state/kronos/      (ALPACA_KRONOS_* secrets, optional)
 # With Alpaca they need separate paper accounts because each manages the
-# whole account. The schedule runs all four legs, including Kronos. Kronos did
-# not beat VOO out of sample and its model download is the slowest step here;
-# it still runs because every paper account in this repo is on the schedule.
-# Its state lives in state/kronos/.
+# whole account. Kronos did not beat VOO out of sample and its model download
+# is the slowest step here. Its state lives in state/kronos/.
 #
 # After every real run the state files and trade logs are committed to the
-# `paper-trading-log` branch. That gives a permanent history and, because it
-# counts as repository activity, stops GitHub from auto-disabling this
-# schedule after 60 idle days.
+# `paper-trading-log` branch.
 #
-# Modes (chosen automatically for scheduled runs, manually for "Run workflow"):
-#   paper    - built-in paper account, no keys needed (what the schedule runs without Alpaca)
+# Modes (chosen from the "Run workflow" form):
+#   paper    - built-in paper account, no keys needed
 #   preview  - no keys, nothing saved; shows today's signal on a throwaway $100k account
 #   dry-run  - Alpaca paper account, prints the orders it would send
-#   live     - Alpaca paper account, submits the orders (what the schedule runs with Alpaca)
+#   live     - Alpaca paper account, submits the orders
 #   notify-test - sends a test text/push through every configured channel
 #
 # Daily text message / push: add any of these repository secrets and the run
@@ -49,9 +42,6 @@ name: TVM paper trade
 # the GitHub mobile app delivers as a push notification. Set repo variable
 # TVM_GITHUB_ISSUE_NOTIFY=false to turn that off.
 on:
-  schedule:
-    - cron: "40 19 * * 1-5"
-    - cron: "40 20 * * 1-5"
   workflow_dispatch:
     inputs:
       mode:
@@ -68,10 +58,8 @@ on:
 jobs:
   rebalance:
     runs-on: ubuntu-latest
-    # Scheduled runs are on by default once this file is on the default branch.
-    # Set repo variable TVM_PAPER_TRADING_ENABLED to "false" to pause them;
-    # manual runs always work.
-    if: ${{ github.event_name == 'workflow_dispatch' || vars.TVM_PAPER_TRADING_ENABLED != 'false' }}
+    # No schedule. A run happens only from the Actions "Run workflow" button.
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     permissions:
       contents: write   # push the paper-trading-log branch
       issues: write     # daily status comment -> GitHub app push notification
