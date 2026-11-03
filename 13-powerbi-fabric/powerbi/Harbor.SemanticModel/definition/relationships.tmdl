@@ -11,6 +11,10 @@ relationship 'Sales product'
 	fromColumn: FactSales.ProductKey
 	toColumn: DimProduct.ProductKey
 
+relationship 'Sales price version'
+	fromColumn: FactSales.ProductPriceKey
+	toColumn: DimProductPrice.ProductPriceKey
+
 relationship 'Sales store'
 	fromColumn: FactSales.StoreKey
 	toColumn: DimStore.StoreKey
@@ -25,4 +29,16 @@ relationship 'Budget product'
 
 relationship 'Budget store'
 	fromColumn: FactBudget.StoreKey
+	toColumn: DimStore.StoreKey
+
+relationship 'Inventory date'
+	fromColumn: FactInventory.DateKey
+	toColumn: DimDate.DateKey
+
+relationship 'Inventory product'
+	fromColumn: FactInventory.ProductKey
+	toColumn: DimProduct.ProductKey
+
+relationship 'Inventory store'
+	fromColumn: FactInventory.StoreKey
 	toColumn: DimStore.StoreKey

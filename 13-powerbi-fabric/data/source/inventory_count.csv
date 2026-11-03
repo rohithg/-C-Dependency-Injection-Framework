@@ -1,0 +1,1153 @@
+count_date,store,product,units_on_hand
+2024-01-31,Seattle Pike,House Blend,39
+2024-01-31,Seattle Pike,Espresso Beans,41
+2024-01-31,Seattle Pike,Cold Brew,42
+2024-01-31,Seattle Pike,Loose Tea,38
+2024-01-31,Seattle Pike,Mug,39
+2024-01-31,Seattle Pike,Grinder,21
+2024-01-31,Seattle Pike,Kettle,10
+2024-01-31,Seattle Pike,Filters,37
+2024-01-31,Seattle Pike,Croissant,38
+2024-01-31,Seattle Pike,Cookie,39
+2024-01-31,Seattle Pike,Sandwich,48
+2024-01-31,Seattle Pike,Granola,44
+2024-01-31,Portland Pearl,House Blend,39
+2024-01-31,Portland Pearl,Espresso Beans,42
+2024-01-31,Portland Pearl,Cold Brew,46
+2024-01-31,Portland Pearl,Loose Tea,36
+2024-01-31,Portland Pearl,Mug,43
+2024-01-31,Portland Pearl,Grinder,17
+2024-01-31,Portland Pearl,Kettle,17
+2024-01-31,Portland Pearl,Filters,42
+2024-01-31,Portland Pearl,Croissant,43
+2024-01-31,Portland Pearl,Cookie,45
+2024-01-31,Portland Pearl,Sandwich,39
+2024-01-31,Portland Pearl,Granola,50
+2024-01-31,Austin Congress,House Blend,49
+2024-01-31,Austin Congress,Espresso Beans,42
+2024-01-31,Austin Congress,Cold Brew,37
+2024-01-31,Austin Congress,Loose Tea,43
+2024-01-31,Austin Congress,Mug,39
+2024-01-31,Austin Congress,Grinder,22
+2024-01-31,Austin Congress,Kettle,10
+2024-01-31,Austin Congress,Filters,47
+2024-01-31,Austin Congress,Croissant,40
+2024-01-31,Austin Congress,Cookie,44
+2024-01-31,Austin Congress,Sandwich,42
+2024-01-31,Austin Congress,Granola,43
+2024-01-31,Denver LoHi,House Blend,50
+2024-01-31,Denver LoHi,Espresso Beans,50
+2024-01-31,Denver LoHi,Cold Brew,42
+2024-01-31,Denver LoHi,Loose Tea,47
+2024-01-31,Denver LoHi,Mug,37
+2024-01-31,Denver LoHi,Grinder,20
+2024-01-31,Denver LoHi,Kettle,14
+2024-01-31,Denver LoHi,Filters,37
+2024-01-31,Denver LoHi,Croissant,49
+2024-01-31,Denver LoHi,Cookie,37
+2024-01-31,Denver LoHi,Sandwich,42
+2024-01-31,Denver LoHi,Granola,45
+2024-02-29,Seattle Pike,House Blend,49
+2024-02-29,Seattle Pike,Espresso Beans,42
+2024-02-29,Seattle Pike,Cold Brew,37
+2024-02-29,Seattle Pike,Loose Tea,46
+2024-02-29,Seattle Pike,Mug,36
+2024-02-29,Seattle Pike,Grinder,15
+2024-02-29,Seattle Pike,Kettle,13
+2024-02-29,Seattle Pike,Filters,47
+2024-02-29,Seattle Pike,Croissant,37
+2024-02-29,Seattle Pike,Cookie,43
+2024-02-29,Seattle Pike,Sandwich,50
+2024-02-29,Seattle Pike,Granola,46
+2024-02-29,Portland Pearl,House Blend,44
+2024-02-29,Portland Pearl,Espresso Beans,50
+2024-02-29,Portland Pearl,Cold Brew,39
+2024-02-29,Portland Pearl,Loose Tea,45
+2024-02-29,Portland Pearl,Mug,48
+2024-02-29,Portland Pearl,Grinder,12
+2024-02-29,Portland Pearl,Kettle,19
+2024-02-29,Portland Pearl,Filters,37
+2024-02-29,Portland Pearl,Croissant,44
+2024-02-29,Portland Pearl,Cookie,36
+2024-02-29,Portland Pearl,Sandwich,43
+2024-02-29,Portland Pearl,Granola,47
+2024-02-29,Austin Congress,House Blend,39
+2024-02-29,Austin Congress,Espresso Beans,38
+2024-02-29,Austin Congress,Cold Brew,49
+2024-02-29,Austin Congress,Loose Tea,45
+2024-02-29,Austin Congress,Mug,43
+2024-02-29,Austin Congress,Grinder,21
+2024-02-29,Austin Congress,Kettle,19
+2024-02-29,Austin Congress,Filters,50
+2024-02-29,Austin Congress,Croissant,43
+2024-02-29,Austin Congress,Cookie,40
+2024-02-29,Austin Congress,Sandwich,44
+2024-02-29,Austin Congress,Granola,41
+2024-02-29,Denver LoHi,House Blend,49
+2024-02-29,Denver LoHi,Espresso Beans,50
+2024-02-29,Denver LoHi,Cold Brew,42
+2024-02-29,Denver LoHi,Loose Tea,38
+2024-02-29,Denver LoHi,Mug,38
+2024-02-29,Denver LoHi,Grinder,22
+2024-02-29,Denver LoHi,Kettle,19
+2024-02-29,Denver LoHi,Filters,37
+2024-02-29,Denver LoHi,Croissant,44
+2024-02-29,Denver LoHi,Cookie,47
+2024-02-29,Denver LoHi,Sandwich,41
+2024-02-29,Denver LoHi,Granola,47
+2024-03-31,Seattle Pike,House Blend,41
+2024-03-31,Seattle Pike,Espresso Beans,46
+2024-03-31,Seattle Pike,Cold Brew,49
+2024-03-31,Seattle Pike,Loose Tea,43
+2024-03-31,Seattle Pike,Mug,44
+2024-03-31,Seattle Pike,Grinder,19
+2024-03-31,Seattle Pike,Kettle,13
+2024-03-31,Seattle Pike,Filters,40
+2024-03-31,Seattle Pike,Croissant,38
+2024-03-31,Seattle Pike,Cookie,41
+2024-03-31,Seattle Pike,Sandwich,44
+2024-03-31,Seattle Pike,Granola,40
+2024-03-31,Portland Pearl,House Blend,44
+2024-03-31,Portland Pearl,Espresso Beans,46
+2024-03-31,Portland Pearl,Cold Brew,37
+2024-03-31,Portland Pearl,Loose Tea,48
+2024-03-31,Portland Pearl,Mug,50
+2024-03-31,Portland Pearl,Grinder,23
+2024-03-31,Portland Pearl,Kettle,18
+2024-03-31,Portland Pearl,Filters,50
+2024-03-31,Portland Pearl,Croissant,47
+2024-03-31,Portland Pearl,Cookie,44
+2024-03-31,Portland Pearl,Sandwich,39
+2024-03-31,Portland Pearl,Granola,41
+2024-03-31,Austin Congress,House Blend,39
+2024-03-31,Austin Congress,Espresso Beans,50
+2024-03-31,Austin Congress,Cold Brew,36
+2024-03-31,Austin Congress,Loose Tea,40
+2024-03-31,Austin Congress,Mug,41
+2024-03-31,Austin Congress,Grinder,13
+2024-03-31,Austin Congress,Kettle,14
+2024-03-31,Austin Congress,Filters,36
+2024-03-31,Austin Congress,Croissant,42
+2024-03-31,Austin Congress,Cookie,40
+2024-03-31,Austin Congress,Sandwich,42
+2024-03-31,Austin Congress,Granola,40
+2024-03-31,Denver LoHi,House Blend,49
+2024-03-31,Denver LoHi,Espresso Beans,47
+2024-03-31,Denver LoHi,Cold Brew,50
+2024-03-31,Denver LoHi,Loose Tea,42
+2024-03-31,Denver LoHi,Mug,38
+2024-03-31,Denver LoHi,Grinder,20
+2024-03-31,Denver LoHi,Kettle,16
+2024-03-31,Denver LoHi,Filters,37
+2024-03-31,Denver LoHi,Croissant,38
+2024-03-31,Denver LoHi,Cookie,50
+2024-03-31,Denver LoHi,Sandwich,46
+2024-03-31,Denver LoHi,Granola,49
+2024-04-30,Seattle Pike,House Blend,36
+2024-04-30,Seattle Pike,Espresso Beans,39
+2024-04-30,Seattle Pike,Cold Brew,48
+2024-04-30,Seattle Pike,Loose Tea,38
+2024-04-30,Seattle Pike,Mug,40
+2024-04-30,Seattle Pike,Grinder,11
+2024-04-30,Seattle Pike,Kettle,10
+2024-04-30,Seattle Pike,Filters,48
+2024-04-30,Seattle Pike,Croissant,48
+2024-04-30,Seattle Pike,Cookie,42
+2024-04-30,Seattle Pike,Sandwich,41
+2024-04-30,Seattle Pike,Granola,49
+2024-04-30,Portland Pearl,House Blend,38
+2024-04-30,Portland Pearl,Espresso Beans,45
+2024-04-30,Portland Pearl,Cold Brew,42
+2024-04-30,Portland Pearl,Loose Tea,50
+2024-04-30,Portland Pearl,Mug,39
+2024-04-30,Portland Pearl,Grinder,12
+2024-04-30,Portland Pearl,Kettle,16
+2024-04-30,Portland Pearl,Filters,45
+2024-04-30,Portland Pearl,Croissant,43
+2024-04-30,Portland Pearl,Cookie,42
+2024-04-30,Portland Pearl,Sandwich,42
+2024-04-30,Portland Pearl,Granola,37
+2024-04-30,Austin Congress,House Blend,45
+2024-04-30,Austin Congress,Espresso Beans,37
+2024-04-30,Austin Congress,Cold Brew,40
+2024-04-30,Austin Congress,Loose Tea,47
+2024-04-30,Austin Congress,Mug,37
+2024-04-30,Austin Congress,Grinder,10
+2024-04-30,Austin Congress,Kettle,11
+2024-04-30,Austin Congress,Filters,46
+2024-04-30,Austin Congress,Croissant,37
+2024-04-30,Austin Congress,Cookie,48
+2024-04-30,Austin Congress,Sandwich,44
+2024-04-30,Austin Congress,Granola,44
+2024-04-30,Denver LoHi,House Blend,41
+2024-04-30,Denver LoHi,Espresso Beans,38
+2024-04-30,Denver LoHi,Cold Brew,48
+2024-04-30,Denver LoHi,Loose Tea,50
+2024-04-30,Denver LoHi,Mug,44
+2024-04-30,Denver LoHi,Grinder,17
+2024-04-30,Denver LoHi,Kettle,21
+2024-04-30,Denver LoHi,Filters,38
+2024-04-30,Denver LoHi,Croissant,45
+2024-04-30,Denver LoHi,Cookie,37
+2024-04-30,Denver LoHi,Sandwich,39
+2024-04-30,Denver LoHi,Granola,36
+2024-05-31,Seattle Pike,House Blend,50
+2024-05-31,Seattle Pike,Espresso Beans,38
+2024-05-31,Seattle Pike,Cold Brew,41
+2024-05-31,Seattle Pike,Loose Tea,42
+2024-05-31,Seattle Pike,Mug,46
+2024-05-31,Seattle Pike,Grinder,19
+2024-05-31,Seattle Pike,Kettle,11
+2024-05-31,Seattle Pike,Filters,47
+2024-05-31,Seattle Pike,Croissant,40
+2024-05-31,Seattle Pike,Cookie,41
+2024-05-31,Seattle Pike,Sandwich,41
+2024-05-31,Seattle Pike,Granola,41
+2024-05-31,Portland Pearl,House Blend,36
+2024-05-31,Portland Pearl,Espresso Beans,46
+2024-05-31,Portland Pearl,Cold Brew,49
+2024-05-31,Portland Pearl,Loose Tea,43
+2024-05-31,Portland Pearl,Mug,39
+2024-05-31,Portland Pearl,Grinder,10
+2024-05-31,Portland Pearl,Kettle,24
+2024-05-31,Portland Pearl,Filters,45
+2024-05-31,Portland Pearl,Croissant,36
+2024-05-31,Portland Pearl,Cookie,50
+2024-05-31,Portland Pearl,Sandwich,49
+2024-05-31,Portland Pearl,Granola,48
+2024-05-31,Austin Congress,House Blend,48
+2024-05-31,Austin Congress,Espresso Beans,49
+2024-05-31,Austin Congress,Cold Brew,45
+2024-05-31,Austin Congress,Loose Tea,38
+2024-05-31,Austin Congress,Mug,38
+2024-05-31,Austin Congress,Grinder,15
+2024-05-31,Austin Congress,Kettle,16
+2024-05-31,Austin Congress,Filters,43
+2024-05-31,Austin Congress,Croissant,37
+2024-05-31,Austin Congress,Cookie,37
+2024-05-31,Austin Congress,Sandwich,39
+2024-05-31,Austin Congress,Granola,45
+2024-05-31,Denver LoHi,House Blend,39
+2024-05-31,Denver LoHi,Espresso Beans,43
+2024-05-31,Denver LoHi,Cold Brew,48
+2024-05-31,Denver LoHi,Loose Tea,43
+2024-05-31,Denver LoHi,Mug,48
+2024-05-31,Denver LoHi,Grinder,12
+2024-05-31,Denver LoHi,Kettle,16
+2024-05-31,Denver LoHi,Filters,37
+2024-05-31,Denver LoHi,Croissant,37
+2024-05-31,Denver LoHi,Cookie,45
+2024-05-31,Denver LoHi,Sandwich,47
+2024-05-31,Denver LoHi,Granola,43
+2024-06-30,Seattle Pike,House Blend,46
+2024-06-30,Seattle Pike,Espresso Beans,38
+2024-06-30,Seattle Pike,Cold Brew,47
+2024-06-30,Seattle Pike,Loose Tea,43
+2024-06-30,Seattle Pike,Mug,44
+2024-06-30,Seattle Pike,Grinder,21
+2024-06-30,Seattle Pike,Kettle,11
+2024-06-30,Seattle Pike,Filters,47
+2024-06-30,Seattle Pike,Croissant,50
+2024-06-30,Seattle Pike,Cookie,43
+2024-06-30,Seattle Pike,Sandwich,45
+2024-06-30,Seattle Pike,Granola,42
+2024-06-30,Portland Pearl,House Blend,49
+2024-06-30,Portland Pearl,Espresso Beans,41
+2024-06-30,Portland Pearl,Cold Brew,43
+2024-06-30,Portland Pearl,Loose Tea,39
+2024-06-30,Portland Pearl,Mug,36
+2024-06-30,Portland Pearl,Grinder,13
+2024-06-30,Portland Pearl,Kettle,10
+2024-06-30,Portland Pearl,Filters,43
+2024-06-30,Portland Pearl,Croissant,37
+2024-06-30,Portland Pearl,Cookie,37
+2024-06-30,Portland Pearl,Sandwich,39
+2024-06-30,Portland Pearl,Granola,47
+2024-06-30,Austin Congress,House Blend,36
+2024-06-30,Austin Congress,Espresso Beans,47
+2024-06-30,Austin Congress,Cold Brew,45
+2024-06-30,Austin Congress,Loose Tea,45
+2024-06-30,Austin Congress,Mug,50
+2024-06-30,Austin Congress,Grinder,10
+2024-06-30,Austin Congress,Kettle,20
+2024-06-30,Austin Congress,Filters,41
+2024-06-30,Austin Congress,Croissant,49
+2024-06-30,Austin Congress,Cookie,42
+2024-06-30,Austin Congress,Sandwich,44
+2024-06-30,Austin Congress,Granola,37
+2024-06-30,Denver LoHi,House Blend,47
+2024-06-30,Denver LoHi,Espresso Beans,48
+2024-06-30,Denver LoHi,Cold Brew,45
+2024-06-30,Denver LoHi,Loose Tea,44
+2024-06-30,Denver LoHi,Mug,49
+2024-06-30,Denver LoHi,Grinder,21
+2024-06-30,Denver LoHi,Kettle,19
+2024-06-30,Denver LoHi,Filters,39
+2024-06-30,Denver LoHi,Croissant,44
+2024-06-30,Denver LoHi,Cookie,39
+2024-06-30,Denver LoHi,Sandwich,41
+2024-06-30,Denver LoHi,Granola,44
+2024-07-31,Seattle Pike,House Blend,42
+2024-07-31,Seattle Pike,Espresso Beans,47
+2024-07-31,Seattle Pike,Cold Brew,44
+2024-07-31,Seattle Pike,Loose Tea,46
+2024-07-31,Seattle Pike,Mug,39
+2024-07-31,Seattle Pike,Grinder,10
+2024-07-31,Seattle Pike,Kettle,14
+2024-07-31,Seattle Pike,Filters,45
+2024-07-31,Seattle Pike,Croissant,40
+2024-07-31,Seattle Pike,Cookie,50
+2024-07-31,Seattle Pike,Sandwich,37
+2024-07-31,Seattle Pike,Granola,47
+2024-07-31,Portland Pearl,House Blend,41
+2024-07-31,Portland Pearl,Espresso Beans,50
+2024-07-31,Portland Pearl,Cold Brew,50
+2024-07-31,Portland Pearl,Loose Tea,42
+2024-07-31,Portland Pearl,Mug,39
+2024-07-31,Portland Pearl,Grinder,20
+2024-07-31,Portland Pearl,Kettle,14
+2024-07-31,Portland Pearl,Filters,37
+2024-07-31,Portland Pearl,Croissant,44
+2024-07-31,Portland Pearl,Cookie,42
+2024-07-31,Portland Pearl,Sandwich,47
+2024-07-31,Portland Pearl,Granola,41
+2024-07-31,Austin Congress,House Blend,48
+2024-07-31,Austin Congress,Espresso Beans,47
+2024-07-31,Austin Congress,Cold Brew,49
+2024-07-31,Austin Congress,Loose Tea,41
+2024-07-31,Austin Congress,Mug,44
+2024-07-31,Austin Congress,Grinder,14
+2024-07-31,Austin Congress,Kettle,20
+2024-07-31,Austin Congress,Filters,49
+2024-07-31,Austin Congress,Croissant,41
+2024-07-31,Austin Congress,Cookie,48
+2024-07-31,Austin Congress,Sandwich,50
+2024-07-31,Austin Congress,Granola,40
+2024-07-31,Denver LoHi,House Blend,46
+2024-07-31,Denver LoHi,Espresso Beans,49
+2024-07-31,Denver LoHi,Cold Brew,37
+2024-07-31,Denver LoHi,Loose Tea,39
+2024-07-31,Denver LoHi,Mug,43
+2024-07-31,Denver LoHi,Grinder,15
+2024-07-31,Denver LoHi,Kettle,16
+2024-07-31,Denver LoHi,Filters,45
+2024-07-31,Denver LoHi,Croissant,49
+2024-07-31,Denver LoHi,Cookie,50
+2024-07-31,Denver LoHi,Sandwich,40
+2024-07-31,Denver LoHi,Granola,39
+2024-08-31,Seattle Pike,House Blend,40
+2024-08-31,Seattle Pike,Espresso Beans,42
+2024-08-31,Seattle Pike,Cold Brew,45
+2024-08-31,Seattle Pike,Loose Tea,42
+2024-08-31,Seattle Pike,Mug,49
+2024-08-31,Seattle Pike,Grinder,24
+2024-08-31,Seattle Pike,Kettle,20
+2024-08-31,Seattle Pike,Filters,44
+2024-08-31,Seattle Pike,Croissant,50
+2024-08-31,Seattle Pike,Cookie,47
+2024-08-31,Seattle Pike,Sandwich,47
+2024-08-31,Seattle Pike,Granola,41
+2024-08-31,Portland Pearl,House Blend,49
+2024-08-31,Portland Pearl,Espresso Beans,46
+2024-08-31,Portland Pearl,Cold Brew,45
+2024-08-31,Portland Pearl,Loose Tea,45
+2024-08-31,Portland Pearl,Mug,41
+2024-08-31,Portland Pearl,Grinder,20
+2024-08-31,Portland Pearl,Kettle,16
+2024-08-31,Portland Pearl,Filters,39
+2024-08-31,Portland Pearl,Croissant,43
+2024-08-31,Portland Pearl,Cookie,49
+2024-08-31,Portland Pearl,Sandwich,44
+2024-08-31,Portland Pearl,Granola,44
+2024-08-31,Austin Congress,House Blend,49
+2024-08-31,Austin Congress,Espresso Beans,37
+2024-08-31,Austin Congress,Cold Brew,40
+2024-08-31,Austin Congress,Loose Tea,38
+2024-08-31,Austin Congress,Mug,37
+2024-08-31,Austin Congress,Grinder,17
+2024-08-31,Austin Congress,Kettle,21
+2024-08-31,Austin Congress,Filters,49
+2024-08-31,Austin Congress,Croissant,40
+2024-08-31,Austin Congress,Cookie,42
+2024-08-31,Austin Congress,Sandwich,48
+2024-08-31,Austin Congress,Granola,37
+2024-08-31,Denver LoHi,House Blend,45
+2024-08-31,Denver LoHi,Espresso Beans,49
+2024-08-31,Denver LoHi,Cold Brew,49
+2024-08-31,Denver LoHi,Loose Tea,40
+2024-08-31,Denver LoHi,Mug,40
+2024-08-31,Denver LoHi,Grinder,14
+2024-08-31,Denver LoHi,Kettle,22
+2024-08-31,Denver LoHi,Filters,49
+2024-08-31,Denver LoHi,Croissant,44
+2024-08-31,Denver LoHi,Cookie,40
+2024-08-31,Denver LoHi,Sandwich,40
+2024-08-31,Denver LoHi,Granola,50
+2024-09-30,Seattle Pike,House Blend,46
+2024-09-30,Seattle Pike,Espresso Beans,42
+2024-09-30,Seattle Pike,Cold Brew,39
+2024-09-30,Seattle Pike,Loose Tea,41
+2024-09-30,Seattle Pike,Mug,39
+2024-09-30,Seattle Pike,Grinder,13
+2024-09-30,Seattle Pike,Kettle,22
+2024-09-30,Seattle Pike,Filters,44
+2024-09-30,Seattle Pike,Croissant,47
+2024-09-30,Seattle Pike,Cookie,43
+2024-09-30,Seattle Pike,Sandwich,39
+2024-09-30,Seattle Pike,Granola,39
+2024-09-30,Portland Pearl,House Blend,49
+2024-09-30,Portland Pearl,Espresso Beans,48
+2024-09-30,Portland Pearl,Cold Brew,45
+2024-09-30,Portland Pearl,Loose Tea,44
+2024-09-30,Portland Pearl,Mug,49
+2024-09-30,Portland Pearl,Grinder,13
+2024-09-30,Portland Pearl,Kettle,15
+2024-09-30,Portland Pearl,Filters,43
+2024-09-30,Portland Pearl,Croissant,48
+2024-09-30,Portland Pearl,Cookie,37
+2024-09-30,Portland Pearl,Sandwich,48
+2024-09-30,Portland Pearl,Granola,37
+2024-09-30,Austin Congress,House Blend,42
+2024-09-30,Austin Congress,Espresso Beans,37
+2024-09-30,Austin Congress,Cold Brew,46
+2024-09-30,Austin Congress,Loose Tea,38
+2024-09-30,Austin Congress,Mug,48
+2024-09-30,Austin Congress,Grinder,19
+2024-09-30,Austin Congress,Kettle,16
+2024-09-30,Austin Congress,Filters,50
+2024-09-30,Austin Congress,Croissant,36
+2024-09-30,Austin Congress,Cookie,48
+2024-09-30,Austin Congress,Sandwich,50
+2024-09-30,Austin Congress,Granola,38
+2024-09-30,Denver LoHi,House Blend,36
+2024-09-30,Denver LoHi,Espresso Beans,45
+2024-09-30,Denver LoHi,Cold Brew,39
+2024-09-30,Denver LoHi,Loose Tea,46
+2024-09-30,Denver LoHi,Mug,40
+2024-09-30,Denver LoHi,Grinder,11
+2024-09-30,Denver LoHi,Kettle,11
+2024-09-30,Denver LoHi,Filters,43
+2024-09-30,Denver LoHi,Croissant,43
+2024-09-30,Denver LoHi,Cookie,49
+2024-09-30,Denver LoHi,Sandwich,46
+2024-09-30,Denver LoHi,Granola,50
+2024-10-31,Seattle Pike,House Blend,40
+2024-10-31,Seattle Pike,Espresso Beans,50
+2024-10-31,Seattle Pike,Cold Brew,45
+2024-10-31,Seattle Pike,Loose Tea,37
+2024-10-31,Seattle Pike,Mug,38
+2024-10-31,Seattle Pike,Grinder,19
+2024-10-31,Seattle Pike,Kettle,15
+2024-10-31,Seattle Pike,Filters,49
+2024-10-31,Seattle Pike,Croissant,46
+2024-10-31,Seattle Pike,Cookie,37
+2024-10-31,Seattle Pike,Sandwich,41
+2024-10-31,Seattle Pike,Granola,48
+2024-10-31,Portland Pearl,House Blend,36
+2024-10-31,Portland Pearl,Espresso Beans,49
+2024-10-31,Portland Pearl,Cold Brew,50
+2024-10-31,Portland Pearl,Loose Tea,37
+2024-10-31,Portland Pearl,Mug,49
+2024-10-31,Portland Pearl,Grinder,12
+2024-10-31,Portland Pearl,Kettle,20
+2024-10-31,Portland Pearl,Filters,48
+2024-10-31,Portland Pearl,Croissant,41
+2024-10-31,Portland Pearl,Cookie,49
+2024-10-31,Portland Pearl,Sandwich,37
+2024-10-31,Portland Pearl,Granola,49
+2024-10-31,Austin Congress,House Blend,39
+2024-10-31,Austin Congress,Espresso Beans,47
+2024-10-31,Austin Congress,Cold Brew,36
+2024-10-31,Austin Congress,Loose Tea,45
+2024-10-31,Austin Congress,Mug,48
+2024-10-31,Austin Congress,Grinder,15
+2024-10-31,Austin Congress,Kettle,13
+2024-10-31,Austin Congress,Filters,40
+2024-10-31,Austin Congress,Croissant,47
+2024-10-31,Austin Congress,Cookie,41
+2024-10-31,Austin Congress,Sandwich,41
+2024-10-31,Austin Congress,Granola,37
+2024-10-31,Denver LoHi,House Blend,44
+2024-10-31,Denver LoHi,Espresso Beans,50
+2024-10-31,Denver LoHi,Cold Brew,37
+2024-10-31,Denver LoHi,Loose Tea,50
+2024-10-31,Denver LoHi,Mug,47
+2024-10-31,Denver LoHi,Grinder,19
+2024-10-31,Denver LoHi,Kettle,15
+2024-10-31,Denver LoHi,Filters,42
+2024-10-31,Denver LoHi,Croissant,38
+2024-10-31,Denver LoHi,Cookie,38
+2024-10-31,Denver LoHi,Sandwich,40
+2024-10-31,Denver LoHi,Granola,50
+2024-11-30,Seattle Pike,House Blend,42
+2024-11-30,Seattle Pike,Espresso Beans,38
+2024-11-30,Seattle Pike,Cold Brew,42
+2024-11-30,Seattle Pike,Loose Tea,47
+2024-11-30,Seattle Pike,Mug,48
+2024-11-30,Seattle Pike,Grinder,11
+2024-11-30,Seattle Pike,Kettle,11
+2024-11-30,Seattle Pike,Filters,44
+2024-11-30,Seattle Pike,Croissant,39
+2024-11-30,Seattle Pike,Cookie,37
+2024-11-30,Seattle Pike,Sandwich,40
+2024-11-30,Seattle Pike,Granola,50
+2024-11-30,Portland Pearl,House Blend,38
+2024-11-30,Portland Pearl,Espresso Beans,41
+2024-11-30,Portland Pearl,Cold Brew,47
+2024-11-30,Portland Pearl,Loose Tea,39
+2024-11-30,Portland Pearl,Mug,37
+2024-11-30,Portland Pearl,Grinder,10
+2024-11-30,Portland Pearl,Kettle,10
+2024-11-30,Portland Pearl,Filters,44
+2024-11-30,Portland Pearl,Croissant,48
+2024-11-30,Portland Pearl,Cookie,47
+2024-11-30,Portland Pearl,Sandwich,38
+2024-11-30,Portland Pearl,Granola,49
+2024-11-30,Austin Congress,House Blend,38
+2024-11-30,Austin Congress,Espresso Beans,44
+2024-11-30,Austin Congress,Cold Brew,46
+2024-11-30,Austin Congress,Loose Tea,41
+2024-11-30,Austin Congress,Mug,40
+2024-11-30,Austin Congress,Grinder,24
+2024-11-30,Austin Congress,Kettle,13
+2024-11-30,Austin Congress,Filters,47
+2024-11-30,Austin Congress,Croissant,44
+2024-11-30,Austin Congress,Cookie,43
+2024-11-30,Austin Congress,Sandwich,37
+2024-11-30,Austin Congress,Granola,45
+2024-11-30,Denver LoHi,House Blend,47
+2024-11-30,Denver LoHi,Espresso Beans,50
+2024-11-30,Denver LoHi,Cold Brew,37
+2024-11-30,Denver LoHi,Loose Tea,38
+2024-11-30,Denver LoHi,Mug,50
+2024-11-30,Denver LoHi,Grinder,21
+2024-11-30,Denver LoHi,Kettle,12
+2024-11-30,Denver LoHi,Filters,39
+2024-11-30,Denver LoHi,Croissant,41
+2024-11-30,Denver LoHi,Cookie,39
+2024-11-30,Denver LoHi,Sandwich,42
+2024-11-30,Denver LoHi,Granola,38
+2024-12-31,Seattle Pike,House Blend,38
+2024-12-31,Seattle Pike,Espresso Beans,38
+2024-12-31,Seattle Pike,Cold Brew,48
+2024-12-31,Seattle Pike,Loose Tea,43
+2024-12-31,Seattle Pike,Mug,36
+2024-12-31,Seattle Pike,Grinder,21
+2024-12-31,Seattle Pike,Kettle,24
+2024-12-31,Seattle Pike,Filters,43
+2024-12-31,Seattle Pike,Croissant,45
+2024-12-31,Seattle Pike,Cookie,46
+2024-12-31,Seattle Pike,Sandwich,45
+2024-12-31,Seattle Pike,Granola,40
+2024-12-31,Portland Pearl,House Blend,42
+2024-12-31,Portland Pearl,Espresso Beans,49
+2024-12-31,Portland Pearl,Cold Brew,50
+2024-12-31,Portland Pearl,Loose Tea,42
+2024-12-31,Portland Pearl,Mug,45
+2024-12-31,Portland Pearl,Grinder,20
+2024-12-31,Portland Pearl,Kettle,24
+2024-12-31,Portland Pearl,Filters,47
+2024-12-31,Portland Pearl,Croissant,50
+2024-12-31,Portland Pearl,Cookie,41
+2024-12-31,Portland Pearl,Sandwich,47
+2024-12-31,Portland Pearl,Granola,45
+2024-12-31,Austin Congress,House Blend,47
+2024-12-31,Austin Congress,Espresso Beans,43
+2024-12-31,Austin Congress,Cold Brew,49
+2024-12-31,Austin Congress,Loose Tea,41
+2024-12-31,Austin Congress,Mug,47
+2024-12-31,Austin Congress,Grinder,23
+2024-12-31,Austin Congress,Kettle,22
+2024-12-31,Austin Congress,Filters,44
+2024-12-31,Austin Congress,Croissant,38
+2024-12-31,Austin Congress,Cookie,40
+2024-12-31,Austin Congress,Sandwich,40
+2024-12-31,Austin Congress,Granola,46
+2024-12-31,Denver LoHi,House Blend,43
+2024-12-31,Denver LoHi,Espresso Beans,49
+2024-12-31,Denver LoHi,Cold Brew,38
+2024-12-31,Denver LoHi,Loose Tea,49
+2024-12-31,Denver LoHi,Mug,49
+2024-12-31,Denver LoHi,Grinder,14
+2024-12-31,Denver LoHi,Kettle,17
+2024-12-31,Denver LoHi,Filters,46
+2024-12-31,Denver LoHi,Croissant,44
+2024-12-31,Denver LoHi,Cookie,44
+2024-12-31,Denver LoHi,Sandwich,48
+2024-12-31,Denver LoHi,Granola,50
+2025-01-31,Seattle Pike,House Blend,44
+2025-01-31,Seattle Pike,Espresso Beans,40
+2025-01-31,Seattle Pike,Cold Brew,48
+2025-01-31,Seattle Pike,Loose Tea,39
+2025-01-31,Seattle Pike,Mug,45
+2025-01-31,Seattle Pike,Grinder,18
+2025-01-31,Seattle Pike,Kettle,16
+2025-01-31,Seattle Pike,Filters,48
+2025-01-31,Seattle Pike,Croissant,38
+2025-01-31,Seattle Pike,Cookie,49
+2025-01-31,Seattle Pike,Sandwich,43
+2025-01-31,Seattle Pike,Granola,46
+2025-01-31,Portland Pearl,House Blend,43
+2025-01-31,Portland Pearl,Espresso Beans,37
+2025-01-31,Portland Pearl,Cold Brew,40
+2025-01-31,Portland Pearl,Loose Tea,42
+2025-01-31,Portland Pearl,Mug,36
+2025-01-31,Portland Pearl,Grinder,10
+2025-01-31,Portland Pearl,Kettle,23
+2025-01-31,Portland Pearl,Filters,41
+2025-01-31,Portland Pearl,Croissant,44
+2025-01-31,Portland Pearl,Cookie,40
+2025-01-31,Portland Pearl,Sandwich,41
+2025-01-31,Portland Pearl,Granola,42
+2025-01-31,Austin Congress,House Blend,47
+2025-01-31,Austin Congress,Espresso Beans,36
+2025-01-31,Austin Congress,Cold Brew,45
+2025-01-31,Austin Congress,Loose Tea,38
+2025-01-31,Austin Congress,Mug,49
+2025-01-31,Austin Congress,Grinder,21
+2025-01-31,Austin Congress,Kettle,10
+2025-01-31,Austin Congress,Filters,37
+2025-01-31,Austin Congress,Croissant,49
+2025-01-31,Austin Congress,Cookie,38
+2025-01-31,Austin Congress,Sandwich,43
+2025-01-31,Austin Congress,Granola,45
+2025-01-31,Denver LoHi,House Blend,38
+2025-01-31,Denver LoHi,Espresso Beans,48
+2025-01-31,Denver LoHi,Cold Brew,49
+2025-01-31,Denver LoHi,Loose Tea,42
+2025-01-31,Denver LoHi,Mug,45
+2025-01-31,Denver LoHi,Grinder,20
+2025-01-31,Denver LoHi,Kettle,19
+2025-01-31,Denver LoHi,Filters,50
+2025-01-31,Denver LoHi,Croissant,37
+2025-01-31,Denver LoHi,Cookie,41
+2025-01-31,Denver LoHi,Sandwich,44
+2025-01-31,Denver LoHi,Granola,36
+2025-02-28,Seattle Pike,House Blend,45
+2025-02-28,Seattle Pike,Espresso Beans,47
+2025-02-28,Seattle Pike,Cold Brew,46
+2025-02-28,Seattle Pike,Loose Tea,41
+2025-02-28,Seattle Pike,Mug,41
+2025-02-28,Seattle Pike,Grinder,11
+2025-02-28,Seattle Pike,Kettle,15
+2025-02-28,Seattle Pike,Filters,46
+2025-02-28,Seattle Pike,Croissant,37
+2025-02-28,Seattle Pike,Cookie,43
+2025-02-28,Seattle Pike,Sandwich,49
+2025-02-28,Seattle Pike,Granola,38
+2025-02-28,Portland Pearl,House Blend,46
+2025-02-28,Portland Pearl,Espresso Beans,39
+2025-02-28,Portland Pearl,Cold Brew,43
+2025-02-28,Portland Pearl,Loose Tea,41
+2025-02-28,Portland Pearl,Mug,45
+2025-02-28,Portland Pearl,Grinder,15
+2025-02-28,Portland Pearl,Kettle,24
+2025-02-28,Portland Pearl,Filters,41
+2025-02-28,Portland Pearl,Croissant,48
+2025-02-28,Portland Pearl,Cookie,48
+2025-02-28,Portland Pearl,Sandwich,42
+2025-02-28,Portland Pearl,Granola,41
+2025-02-28,Austin Congress,House Blend,47
+2025-02-28,Austin Congress,Espresso Beans,46
+2025-02-28,Austin Congress,Cold Brew,46
+2025-02-28,Austin Congress,Loose Tea,36
+2025-02-28,Austin Congress,Mug,47
+2025-02-28,Austin Congress,Grinder,12
+2025-02-28,Austin Congress,Kettle,24
+2025-02-28,Austin Congress,Filters,47
+2025-02-28,Austin Congress,Croissant,46
+2025-02-28,Austin Congress,Cookie,50
+2025-02-28,Austin Congress,Sandwich,46
+2025-02-28,Austin Congress,Granola,41
+2025-02-28,Denver LoHi,House Blend,36
+2025-02-28,Denver LoHi,Espresso Beans,36
+2025-02-28,Denver LoHi,Cold Brew,39
+2025-02-28,Denver LoHi,Loose Tea,44
+2025-02-28,Denver LoHi,Mug,41
+2025-02-28,Denver LoHi,Grinder,17
+2025-02-28,Denver LoHi,Kettle,15
+2025-02-28,Denver LoHi,Filters,43
+2025-02-28,Denver LoHi,Croissant,44
+2025-02-28,Denver LoHi,Cookie,38
+2025-02-28,Denver LoHi,Sandwich,40
+2025-02-28,Denver LoHi,Granola,38
+2025-03-31,Seattle Pike,House Blend,46
+2025-03-31,Seattle Pike,Espresso Beans,40
+2025-03-31,Seattle Pike,Cold Brew,48
+2025-03-31,Seattle Pike,Loose Tea,36
+2025-03-31,Seattle Pike,Mug,48
+2025-03-31,Seattle Pike,Grinder,17
+2025-03-31,Seattle Pike,Kettle,21
+2025-03-31,Seattle Pike,Filters,40
+2025-03-31,Seattle Pike,Croissant,45
+2025-03-31,Seattle Pike,Cookie,46
+2025-03-31,Seattle Pike,Sandwich,40
+2025-03-31,Seattle Pike,Granola,43
+2025-03-31,Portland Pearl,House Blend,49
+2025-03-31,Portland Pearl,Espresso Beans,40
+2025-03-31,Portland Pearl,Cold Brew,40
+2025-03-31,Portland Pearl,Loose Tea,42
+2025-03-31,Portland Pearl,Mug,49
+2025-03-31,Portland Pearl,Grinder,17
+2025-03-31,Portland Pearl,Kettle,17
+2025-03-31,Portland Pearl,Filters,46
+2025-03-31,Portland Pearl,Croissant,46
+2025-03-31,Portland Pearl,Cookie,37
+2025-03-31,Portland Pearl,Sandwich,43
+2025-03-31,Portland Pearl,Granola,50
+2025-03-31,Austin Congress,House Blend,46
+2025-03-31,Austin Congress,Espresso Beans,43
+2025-03-31,Austin Congress,Cold Brew,41
+2025-03-31,Austin Congress,Loose Tea,38
+2025-03-31,Austin Congress,Mug,45
+2025-03-31,Austin Congress,Grinder,21
+2025-03-31,Austin Congress,Kettle,11
+2025-03-31,Austin Congress,Filters,41
+2025-03-31,Austin Congress,Croissant,47
+2025-03-31,Austin Congress,Cookie,45
+2025-03-31,Austin Congress,Sandwich,46
+2025-03-31,Austin Congress,Granola,43
+2025-03-31,Denver LoHi,House Blend,41
+2025-03-31,Denver LoHi,Espresso Beans,43
+2025-03-31,Denver LoHi,Cold Brew,45
+2025-03-31,Denver LoHi,Loose Tea,42
+2025-03-31,Denver LoHi,Mug,39
+2025-03-31,Denver LoHi,Grinder,18
+2025-03-31,Denver LoHi,Kettle,18
+2025-03-31,Denver LoHi,Filters,47
+2025-03-31,Denver LoHi,Croissant,45
+2025-03-31,Denver LoHi,Cookie,38
+2025-03-31,Denver LoHi,Sandwich,48
+2025-03-31,Denver LoHi,Granola,38
+2025-04-30,Seattle Pike,House Blend,44
+2025-04-30,Seattle Pike,Espresso Beans,49
+2025-04-30,Seattle Pike,Cold Brew,36
+2025-04-30,Seattle Pike,Loose Tea,37
+2025-04-30,Seattle Pike,Mug,44
+2025-04-30,Seattle Pike,Grinder,22
+2025-04-30,Seattle Pike,Kettle,20
+2025-04-30,Seattle Pike,Filters,48
+2025-04-30,Seattle Pike,Croissant,40
+2025-04-30,Seattle Pike,Cookie,39
+2025-04-30,Seattle Pike,Sandwich,38
+2025-04-30,Seattle Pike,Granola,46
+2025-04-30,Portland Pearl,House Blend,42
+2025-04-30,Portland Pearl,Espresso Beans,40
+2025-04-30,Portland Pearl,Cold Brew,50
+2025-04-30,Portland Pearl,Loose Tea,48
+2025-04-30,Portland Pearl,Mug,39
+2025-04-30,Portland Pearl,Grinder,11
+2025-04-30,Portland Pearl,Kettle,10
+2025-04-30,Portland Pearl,Filters,36
+2025-04-30,Portland Pearl,Croissant,43
+2025-04-30,Portland Pearl,Cookie,47
+2025-04-30,Portland Pearl,Sandwich,49
+2025-04-30,Portland Pearl,Granola,39
+2025-04-30,Austin Congress,House Blend,41
+2025-04-30,Austin Congress,Espresso Beans,41
+2025-04-30,Austin Congress,Cold Brew,36
+2025-04-30,Austin Congress,Loose Tea,36
+2025-04-30,Austin Congress,Mug,47
+2025-04-30,Austin Congress,Grinder,10
+2025-04-30,Austin Congress,Kettle,21
+2025-04-30,Austin Congress,Filters,38
+2025-04-30,Austin Congress,Croissant,45
+2025-04-30,Austin Congress,Cookie,40
+2025-04-30,Austin Congress,Sandwich,46
+2025-04-30,Austin Congress,Granola,40
+2025-04-30,Denver LoHi,House Blend,36
+2025-04-30,Denver LoHi,Espresso Beans,36
+2025-04-30,Denver LoHi,Cold Brew,49
+2025-04-30,Denver LoHi,Loose Tea,39
+2025-04-30,Denver LoHi,Mug,41
+2025-04-30,Denver LoHi,Grinder,15
+2025-04-30,Denver LoHi,Kettle,23
+2025-04-30,Denver LoHi,Filters,37
+2025-04-30,Denver LoHi,Croissant,42
+2025-04-30,Denver LoHi,Cookie,39
+2025-04-30,Denver LoHi,Sandwich,50
+2025-04-30,Denver LoHi,Granola,49
+2025-05-31,Seattle Pike,House Blend,36
+2025-05-31,Seattle Pike,Espresso Beans,49
+2025-05-31,Seattle Pike,Cold Brew,46
+2025-05-31,Seattle Pike,Loose Tea,37
+2025-05-31,Seattle Pike,Mug,44
+2025-05-31,Seattle Pike,Grinder,18
+2025-05-31,Seattle Pike,Kettle,13
+2025-05-31,Seattle Pike,Filters,43
+2025-05-31,Seattle Pike,Croissant,50
+2025-05-31,Seattle Pike,Cookie,48
+2025-05-31,Seattle Pike,Sandwich,47
+2025-05-31,Seattle Pike,Granola,49
+2025-05-31,Portland Pearl,House Blend,42
+2025-05-31,Portland Pearl,Espresso Beans,50
+2025-05-31,Portland Pearl,Cold Brew,37
+2025-05-31,Portland Pearl,Loose Tea,42
+2025-05-31,Portland Pearl,Mug,44
+2025-05-31,Portland Pearl,Grinder,12
+2025-05-31,Portland Pearl,Kettle,11
+2025-05-31,Portland Pearl,Filters,38
+2025-05-31,Portland Pearl,Croissant,46
+2025-05-31,Portland Pearl,Cookie,47
+2025-05-31,Portland Pearl,Sandwich,48
+2025-05-31,Portland Pearl,Granola,48
+2025-05-31,Austin Congress,House Blend,46
+2025-05-31,Austin Congress,Espresso Beans,47
+2025-05-31,Austin Congress,Cold Brew,41
+2025-05-31,Austin Congress,Loose Tea,50
+2025-05-31,Austin Congress,Mug,45
+2025-05-31,Austin Congress,Grinder,16
+2025-05-31,Austin Congress,Kettle,20
+2025-05-31,Austin Congress,Filters,36
+2025-05-31,Austin Congress,Croissant,40
+2025-05-31,Austin Congress,Cookie,42
+2025-05-31,Austin Congress,Sandwich,47
+2025-05-31,Austin Congress,Granola,46
+2025-05-31,Denver LoHi,House Blend,39
+2025-05-31,Denver LoHi,Espresso Beans,36
+2025-05-31,Denver LoHi,Cold Brew,40
+2025-05-31,Denver LoHi,Loose Tea,37
+2025-05-31,Denver LoHi,Mug,48
+2025-05-31,Denver LoHi,Grinder,17
+2025-05-31,Denver LoHi,Kettle,15
+2025-05-31,Denver LoHi,Filters,47
+2025-05-31,Denver LoHi,Croissant,38
+2025-05-31,Denver LoHi,Cookie,39
+2025-05-31,Denver LoHi,Sandwich,36
+2025-05-31,Denver LoHi,Granola,42
+2025-06-30,Seattle Pike,House Blend,49
+2025-06-30,Seattle Pike,Espresso Beans,47
+2025-06-30,Seattle Pike,Cold Brew,40
+2025-06-30,Seattle Pike,Loose Tea,40
+2025-06-30,Seattle Pike,Mug,40
+2025-06-30,Seattle Pike,Grinder,18
+2025-06-30,Seattle Pike,Kettle,14
+2025-06-30,Seattle Pike,Filters,45
+2025-06-30,Seattle Pike,Croissant,36
+2025-06-30,Seattle Pike,Cookie,42
+2025-06-30,Seattle Pike,Sandwich,48
+2025-06-30,Seattle Pike,Granola,39
+2025-06-30,Portland Pearl,House Blend,47
+2025-06-30,Portland Pearl,Espresso Beans,47
+2025-06-30,Portland Pearl,Cold Brew,47
+2025-06-30,Portland Pearl,Loose Tea,47
+2025-06-30,Portland Pearl,Mug,39
+2025-06-30,Portland Pearl,Grinder,13
+2025-06-30,Portland Pearl,Kettle,11
+2025-06-30,Portland Pearl,Filters,48
+2025-06-30,Portland Pearl,Croissant,48
+2025-06-30,Portland Pearl,Cookie,46
+2025-06-30,Portland Pearl,Sandwich,49
+2025-06-30,Portland Pearl,Granola,50
+2025-06-30,Austin Congress,House Blend,48
+2025-06-30,Austin Congress,Espresso Beans,43
+2025-06-30,Austin Congress,Cold Brew,38
+2025-06-30,Austin Congress,Loose Tea,47
+2025-06-30,Austin Congress,Mug,49
+2025-06-30,Austin Congress,Grinder,15
+2025-06-30,Austin Congress,Kettle,13
+2025-06-30,Austin Congress,Filters,46
+2025-06-30,Austin Congress,Croissant,50
+2025-06-30,Austin Congress,Cookie,37
+2025-06-30,Austin Congress,Sandwich,42
+2025-06-30,Austin Congress,Granola,41
+2025-06-30,Denver LoHi,House Blend,50
+2025-06-30,Denver LoHi,Espresso Beans,44
+2025-06-30,Denver LoHi,Cold Brew,49
+2025-06-30,Denver LoHi,Loose Tea,50
+2025-06-30,Denver LoHi,Mug,44
+2025-06-30,Denver LoHi,Grinder,20
+2025-06-30,Denver LoHi,Kettle,17
+2025-06-30,Denver LoHi,Filters,50
+2025-06-30,Denver LoHi,Croissant,43
+2025-06-30,Denver LoHi,Cookie,49
+2025-06-30,Denver LoHi,Sandwich,45
+2025-06-30,Denver LoHi,Granola,41
+2025-07-31,Seattle Pike,House Blend,45
+2025-07-31,Seattle Pike,Espresso Beans,38
+2025-07-31,Seattle Pike,Cold Brew,45
+2025-07-31,Seattle Pike,Loose Tea,38
+2025-07-31,Seattle Pike,Mug,43
+2025-07-31,Seattle Pike,Grinder,11
+2025-07-31,Seattle Pike,Kettle,13
+2025-07-31,Seattle Pike,Filters,44
+2025-07-31,Seattle Pike,Croissant,48
+2025-07-31,Seattle Pike,Cookie,41
+2025-07-31,Seattle Pike,Sandwich,45
+2025-07-31,Seattle Pike,Granola,38
+2025-07-31,Portland Pearl,House Blend,44
+2025-07-31,Portland Pearl,Espresso Beans,39
+2025-07-31,Portland Pearl,Cold Brew,39
+2025-07-31,Portland Pearl,Loose Tea,42
+2025-07-31,Portland Pearl,Mug,47
+2025-07-31,Portland Pearl,Grinder,20
+2025-07-31,Portland Pearl,Kettle,19
+2025-07-31,Portland Pearl,Filters,50
+2025-07-31,Portland Pearl,Croissant,39
+2025-07-31,Portland Pearl,Cookie,41
+2025-07-31,Portland Pearl,Sandwich,47
+2025-07-31,Portland Pearl,Granola,38
+2025-07-31,Austin Congress,House Blend,45
+2025-07-31,Austin Congress,Espresso Beans,48
+2025-07-31,Austin Congress,Cold Brew,40
+2025-07-31,Austin Congress,Loose Tea,37
+2025-07-31,Austin Congress,Mug,43
+2025-07-31,Austin Congress,Grinder,15
+2025-07-31,Austin Congress,Kettle,19
+2025-07-31,Austin Congress,Filters,38
+2025-07-31,Austin Congress,Croissant,46
+2025-07-31,Austin Congress,Cookie,39
+2025-07-31,Austin Congress,Sandwich,47
+2025-07-31,Austin Congress,Granola,45
+2025-07-31,Denver LoHi,House Blend,42
+2025-07-31,Denver LoHi,Espresso Beans,49
+2025-07-31,Denver LoHi,Cold Brew,36
+2025-07-31,Denver LoHi,Loose Tea,50
+2025-07-31,Denver LoHi,Mug,41
+2025-07-31,Denver LoHi,Grinder,16
+2025-07-31,Denver LoHi,Kettle,15
+2025-07-31,Denver LoHi,Filters,48
+2025-07-31,Denver LoHi,Croissant,40
+2025-07-31,Denver LoHi,Cookie,37
+2025-07-31,Denver LoHi,Sandwich,37
+2025-07-31,Denver LoHi,Granola,42
+2025-08-31,Seattle Pike,House Blend,46
+2025-08-31,Seattle Pike,Espresso Beans,49
+2025-08-31,Seattle Pike,Cold Brew,50
+2025-08-31,Seattle Pike,Loose Tea,46
+2025-08-31,Seattle Pike,Mug,49
+2025-08-31,Seattle Pike,Grinder,17
+2025-08-31,Seattle Pike,Kettle,16
+2025-08-31,Seattle Pike,Filters,45
+2025-08-31,Seattle Pike,Croissant,36
+2025-08-31,Seattle Pike,Cookie,43
+2025-08-31,Seattle Pike,Sandwich,41
+2025-08-31,Seattle Pike,Granola,44
+2025-08-31,Portland Pearl,House Blend,47
+2025-08-31,Portland Pearl,Espresso Beans,50
+2025-08-31,Portland Pearl,Cold Brew,49
+2025-08-31,Portland Pearl,Loose Tea,50
+2025-08-31,Portland Pearl,Mug,39
+2025-08-31,Portland Pearl,Grinder,10
+2025-08-31,Portland Pearl,Kettle,22
+2025-08-31,Portland Pearl,Filters,36
+2025-08-31,Portland Pearl,Croissant,47
+2025-08-31,Portland Pearl,Cookie,45
+2025-08-31,Portland Pearl,Sandwich,47
+2025-08-31,Portland Pearl,Granola,44
+2025-08-31,Austin Congress,House Blend,41
+2025-08-31,Austin Congress,Espresso Beans,41
+2025-08-31,Austin Congress,Cold Brew,47
+2025-08-31,Austin Congress,Loose Tea,43
+2025-08-31,Austin Congress,Mug,50
+2025-08-31,Austin Congress,Grinder,19
+2025-08-31,Austin Congress,Kettle,11
+2025-08-31,Austin Congress,Filters,45
+2025-08-31,Austin Congress,Croissant,38
+2025-08-31,Austin Congress,Cookie,37
+2025-08-31,Austin Congress,Sandwich,36
+2025-08-31,Austin Congress,Granola,43
+2025-08-31,Denver LoHi,House Blend,40
+2025-08-31,Denver LoHi,Espresso Beans,37
+2025-08-31,Denver LoHi,Cold Brew,44
+2025-08-31,Denver LoHi,Loose Tea,36
+2025-08-31,Denver LoHi,Mug,39
+2025-08-31,Denver LoHi,Grinder,13
+2025-08-31,Denver LoHi,Kettle,20
+2025-08-31,Denver LoHi,Filters,50
+2025-08-31,Denver LoHi,Croissant,37
+2025-08-31,Denver LoHi,Cookie,36
+2025-08-31,Denver LoHi,Sandwich,41
+2025-08-31,Denver LoHi,Granola,41
+2025-09-30,Seattle Pike,House Blend,42
+2025-09-30,Seattle Pike,Espresso Beans,47
+2025-09-30,Seattle Pike,Cold Brew,41
+2025-09-30,Seattle Pike,Loose Tea,50
+2025-09-30,Seattle Pike,Mug,43
+2025-09-30,Seattle Pike,Grinder,19
+2025-09-30,Seattle Pike,Kettle,12
+2025-09-30,Seattle Pike,Filters,43
+2025-09-30,Seattle Pike,Croissant,47
+2025-09-30,Seattle Pike,Cookie,48
+2025-09-30,Seattle Pike,Sandwich,40
+2025-09-30,Seattle Pike,Granola,46
+2025-09-30,Portland Pearl,House Blend,50
+2025-09-30,Portland Pearl,Espresso Beans,36
+2025-09-30,Portland Pearl,Cold Brew,43
+2025-09-30,Portland Pearl,Loose Tea,49
+2025-09-30,Portland Pearl,Mug,43
+2025-09-30,Portland Pearl,Grinder,19
+2025-09-30,Portland Pearl,Kettle,22
+2025-09-30,Portland Pearl,Filters,39
+2025-09-30,Portland Pearl,Croissant,50
+2025-09-30,Portland Pearl,Cookie,48
+2025-09-30,Portland Pearl,Sandwich,44
+2025-09-30,Portland Pearl,Granola,46
+2025-09-30,Austin Congress,House Blend,48
+2025-09-30,Austin Congress,Espresso Beans,47
+2025-09-30,Austin Congress,Cold Brew,36
+2025-09-30,Austin Congress,Loose Tea,44
+2025-09-30,Austin Congress,Mug,48
+2025-09-30,Austin Congress,Grinder,18
+2025-09-30,Austin Congress,Kettle,20
+2025-09-30,Austin Congress,Filters,42
+2025-09-30,Austin Congress,Croissant,43
+2025-09-30,Austin Congress,Cookie,44
+2025-09-30,Austin Congress,Sandwich,43
+2025-09-30,Austin Congress,Granola,50
+2025-09-30,Denver LoHi,House Blend,48
+2025-09-30,Denver LoHi,Espresso Beans,46
+2025-09-30,Denver LoHi,Cold Brew,38
+2025-09-30,Denver LoHi,Loose Tea,37
+2025-09-30,Denver LoHi,Mug,45
+2025-09-30,Denver LoHi,Grinder,24
+2025-09-30,Denver LoHi,Kettle,19
+2025-09-30,Denver LoHi,Filters,44
+2025-09-30,Denver LoHi,Croissant,48
+2025-09-30,Denver LoHi,Cookie,47
+2025-09-30,Denver LoHi,Sandwich,38
+2025-09-30,Denver LoHi,Granola,50
+2025-10-31,Seattle Pike,House Blend,41
+2025-10-31,Seattle Pike,Espresso Beans,47
+2025-10-31,Seattle Pike,Cold Brew,40
+2025-10-31,Seattle Pike,Loose Tea,45
+2025-10-31,Seattle Pike,Mug,44
+2025-10-31,Seattle Pike,Grinder,16
+2025-10-31,Seattle Pike,Kettle,19
+2025-10-31,Seattle Pike,Filters,37
+2025-10-31,Seattle Pike,Croissant,43
+2025-10-31,Seattle Pike,Cookie,44
+2025-10-31,Seattle Pike,Sandwich,38
+2025-10-31,Seattle Pike,Granola,40
+2025-10-31,Portland Pearl,House Blend,38
+2025-10-31,Portland Pearl,Espresso Beans,47
+2025-10-31,Portland Pearl,Cold Brew,48
+2025-10-31,Portland Pearl,Loose Tea,50
+2025-10-31,Portland Pearl,Mug,50
+2025-10-31,Portland Pearl,Grinder,15
+2025-10-31,Portland Pearl,Kettle,15
+2025-10-31,Portland Pearl,Filters,44
+2025-10-31,Portland Pearl,Croissant,36
+2025-10-31,Portland Pearl,Cookie,46
+2025-10-31,Portland Pearl,Sandwich,42
+2025-10-31,Portland Pearl,Granola,45
+2025-10-31,Austin Congress,House Blend,40
+2025-10-31,Austin Congress,Espresso Beans,37
+2025-10-31,Austin Congress,Cold Brew,50
+2025-10-31,Austin Congress,Loose Tea,39
+2025-10-31,Austin Congress,Mug,44
+2025-10-31,Austin Congress,Grinder,23
+2025-10-31,Austin Congress,Kettle,21
+2025-10-31,Austin Congress,Filters,47
+2025-10-31,Austin Congress,Croissant,43
+2025-10-31,Austin Congress,Cookie,43
+2025-10-31,Austin Congress,Sandwich,40
+2025-10-31,Austin Congress,Granola,47
+2025-10-31,Denver LoHi,House Blend,39
+2025-10-31,Denver LoHi,Espresso Beans,43
+2025-10-31,Denver LoHi,Cold Brew,44
+2025-10-31,Denver LoHi,Loose Tea,37
+2025-10-31,Denver LoHi,Mug,46
+2025-10-31,Denver LoHi,Grinder,11
+2025-10-31,Denver LoHi,Kettle,20
+2025-10-31,Denver LoHi,Filters,49
+2025-10-31,Denver LoHi,Croissant,40
+2025-10-31,Denver LoHi,Cookie,37
+2025-10-31,Denver LoHi,Sandwich,38
+2025-10-31,Denver LoHi,Granola,42
+2025-11-30,Seattle Pike,House Blend,37
+2025-11-30,Seattle Pike,Espresso Beans,44
+2025-11-30,Seattle Pike,Cold Brew,37
+2025-11-30,Seattle Pike,Loose Tea,38
+2025-11-30,Seattle Pike,Mug,38
+2025-11-30,Seattle Pike,Grinder,21
+2025-11-30,Seattle Pike,Kettle,17
+2025-11-30,Seattle Pike,Filters,41
+2025-11-30,Seattle Pike,Croissant,45
+2025-11-30,Seattle Pike,Cookie,39
+2025-11-30,Seattle Pike,Sandwich,47
+2025-11-30,Seattle Pike,Granola,39
+2025-11-30,Portland Pearl,House Blend,43
+2025-11-30,Portland Pearl,Espresso Beans,39
+2025-11-30,Portland Pearl,Cold Brew,48
+2025-11-30,Portland Pearl,Loose Tea,42
+2025-11-30,Portland Pearl,Mug,36
+2025-11-30,Portland Pearl,Grinder,18
+2025-11-30,Portland Pearl,Kettle,15
+2025-11-30,Portland Pearl,Filters,40
+2025-11-30,Portland Pearl,Croissant,37
+2025-11-30,Portland Pearl,Cookie,44
+2025-11-30,Portland Pearl,Sandwich,44
+2025-11-30,Portland Pearl,Granola,43
+2025-11-30,Austin Congress,House Blend,45
+2025-11-30,Austin Congress,Espresso Beans,36
+2025-11-30,Austin Congress,Cold Brew,45
+2025-11-30,Austin Congress,Loose Tea,37
+2025-11-30,Austin Congress,Mug,43
+2025-11-30,Austin Congress,Grinder,21
+2025-11-30,Austin Congress,Kettle,15
+2025-11-30,Austin Congress,Filters,40
+2025-11-30,Austin Congress,Croissant,41
+2025-11-30,Austin Congress,Cookie,50
+2025-11-30,Austin Congress,Sandwich,37
+2025-11-30,Austin Congress,Granola,37
+2025-11-30,Denver LoHi,House Blend,39
+2025-11-30,Denver LoHi,Espresso Beans,49
+2025-11-30,Denver LoHi,Cold Brew,43
+2025-11-30,Denver LoHi,Loose Tea,42
+2025-11-30,Denver LoHi,Mug,45
+2025-11-30,Denver LoHi,Grinder,17
+2025-11-30,Denver LoHi,Kettle,11
+2025-11-30,Denver LoHi,Filters,47
+2025-11-30,Denver LoHi,Croissant,49
+2025-11-30,Denver LoHi,Cookie,38
+2025-11-30,Denver LoHi,Sandwich,36
+2025-11-30,Denver LoHi,Granola,41
+2025-12-31,Seattle Pike,House Blend,38
+2025-12-31,Seattle Pike,Espresso Beans,42
+2025-12-31,Seattle Pike,Cold Brew,43
+2025-12-31,Seattle Pike,Loose Tea,50
+2025-12-31,Seattle Pike,Mug,41
+2025-12-31,Seattle Pike,Grinder,20
+2025-12-31,Seattle Pike,Kettle,18
+2025-12-31,Seattle Pike,Filters,50
+2025-12-31,Seattle Pike,Croissant,47
+2025-12-31,Seattle Pike,Cookie,42
+2025-12-31,Seattle Pike,Sandwich,45
+2025-12-31,Seattle Pike,Granola,37
+2025-12-31,Portland Pearl,House Blend,48
+2025-12-31,Portland Pearl,Espresso Beans,42
+2025-12-31,Portland Pearl,Cold Brew,43
+2025-12-31,Portland Pearl,Loose Tea,46
+2025-12-31,Portland Pearl,Mug,46
+2025-12-31,Portland Pearl,Grinder,16
+2025-12-31,Portland Pearl,Kettle,23
+2025-12-31,Portland Pearl,Filters,38
+2025-12-31,Portland Pearl,Croissant,48
+2025-12-31,Portland Pearl,Cookie,37
+2025-12-31,Portland Pearl,Sandwich,47
+2025-12-31,Portland Pearl,Granola,38
+2025-12-31,Austin Congress,House Blend,39
+2025-12-31,Austin Congress,Espresso Beans,43
+2025-12-31,Austin Congress,Cold Brew,39
+2025-12-31,Austin Congress,Loose Tea,40
+2025-12-31,Austin Congress,Mug,45
+2025-12-31,Austin Congress,Grinder,18
+2025-12-31,Austin Congress,Kettle,23
+2025-12-31,Austin Congress,Filters,46
+2025-12-31,Austin Congress,Croissant,49
+2025-12-31,Austin Congress,Cookie,50
+2025-12-31,Austin Congress,Sandwich,50
+2025-12-31,Austin Congress,Granola,38
+2025-12-31,Denver LoHi,House Blend,39
+2025-12-31,Denver LoHi,Espresso Beans,44
+2025-12-31,Denver LoHi,Cold Brew,36
+2025-12-31,Denver LoHi,Loose Tea,49
+2025-12-31,Denver LoHi,Mug,50
+2025-12-31,Denver LoHi,Grinder,15
+2025-12-31,Denver LoHi,Kettle,24
+2025-12-31,Denver LoHi,Filters,41
+2025-12-31,Denver LoHi,Croissant,37
+2025-12-31,Denver LoHi,Cookie,48
+2025-12-31,Denver LoHi,Sandwich,38
+2025-12-31,Denver LoHi,Granola,44

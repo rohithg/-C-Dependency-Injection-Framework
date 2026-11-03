@@ -1,0 +1,56 @@
+/// One row per product price version. The fact points here. This table is not related to DimProduct, or the model would have two paths from price to sales.
+table DimProductPrice
+
+	column ProductPriceKey
+		dataType: int64
+		isHidden
+		isKey
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: ProductPriceKey
+
+	column ProductKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: ProductKey
+
+	column Product
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: Product
+
+	/// The list price that was in force between Valid From and Valid To.
+	column 'List Price'
+		dataType: decimal
+		formatString: $#,##0.00
+		summarizeBy: none
+		sourceColumn: List Price
+
+	column 'Valid From'
+		dataType: dateTime
+		formatString: yyyy-MM-dd
+		summarizeBy: none
+		sourceColumn: Valid From
+
+	column 'Valid To'
+		dataType: dateTime
+		formatString: yyyy-MM-dd
+		summarizeBy: none
+		sourceColumn: Valid To
+
+	column 'Is Current'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Is Current
+
+	partition DimProductPrice = m
+		mode: import
+		source =
+				let
+					Source = LoadCsv("dim_product_price.csv"),
+					Typed = Table.TransformColumnTypes(Source, {{"ProductPriceKey", Int64.Type}, {"ProductKey", Int64.Type}, {"List Price", type number}, {"Valid From", type date}, {"Valid To", type date}})
+				in
+					Typed

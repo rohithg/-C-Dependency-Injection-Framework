@@ -66,6 +66,14 @@ CUSTOMERS = [
 
 STORE_WEIGHT = {1: Decimal("1.15"), 2: Decimal("0.90"), 3: Decimal("1.00"), 4: Decimal("0.85")}
 MONEY = Decimal("0.01")
+OPEN_END = date(9999, 12, 31)
+BATCH_ID = "2026-01-06"
+# Price changes after launch. The fact keeps the price on the order date.
+# The product dimension keeps only the price a customer would pay today.
+PRICE_CHANGES = {
+    "House Blend": [(date(2025, 3, 1), "13.00")],
+    "Grinder": [(date(2025, 6, 1), "99.00")],
+}
 
 
 def money(value: Decimal | str | int) -> Decimal:
@@ -112,7 +120,56 @@ def build_dates() -> list[dict]:
     return rows
 
 
-def build_products() -> list[dict]:
+def build_price_history(products: list[dict]) -> tuple[list[dict], list[dict]]:
+    """Source events, and the SCD2 rows the warehouse builds from those events.
+
+    Each product has one open-ended row. A price change closes the old row
+    the day before and opens a new one. Exactly one row per product is current.
+    """
+    events = []
+    versions = []
+    key = 1
+    by_name = {row["Product"]: row for row in products}
+    for product in PRODUCTS:
+        changes = [(START, product["List Price"]), *PRICE_CHANGES.get(product["Product"], [])]
+        for index, (effective, list_price) in enumerate(changes):
+            valid_to = OPEN_END
+            if index + 1 < len(changes):
+                valid_to = changes[index + 1][0] - timedelta(days=1)
+            current = valid_to == OPEN_END
+            versions.append({
+                "ProductPriceKey": key,
+                "ProductKey": by_name[product["Product"]]["ProductKey"],
+                "Product": product["Product"],
+                "List Price": list_price,
+                "Valid From": effective.isoformat(),
+                "Valid To": valid_to.isoformat(),
+                "Is Current": "true" if current else "false",
+                "_from": effective,
+                "_to": valid_to,
+            })
+            events.append({
+                "product": product["Product"],
+                "effective_date": effective.isoformat(),
+                "list_price": list_price,
+            })
+            key += 1
+    return events, versions
+
+
+def price_on(versions: list[dict], product_name: str, day: date) -> dict:
+    matches = [
+        row for row in versions
+        if row["Product"] == product_name and row["_from"] <= day <= row["_to"]
+    ]
+    if len(matches) != 1:
+        raise RuntimeError(f"{product_name} on {day.isoformat()} matched {len(matches)} prices")
+    return matches[0]
+
+
+def build_products(versions: list[dict]) -> list[dict]:
+    """Type 1 product dimension: who the product is, and today's price."""
+    current = {row["Product"]: row["List Price"] for row in versions if row["Is Current"] == "true"}
     rows = []
     for key, product in enumerate(PRODUCTS, start=1):
         rows.append({
@@ -120,7 +177,7 @@ def build_products() -> list[dict]:
             "Product": product["Product"],
             "Category": product["Category"],
             "Unit Cost": product["Unit Cost"],
-            "List Price": product["List Price"],
+            "List Price": current[product["Product"]],
         })
     return rows
 
@@ -136,7 +193,7 @@ def _product_bias(day: date, product: dict) -> float:
     return float(season(day, product["Category"]))
 
 
-def build_bronze() -> tuple[list[dict], list[dict]]:
+def build_bronze(versions: list[dict]) -> tuple[list[dict], list[dict]]:
     """Raw sales export, plus the rows the silver step must reject."""
     rng = random.Random(SEED)
     products = PRODUCTS
@@ -157,7 +214,7 @@ def build_bronze() -> tuple[list[dict], list[dict]]:
                         continue
                     seen.append(product["Product"])
                     qty = 1 + rng.randrange(4 if segment != "Wholesale" else 12)
-                    list_price = money(product["List Price"])
+                    list_price = money(price_on(versions, product["Product"], day)["List Price"])
                     discount = money(list_price * qty * Decimal("0.10")) if rng.random() < 0.15 else money(0)
                     ship = day + timedelta(days=2 if segment == "Wholesale" else 0)
                     kept.append({
@@ -185,7 +242,45 @@ def _index(rows: list[dict], key: str) -> dict:
     return {row[key]: row for row in rows}
 
 
-def build_gold(bronze_kept_and_dirty: list[dict], products: list[dict], stores: list[dict], customers: list[dict]):
+def month_ends(start: date, end: date) -> list[date]:
+    day = date(start.year, start.month, 1)
+    ends = []
+    while day <= end:
+        nxt = date(day.year + 1, 1, 1) if day.month == 12 else date(day.year, day.month + 1, 1)
+        ends.append(nxt - timedelta(days=1))
+        day = nxt
+    return ends
+
+
+def build_inventory(stores: list[dict], products: list[dict]) -> tuple[list[dict], list[dict]]:
+    """Month-end counts. A source row is a clipboard count. Gold adds the keys."""
+    rng = random.Random(SEED + 1)
+    source = []
+    gold = []
+    by_name = {row["Product"]: row for row in products}
+    by_store = {row["Store"]: row for row in stores}
+    for month_end in month_ends(START, END):
+        for store in stores:
+            for product in PRODUCTS:
+                base = 36 if money(product["List Price"]) < 20 else 10
+                units = base + rng.randrange(0, 15)
+                source.append({
+                    "count_date": month_end.isoformat(),
+                    "store": store["Store"],
+                    "product": product["Product"],
+                    "units_on_hand": units,
+                })
+                gold.append({
+                    "DateKey": int(month_end.strftime("%Y%m%d")),
+                    "StoreKey": by_store[store["Store"]]["StoreKey"],
+                    "ProductKey": by_name[product["Product"]]["ProductKey"],
+                    "Units On Hand": units,
+                    "Batch Id": BATCH_ID,
+                })
+    return source, gold
+
+
+def build_gold(bronze_kept_and_dirty: list[dict], products: list[dict], stores: list[dict], customers: list[dict], versions: list[dict]):
     product_by_name = _index(products, "Product")
     store_by_name = _index(stores, "Store")
     customer_by_name = _index(customers, "Customer")
@@ -220,18 +315,21 @@ def build_gold(bronze_kept_and_dirty: list[dict], products: list[dict], stores: 
         net = money(unit_price * qty - discount)
         cost = money(unit_cost * qty)
         order_day = date.fromisoformat(row["order_date"])
+        version = price_on(versions, row["product"], order_day)
         silver.append({
             "OrderId": int(row["order_id"]),
             "OrderDate": row["order_date"],
             "ShipDate": row["ship_date"],
             "DateKey": int(order_day.strftime("%Y%m%d")),
             "ProductKey": product["ProductKey"],
+            "ProductPriceKey": version["ProductPriceKey"],
             "StoreKey": store["StoreKey"],
             "CustomerKey": customer["CustomerKey"],
             "Quantity": qty,
             "Net Amount": f"{net:.2f}",
             "Cost Amount": f"{cost:.2f}",
             "Discount Amount": f"{discount:.2f}",
+            "Batch Id": BATCH_ID,
         })
 
     budget = []
@@ -251,12 +349,15 @@ def build_gold(bronze_kept_and_dirty: list[dict], products: list[dict], stores: 
                 units = Decimal("22") * STORE_WEIGHT[store["StoreKey"]] * season(month, product["Category"])
                 if month.year == 2025:
                     units *= Decimal("1.08")
-                amount = money(units * money(product["List Price"]))
+                # The plan was written at the launch price, not at later price changes.
+                launch = next(item["List Price"] for item in PRODUCTS if item["Product"] == product["Product"])
+                amount = money(units * money(launch))
                 budget.append({
                     "StoreKey": store["StoreKey"],
                     "ProductKey": product["ProductKey"],
                     "Year Month": year_month(month),
                     "Budget Amount": f"{amount:.2f}",
+                    "Batch Id": BATCH_ID,
                 })
     return silver, quarantine, budget
 
@@ -285,13 +386,30 @@ def as_sales(rows: list[dict]) -> list[dict]:
             "OrderId": int(row["OrderId"]),
             "DateKey": int(row["DateKey"]),
             "ProductKey": int(row["ProductKey"]),
+            "ProductPriceKey": int(row["ProductPriceKey"]),
             "StoreKey": int(row["StoreKey"]),
             "CustomerKey": int(row["CustomerKey"]),
             "Quantity": int(row["Quantity"]),
             "Net Amount": money(row["Net Amount"]),
             "Cost Amount": money(row["Cost Amount"]),
+            "Discount Amount": money(row["Discount Amount"]),
             "OrderDate": date.fromisoformat(row["OrderDate"]),
             "ShipDate": date.fromisoformat(row["ShipDate"]),
+        })
+    return out
+
+
+def as_inventory(rows: list[dict], date_by_key: dict) -> list[dict]:
+    out = []
+    for row in rows:
+        key = int(row["DateKey"])
+        out.append({
+            **row,
+            "DateKey": key,
+            "StoreKey": int(row["StoreKey"]),
+            "ProductKey": int(row["ProductKey"]),
+            "Units On Hand": int(row["Units On Hand"]),
+            "Date": date.fromisoformat(date_by_key[key]["Date"]),
         })
     return out
 
@@ -316,6 +434,8 @@ class Catalog:
         self.customers = load_csv(gold / "dim_customer.csv")
         self.sales = as_sales(load_csv(gold / "fact_sales.csv"))
         self.budget = as_budget(load_csv(gold / "fact_budget.csv"))
+        self.prices = load_csv(gold / "dim_product_price.csv")
+        self.inventory = as_inventory(load_csv(gold / "fact_inventory.csv"), {int(row["DateKey"]): row for row in load_csv(gold / "dim_date.csv")})
         self.date_by_key = {int(row["DateKey"]): row for row in self.dates}
         self.product_by_key = {int(row["ProductKey"]): row for row in self.products}
         self.store_by_key = {int(row["StoreKey"]): row for row in self.stores}
@@ -361,6 +481,24 @@ class Catalog:
         # Touch the unused name so a customer filter is visibly discarded.
         del allowed_customers
         return rows
+
+    def inventory_in(self, filters: dict) -> list[dict]:
+        """Snapshot rows visible through date, store, and product. Customers do not apply."""
+        date_filters = {k: filters[k] for k in ("years", "year_months", "date_from", "date_to") if k in filters}
+        kept = []
+        for item in self.inventory:
+            day = self.date_by_key[item["DateKey"]]
+            product = self.product_by_key[item["ProductKey"]]
+            store = self.store_by_key[item["StoreKey"]]
+            if not _match(date_filters, day, {}, {}, {}):
+                continue
+            if not _match(
+                {k: filters[k] for k in filters if k in ("stores", "regions", "products", "categories")},
+                {}, product, store, {},
+            ):
+                continue
+            kept.append(item)
+        return kept
 
 
 def _match(filters: dict, day: dict, product: dict, store: dict, customer: dict) -> bool:
@@ -483,6 +621,66 @@ def budget(catalog: Catalog, filters: dict) -> Decimal:
     return _sum(catalog.budget_in(filters), "Budget Amount")
 
 
+def inventory_units(catalog: Catalog, filters: dict) -> int:
+    """Semi-additive: sum across stores and products, keep only the last snapshot date."""
+    rows = catalog.inventory_in(filters)
+    if not rows:
+        return 0
+    last = max(row["Date"] for row in rows)
+    return sum(row["Units On Hand"] for row in rows if row["Date"] == last)
+
+
+def inventory_sum_across_dates(catalog: Catalog, filters: dict) -> int:
+    """The wrong aggregation. Adding January's stock to February's stock double counts the shelf."""
+    return sum(row["Units On Hand"] for row in catalog.inventory_in(filters))
+
+
+def weekly_units(catalog: Catalog, filters: dict) -> Decimal:
+    """Units sold in the 28 days ending at the last date in context, divided by 4.
+
+    Customer and segment filters are dropped. Weeks of supply is about the shelf.
+    A customer slicer must not divide the whole warehouse by one customer's pace.
+    """
+    end = _context_end(filters)
+    start = end - timedelta(days=27)
+    window = {**_without_dates(filters), "date_from": start.isoformat(), "date_to": end.isoformat()}
+    window.pop("customers", None)
+    window.pop("segments", None)
+    return (Decimal(units(catalog, window)) / Decimal(4)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
+def price_lift(catalog: Catalog, filters: dict) -> dict[str, Decimal]:
+    """Extra net amount versus selling the same units at the launch list price.
+
+    The discount rate on each line is kept. A 10% off $13 is not the same dollars as 10% off $12.
+    """
+    launch: dict[int, Decimal] = {}
+    for row in catalog.prices:
+        if row["Valid From"] == START.isoformat():
+            launch[int(row["ProductKey"])] = money(row["List Price"])
+    totals: dict[str, Decimal] = defaultdict(lambda: Decimal(0))
+    for sale in catalog.sales_in(filters):
+        gross = sale["Net Amount"] + sale["Discount Amount"]
+        if gross == 0:
+            continue
+        ratio = sale["Discount Amount"] / gross
+        hypothetical = money(launch[sale["ProductKey"]] * sale["Quantity"] * (Decimal(1) - ratio))
+        delta = sale["Net Amount"] - hypothetical
+        if delta == 0:
+            continue
+        name = catalog.product_by_key[sale["ProductKey"]]["Product"]
+        totals[name] += delta
+        totals["All"] += delta
+    return {name: money(amount) for name, amount in totals.items()}
+
+
+def weeks_of_supply(catalog: Catalog, filters: dict) -> Decimal | None:
+    pace = weekly_units(catalog, filters)
+    if pace == 0:
+        return None
+    return (Decimal(inventory_units(catalog, filters)) / pace).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
 def share_of_category(catalog: Catalog, filters: dict) -> Decimal | None:
     """ALLEXCEPT(DimProduct, DimProduct[Category]): drop the product filter, keep category."""
     total_filters = {k: v for k, v in filters.items() if k != "products"}
@@ -493,17 +691,24 @@ def share_of_category(catalog: Catalog, filters: dict) -> Decimal | None:
 
 
 def generate(root: Path) -> dict:
-    products = build_products()
+    stub = [{"ProductKey": index, "Product": product["Product"]} for index, product in enumerate(PRODUCTS, start=1)]
+    events, versions = build_price_history(stub)
+    products = build_products(versions)
     stores = list(STORES)
     customers = build_customers()
-    bronze, planted = build_bronze()
-    sales, quarantine, budget_rows = build_gold(bronze, products, stores, customers)
+    bronze, planted = build_bronze(versions)
+    sales, quarantine, budget_rows = build_gold(bronze, products, stores, customers, versions)
+    inventory_source, inventory = build_inventory(stores, products)
     dates = build_dates()
     data = root / "data"
+    public_versions = [{key: value for key, value in row.items() if not key.startswith("_")} for row in versions]
+    write_csv(data / "source" / "product_price_history.csv", events)
+    write_csv(data / "source" / "inventory_count.csv", inventory_source)
     write_csv(data / "bronze" / "sales_export.csv", bronze)
     write_csv(data / "quarantine" / "rejected_sales.csv", quarantine)
     write_csv(data / "gold" / "dim_date.csv", dates)
     write_csv(data / "gold" / "dim_product.csv", products)
+    write_csv(data / "gold" / "dim_product_price.csv", public_versions)
     write_csv(data / "gold" / "dim_store.csv", stores)
     write_csv(data / "gold" / "dim_customer.csv", customers)
     # The Fabric notebook joins bronze sales to these lists. Keys match the gold dims.
@@ -512,12 +717,15 @@ def generate(root: Path) -> dict:
     write_csv(data / "reference" / "customers.csv", customers)
     write_csv(data / "gold" / "fact_sales.csv", sales)
     write_csv(data / "gold" / "fact_budget.csv", budget_rows)
+    write_csv(data / "gold" / "fact_inventory.csv", inventory)
     return {
         "bronze_rows": len(bronze),
         "sales_rows": len(sales),
         "quarantine_rows": len(quarantine),
         "planted_bad_rows": len(planted),
         "budget_rows": len(budget_rows),
+        "inventory_rows": len(inventory),
+        "price_rows": len(public_versions),
         "date_rows": len(dates),
         "products": len(products),
         "stores": len(stores),
@@ -552,6 +760,10 @@ def lesson_numbers(root: Path) -> dict:
             "revenue_yoy_pct": _pct(revenue_yoy_pct(catalog, filters)),
             "budget": str(budget(catalog, filters)),
             "revenue_by_ship_date": str(revenue(catalog, filters, on="ship")),
+            "inventory_units": inventory_units(catalog, filters),
+            "inventory_if_you_sum_dates": inventory_sum_across_dates(catalog, filters),
+            "weekly_units": str(weekly_units(catalog, filters)),
+            "weeks_of_supply": _money(weeks_of_supply(catalog, filters)),
         }
 
     shares = []
@@ -580,6 +792,16 @@ def lesson_numbers(root: Path) -> dict:
             "revenue_all_customers": str(revenue(catalog, month_only)),
             "revenue_one_customer": str(revenue(catalog, customer)),
         },
+        "stores_2025": [
+            {
+                "store": store["Store"],
+                "region": store["Region"],
+                "revenue": str(revenue(catalog, {"stores": (store["Store"],), "years": (2025,)})),
+                "budget": str(budget(catalog, {"stores": (store["Store"],), "years": (2025,)})),
+            }
+            for store in catalog.stores
+        ],
+        "price_lift_2025": {name: str(amount) for name, amount in price_lift(catalog, {"years": (2025,)}).items()},
     }
 
 

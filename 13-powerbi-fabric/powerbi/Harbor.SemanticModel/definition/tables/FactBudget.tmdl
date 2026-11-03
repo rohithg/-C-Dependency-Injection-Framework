@@ -28,6 +28,12 @@ table FactBudget
 		summarizeBy: sum
 		sourceColumn: Budget Amount
 
+	column 'Batch Id'
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: Batch Id
+
 	partition FactBudget = m
 		mode: import
 		source =

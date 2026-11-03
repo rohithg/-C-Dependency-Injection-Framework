@@ -1,10 +1,10 @@
 ProductKey,Product,Category,Unit Cost,List Price
-1,House Blend,Coffee,4.00,12.00
+1,House Blend,Coffee,4.00,13.00
 2,Espresso Beans,Coffee,7.00,18.00
 3,Cold Brew,Coffee,1.50,5.00
 4,Loose Tea,Coffee,2.00,8.00
 5,Mug,Gear,4.00,14.00
-6,Grinder,Gear,40.00,89.00
+6,Grinder,Gear,40.00,99.00
 7,Kettle,Gear,18.00,45.00
 8,Filters,Gear,1.50,6.00
 9,Croissant,Food,1.20,4.50

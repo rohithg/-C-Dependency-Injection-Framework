@@ -6,10 +6,12 @@ model Model
 
 ref table DimDate
 ref table DimProduct
+ref table DimProductPrice
 ref table DimStore
 ref table DimCustomer
 ref table FactSales
 ref table FactBudget
+ref table FactInventory
 ref table Metrics
 ref table 'Time intelligence'
 

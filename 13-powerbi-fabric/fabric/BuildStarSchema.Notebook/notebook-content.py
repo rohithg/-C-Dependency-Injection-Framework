@@ -18,9 +18,14 @@
 
 # # Build the Harbor star schema
 # 
-# Copy `data/bronze/sales_export.csv` to `Files/bronze/` and the three files in `data/reference/` to `Files/reference/` before running.
+# Copy these files into the lakehouse before running:
 # 
-# Bronze is the export as it landed. Silver drops blank, non-positive, and duplicate lines. Gold is the star schema: one date row per day, and facts that hold keys plus additive amounts. The semantic model does not compute those amounts again. It sums them.
+# - `data/bronze/sales_export.csv` to `Files/bronze/`
+# - `data/reference/` to `Files/reference/`
+# - `data/gold/fact_budget.csv` to `Files/gold/`
+# - `data/source/product_price_history.csv` and `data/source/inventory_count.csv` to `Files/source/`
+# 
+# Bronze is the export as it landed. Silver drops blank, non-positive, and duplicate lines. Gold is the star schema. The tested numbers come from `harbor/model.py`. This notebook is the same shape in Spark. The semantic model does not compute amounts again. It sums them.
 
 # CELL ********************
 
@@ -118,6 +123,7 @@ dates.write.mode("overwrite").format("delta").saveAsTable("dim_date")
 
 # The monthly plan is produced by harbor/model.py, not from the orders.
 # Upload data/gold/fact_budget.csv to Files/gold/ before this cell.
+# It already uses the launch price, so a later price change does not rewrite the plan.
 budget = spark.read.option("header", True).csv("Files/gold/fact_budget.csv")
 budget.write.mode("overwrite").format("delta").saveAsTable("fact_budget")
 
@@ -130,6 +136,79 @@ budget.write.mode("overwrite").format("delta").saveAsTable("fact_budget")
 
 # MARKDOWN ********************
 
+# # Price history and the month-end count
+# 
+# A price change closes yesterday's row and opens a new one. The sale keeps the version that covered the order date. `DimProduct[List Price]` stays the price a customer would pay today.
+# 
+# Inventory is a clipboard count on the last day of each month. The notebook stores every snapshot. The measure `Inventory units` keeps only the last snapshot in the filter.
+
+# CELL ********************
+
+from pyspark.sql.window import Window
+
+BATCH_ID = "2026-01-06"
+events = (
+    spark.read.option("header", True)
+    .csv("Files/source/product_price_history.csv")
+    .withColumn("valid_from", F.to_date("effective_date"))
+    .withColumn("list_price", F.col("list_price").cast("decimal(18,2)"))
+)
+product_key = products.select(F.col("Product").alias("product"), F.col("ProductKey").cast("int").alias("ProductKey"))
+by_product = Window.partitionBy("product").orderBy("valid_from")
+by_catalog = Window.orderBy("ProductKey", "valid_from")
+versions = (
+    events.join(product_key, "product")
+    .withColumn("next_from", F.lead("valid_from").over(by_product))
+    .withColumn(
+        "Valid To",
+        F.when(F.col("next_from").isNull(), F.to_date(F.lit("9999-12-31"))).otherwise(F.date_sub(F.col("next_from"), 1)),
+    )
+    .withColumn("Is Current", F.when(F.col("next_from").isNull(), F.lit("true")).otherwise(F.lit("false")))
+    .withColumn("ProductPriceKey", F.row_number().over(by_catalog))
+    .select(
+        "ProductPriceKey",
+        "ProductKey",
+        F.col("product").alias("Product"),
+        F.col("list_price").alias("List Price"),
+        F.col("valid_from").alias("Valid From"),
+        "Valid To",
+        "Is Current",
+    )
+)
+versions.write.mode("overwrite").format("delta").saveAsTable("dim_product_price")
+
+priced = (
+    fact.join(
+        versions.select("ProductKey", "ProductPriceKey", "Valid From", "Valid To"),
+        "ProductKey",
+    )
+    .where((F.col("OrderDate") >= F.col("Valid From")) & (F.col("OrderDate") <= F.col("Valid To")))
+    .withColumn("Batch Id", F.lit(BATCH_ID))
+    .drop("Valid From", "Valid To")
+)
+priced.write.mode("overwrite").format("delta").saveAsTable("fact_sales")
+
+counts = spark.read.option("header", True).csv("Files/source/inventory_count.csv")
+inventory = (
+    counts
+    .join(stores.select(F.col("StoreKey").cast("int"), F.col("Store").alias("store")), "store")
+    .join(products.select(F.col("ProductKey").cast("int"), F.col("Product").alias("product")), "product")
+    .withColumn("DateKey", F.date_format(F.to_date("count_date"), "yyyyMMdd").cast("int"))
+    .withColumn("Units On Hand", F.col("units_on_hand").cast("int"))
+    .withColumn("Batch Id", F.lit(BATCH_ID))
+    .select("DateKey", "StoreKey", "ProductKey", "Units On Hand", "Batch Id")
+)
+inventory.write.mode("overwrite").format("delta").saveAsTable("fact_inventory")
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# MARKDOWN ********************
+
 # # What this notebook does not do
 # 
-# It does not define revenue, margin, or year to date. Those names belong to the semantic model. After this notebook finishes, refresh the Harbor semantic model, or point its partitions at these Delta tables and switch them to Direct Lake.
+# It does not define revenue, margin, year to date, or weeks of supply. Those names belong to the semantic model. After this notebook finishes, refresh the Harbor semantic model, or point its partitions at these Delta tables and switch them to Direct Lake. The Python tests certify the numbers. This notebook was not executed in Spark.

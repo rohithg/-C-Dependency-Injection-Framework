@@ -88,6 +88,37 @@ table Metrics
 		formatString: 0.00%
 		displayFolder: Comparison
 
+	/// Last snapshot in the current dates, summed across stores and products. Do not sum this fact across dates.
+	measure 'Inventory units' = ```
+			CALCULATE(
+				SUM(FactInventory[Units On Hand]),
+				LASTNONBLANK(
+					DimDate[Date],
+					CALCULATE(SUM(FactInventory[Units On Hand]))
+				)
+			)
+			```
+		formatString: #,##0
+		displayFolder: Inventory
+
+	/// Trailing 28 days of units, divided by 4. Customer filters are removed: the shelf is not a customer attribute.
+	measure 'Weekly units' = ```
+			DIVIDE(
+				CALCULATE(
+					[Units],
+					REMOVEFILTERS(DimCustomer),
+					DATESINPERIOD(DimDate[Date], MAX(DimDate[Date]), -28, DAY)
+				),
+				4
+			)
+			```
+		formatString: #,##0.00
+		displayFolder: Inventory
+
+	measure 'Weeks of supply' = DIVIDE([Inventory units], [Weekly units])
+		formatString: 0.00
+		displayFolder: Inventory
+
 	column Dummy
 		dataType: int64
 		isHidden
