@@ -1,0 +1,15 @@
+{
+  "layoutOptimization": 0,
+  "resourcePackages": [],
+  "sections": [
+    {
+      "name": "overview",
+      "displayName": "Overview",
+      "visualContainers": [],
+      "width": 1280,
+      "height": 720,
+      "displayOption": 1,
+      "config": "{}"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+/// Monthly plan by store and product. There is no relationship to DimDate. Budget reaches a month through TREATAS.
+table FactBudget
+
+	column StoreKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: StoreKey
+
+	column ProductKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: ProductKey
+
+	column 'Year Month'
+		dataType: string
+		isHidden
+		summarizeBy: none
+		sourceColumn: Year Month
+
+	column 'Budget Amount'
+		dataType: decimal
+		isHidden
+		formatString: $#,##0.00
+		summarizeBy: sum
+		sourceColumn: Budget Amount
+
+	partition FactBudget = m
+		mode: import
+		source =
+				let
+					Source = LoadCsv("fact_budget.csv"),
+					Typed = Table.TransformColumnTypes(Source, {{"StoreKey", Int64.Type}, {"ProductKey", Int64.Type}, {"Budget Amount", type number}})
+				in
+					Typed

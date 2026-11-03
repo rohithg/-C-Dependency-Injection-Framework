@@ -1,0 +1,95 @@
+/// One row per day, including days with no sales. Time intelligence needs the gaps filled in.
+table DimDate
+	dataCategory: Time
+
+	column DateKey
+		dataType: int64
+		isHidden
+		isKey
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: DateKey
+
+	column Date
+		dataType: dateTime
+		formatString: yyyy-MM-dd
+		summarizeBy: none
+		sourceColumn: Date
+
+	column Year
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: Year
+
+	column Quarter
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Quarter
+
+	column 'Month Number'
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: Month Number
+
+	column 'Month Name'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Month Name
+		sortByColumn: 'Month Number'
+
+	column 'Year Month'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Year Month
+		sortByColumn: 'Year Month Number'
+
+	column 'Year Month Number'
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: Year Month Number
+
+	column 'Day of Week'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Day of Week
+		sortByColumn: 'Weekday Number'
+
+	column 'Weekday Number'
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: Weekday Number
+
+	column 'Day Type'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Day Type
+
+	hierarchy Calendar
+
+		level Year
+			column: Year
+
+		level Quarter
+			column: Quarter
+
+		level Month
+			column: 'Month Name'
+
+		level Date
+			column: Date
+
+	partition DimDate = m
+		mode: import
+		source =
+				let
+					Source = LoadCsv("dim_date.csv"),
+					Typed = Table.TransformColumnTypes(Source, {{"DateKey", Int64.Type}, {"Date", type date}, {"Year", Int64.Type}, {"Month Number", Int64.Type}, {"Year Month Number", Int64.Type}, {"Weekday Number", Int64.Type}})
+				in
+					Typed

@@ -1,0 +1,28 @@
+table DimCustomer
+
+	column CustomerKey
+		dataType: int64
+		isHidden
+		isKey
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: CustomerKey
+
+	column Customer
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Customer
+
+	column Segment
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Segment
+
+	partition DimCustomer = m
+		mode: import
+		source =
+				let
+					Source = LoadCsv("dim_customer.csv"),
+					Typed = Table.TransformColumnTypes(Source, {{"CustomerKey", Int64.Type}})
+				in
+					Typed

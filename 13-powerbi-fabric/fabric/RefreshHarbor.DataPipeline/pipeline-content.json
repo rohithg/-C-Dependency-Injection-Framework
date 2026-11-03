@@ -1,0 +1,23 @@
+{
+  "properties": {
+    "activities": [
+      {
+        "name": "Build star schema",
+        "type": "TridentNotebook",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "typeProperties": {
+          "notebookId": "9b4e2a17-6c33-4f08-8d5a-1e7c9b24f603",
+          "workspaceId": "00000000-0000-0000-0000-000000000000"
+        },
+        "userProperties": []
+      }
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "DataPipeline",
+    "displayName": "Refresh Harbor",
+    "description": "Runs the star-schema notebook. Bind the notebook after the workspace syncs."
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "5d8c0e93-2a14-4b66-a7f1-0c3d6e85b219"
+  }
+}
