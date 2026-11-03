@@ -7,19 +7,15 @@ name: Solana token scanner
 # paper-trades the survivors. There is no wallet, no private key and no
 # signing code; MODE is forced to "paper".
 #
-# Runs on its own every 15 minutes. No repository variable. Grok is asked
-# only when the XAI_API_KEY secret exists; without it, tokens that pass the
-# hard rules are logged and not bought, so a fresh repo spends no xAI tokens.
-# Set SOLANA_SCANNER_ENABLED to "false" to pause. This strategy has no
-# demonstrated edge (see the README); it runs so the paper log keeps going.
+# Automatic runs are off. Nothing here is on a schedule. A run starts only
+# from the Actions "Run workflow" button. Grok is asked only when the
+# XAI_API_KEY secret exists; without it, tokens that pass the hard rules are
+# logged and not bought. This strategy has no demonstrated edge (see the README).
 #
 # A run reads data/ and logs/ from the `solana-scanner-log` branch, scans
 # once, and commits the result back. The daily status goes out on the first
-# run after 20:00 UTC. Fifteen-minute runs are ~2,900 Actions minutes/month,
-# free on a public repo.
+# run after 20:00 UTC.
 on:
-  schedule:
-    - cron: "*/15 * * * *"
   workflow_dispatch:
     inputs:
       mode:
@@ -35,7 +31,7 @@ concurrency:
 jobs:
   scan:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || vars.SOLANA_SCANNER_ENABLED != 'false' }}
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     permissions:
       contents: write
       issues: write

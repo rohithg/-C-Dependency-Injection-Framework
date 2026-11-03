@@ -1,19 +1,16 @@
 name: Crypto paper bot
 
 # The $100 Prompt 02 paper account (11-python-claude-mcp-crypto-paper).
-# Every 4 hours the offline rule agent drives the same MCP tools Claude Code
-# would, against Kraken's public prices. No exchange, no wallet, no API key,
-# and no Claude login: the rule agent is the unattended path. Claude Code
-# remains available for a manual run on your own machine.
+# Automatic runs are off. Nothing here is on a schedule. A run starts only
+# from the Actions "Run workflow" button. The offline rule agent drives the
+# same MCP tools Claude Code would, against Kraken's public prices. No
+# exchange, no wallet, no API key, and no Claude login.
 #
-# Runs unless the repository variable CRYPTO_PAPER_ENABLED is "false".
 # State is committed to the `crypto-paper-log` branch. The daily status goes
 # out on the first run after 20:00 UTC, through the same GitHub-issue
 # notification as the other paper accounts (optional Twilio / ntfy / Telegram
 # secrets work here too).
 on:
-  schedule:
-    - cron: "8 */4 * * *"
   workflow_dispatch:
 
 concurrency:
@@ -23,7 +20,7 @@ concurrency:
 jobs:
   round:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || vars.CRYPTO_PAPER_ENABLED != 'false' }}
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     permissions:
       contents: write
       issues: write
