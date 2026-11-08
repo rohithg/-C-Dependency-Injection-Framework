@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from edge.models import Ladder, StrikeMarket
-from edge.strategy import complete_set_buy, ladder_opportunities, maker_quote
+from edge.strategy import complete_set_buy, ladder_opportunities, maker_quote, yes_basket
 from support import cfg, market
 
 
@@ -76,6 +76,46 @@ def test_maker_joins_the_bid_and_will_not_quote_through_a_tight_book():
     assert maker_quote(tight, cfg()) is None
     ghost = market("ghost", [("0.80", "100")], [("0.80", "100")], [("0.20", "100")], [("0.20", "100")])
     assert maker_quote(ghost, cfg()) is None
+
+
+def test_yes_basket_pays_a_dollar_when_every_outcome_is_cheap():
+    legs = [
+        market("a", [("0.30", "20")], [("0.80", "20")], title="A"),
+        market("b", [("0.30", "50")], [("0.80", "20")], title="B"),
+        market("c", [("0.20", "40")], [("0.80", "20")], title="C"),
+    ]
+    opp = yes_basket(legs, cfg())
+    assert opp is not None
+    assert opp.risk_free
+    assert opp.size == Decimal("20")
+    assert opp.net_profit == Decimal("4.00")
+    assert {leg.token_id for leg in opp.legs} == {"a:yes", "b:yes", "c:yes"}
+
+
+def test_yes_basket_fees_take_the_two_cent_gap():
+    legs = [
+        market("a", [("0.49", "100")], [("0.60", "10")], fee_rate="0.07"),
+        market("b", [("0.49", "100")], [("0.60", "10")], fee_rate="0.07"),
+    ]
+    assert yes_basket(legs, cfg()) is None
+    priced = [
+        market("a", [("0.30", "10")], [("0.80", "10")], fee_rate="0.05", title="A"),
+        market("b", [("0.30", "10")], [("0.80", "10")], fee_rate="0.05", title="B"),
+        market("c", [("0.30", "10")], [("0.80", "10")], fee_rate="0.05", title="C"),
+    ]
+    opp = yes_basket(priced, cfg())
+    assert opp is not None
+    # 10 shares pay $10, cost $9, and each leg's fee is 10 * 0.05 * 0.30 * 0.70.
+    assert opp.net_profit == Decimal("0.685")
+
+
+def test_yes_basket_refuses_a_single_name_or_a_touch_under_the_minimum():
+    assert yes_basket([market("only", [("0.40", "20")], [("0.70", "20")])], cfg()) is None
+    thin = [
+        market("a", [("0.20", "4")], [("0.90", "10")], min_size="5"),
+        market("b", [("0.20", "100")], [("0.90", "10")], min_size="5"),
+    ]
+    assert yes_basket(thin, cfg()) is None
 
 
 def _ladder(kind, rows):

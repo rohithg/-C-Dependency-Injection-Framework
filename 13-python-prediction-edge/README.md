@@ -1,6 +1,6 @@
 # The structural edge
 
-Three packages pay at least $1 no matter how the event lands. The functions in `edge/strategy.py` say when the book is offering one of them for less than that, after fees. There is no order router, no account, and no loop.
+Four packages pay at least $1 no matter how the event lands. The functions in `edge/strategy.py` say when the book is offering one of them for less than that, after fees. There is no order router, no account, and no loop.
 
 ## Complete set
 
@@ -14,6 +14,16 @@ sell both when bid(YES) + bid(NO) − taker fees  >  $1
 The taker fee is `shares × rate × p × (1 − p)`. Rate is 0.07 on crypto, 0.04 to 0.05 on most other categories, and 0 on geopolitics. Makers pay nothing on taker-only markets. At 49 cents the crypto fee is about 1.75 cents **per leg**, so a 2-cent gap is a loss.
 
 A Kalshi binary cannot do this. Its NO ask is one minus its YES bid, so the two sides are the same book and the sum of the asks is just the spread.
+
+## Outcome basket
+
+On a Polymarket event where the rules make exactly one outcome win, one YES of every outcome pays $1. That list includes the "Other" bucket when the rules have one.
+
+```
+buy every YES when  sum of asks + taker fees  <  $1
+```
+
+A list that leaves a name out pays $0 when the missing name wins. The same screen is why a group of placeholder markets that are not taking orders is not a basket: the missing name is still in the rules.
 
 ## Strike ladder
 
@@ -37,9 +47,10 @@ When both Polymarket spreads are 10 cents or tighter, and the best bids still ad
 
 ```python
 from edge.config import Config
-from edge.strategy import complete_set_buy, ladder_opportunities, maker_quote
+from edge.strategy import complete_set_buy, ladder_opportunities, maker_quote, yes_basket
 
 trade = complete_set_buy(market, Config(min_edge="0.01", min_profit="0.05"))
+basket = yes_basket(outcomes, Config(min_edge="0.01", min_profit="0.05"))
 # trade is None, or an Opportunity with size, net_profit, and two legs
 ```
 

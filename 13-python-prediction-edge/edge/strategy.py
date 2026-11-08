@@ -6,6 +6,12 @@ Complete set (Polymarket)
     fees, bring in more than $1. YES and NO are different books, so the sum
     can leave $1. A Kalshi binary cannot: its NO ask is one minus its YES bid.
 
+Outcome basket (Polymarket negative risk)
+    On an event where exactly one outcome wins, one YES of every outcome,
+    including "Other", pays $1. Buy that basket when the asks plus taker fees
+    cost less than $1. A list that leaves an outcome out pays $0 when the
+    missing one wins.
+
 Strike ladder (Kalshi)
     On a "greater than" ladder the lower strike is the easier event. Buying
     YES there and NO on a higher strike pays $1 in both wings and $2 if the
@@ -87,6 +93,52 @@ def maker_quote(market: BinaryMarket, config: Config | None = None) -> Opportuni
         ),
         risk_free=False, market_ids=(market.market_id,),
         note="both bids have to fill; then the pair is worth $1",
+    )
+
+
+def yes_basket(markets: list[BinaryMarket], config: Config | None = None) -> Opportunity | None:
+    """Buy one YES of every outcome. Exactly one pays $1.
+
+    The list has to be the whole rule, including an "Other" bucket when the
+    rules have one. Leave a name out and the basket is a forecast.
+    """
+    config = config or Config()
+    if len(markets) < 2:
+        return None
+    priced: list[tuple[BinaryMarket, Decimal, Decimal]] = []
+    for market in markets:
+        ask = best_ask(market.yes)
+        if ask is None:
+            return None
+        tick = market.yes.tick if market.yes.tick > 0 else Decimal("0.01")
+        price = buy_limit(ask.price, config.latency_haircut, tick)
+        if price is None:
+            return None
+        priced.append((market, price, ask.size))
+    pair = sum((price for _, price, _ in priced), ZERO)
+    size = _cap_size(
+        min(ask_size for _, _, ask_size in priced),
+        pair,
+        max(market.yes.min_size for market, _, _ in priced),
+        config.max_order_notional,
+    )
+    if size is None:
+        return None
+    legs = []
+    fees = ZERO
+    for market, price, _ in priced:
+        fee = taker_fee(market.yes, size, price)
+        fees += fee
+        legs.append(_leg(market.yes, "buy", price, size, fee, market.title))
+    net = size - pair * size - fees - config.merge_gas_usd
+    if net < config.min_profit or net / size < config.min_edge:
+        return None
+    return Opportunity(
+        kind="yes_basket",
+        title=" + ".join(market.title for market, _, _ in priced),
+        size=size, edge_per_share=net / size, net_profit=net, legs=tuple(legs),
+        risk_free=True, market_ids=tuple(market.market_id for market, _, _ in priced),
+        note="exactly one YES pays $1; every outcome has to be in the basket",
     )
 
 
