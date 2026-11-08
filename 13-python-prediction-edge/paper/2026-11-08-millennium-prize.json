@@ -1,0 +1,65 @@
+{
+  "account": "paper",
+  "opened_at": "2026-11-08 02:54 PM PT",
+  "opened_at_utc": "2026-11-08T22:54:03Z",
+  "event": "Which Millennium Prize Problem will AI solve next?",
+  "event_slug": "which-millennium-prize-problem-will-ai-solve-next",
+  "resolves": "2028-01-01T04:59:00Z",
+  "rules": "Exactly one listed outcome pays $1, including no solution by December 31, 2027.",
+  "kind": "yes_basket",
+  "starting_cash": "1000.00",
+  "cash": "975.96145",
+  "spent": "24.03855",
+  "fees": "0.71930",
+  "size": "25.21",
+  "payout_floor": "25.21",
+  "locked_profit": "1.17145",
+  "edge_per_share": "0.04646767155890519635065450218",
+  "volume_24h": "7016.034156",
+  "open_interest": "33162.987173999994",
+  "legs": [
+    {
+      "outcome": "Birch and Swinnerton-Dyer",
+      "token_id": "45002854920632205842375008701834494919687123999359447430484085567728548529599",
+      "price": "0.07",
+      "size": "25.21",
+      "fee": "0.06565"
+    },
+    {
+      "outcome": "Hodge Conjecture",
+      "token_id": "2476725205019729631424404750329035688450353560388947855064478812097488396326",
+      "price": "0.2",
+      "size": "25.21",
+      "fee": "0.16134"
+    },
+    {
+      "outcome": "P versus NP",
+      "token_id": "42350636821320607409137206631220344948522585860907233938867086058208067378263",
+      "price": "0.024",
+      "size": "25.21",
+      "fee": "0.02362"
+    },
+    {
+      "outcome": "Riemann Hypothesis",
+      "token_id": "86049549412527110401342651601582558086024426696929817872551303258295908746274",
+      "price": "0.062",
+      "size": "25.21",
+      "fee": "0.05864"
+    },
+    {
+      "outcome": "Yang-Mills",
+      "token_id": "87258957446167628400774072344996016047563723429033361753715807011875444523296",
+      "price": "0.269",
+      "size": "25.21",
+      "fee": "0.19829"
+    },
+    {
+      "outcome": "No solution by Dec 31, 2027",
+      "token_id": "30500546747312370672108002034406431538511288799914390408472695258565878727559",
+      "price": "0.3",
+      "size": "25.21",
+      "fee": "0.21176"
+    }
+  ],
+  "note": "Paper fill at the ask on every outcome. Profit is locked only while all of these shares are held."
+}
