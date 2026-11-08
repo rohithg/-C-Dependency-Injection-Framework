@@ -1,0 +1,10 @@
+{
+  "links": [
+    {
+      "name": "same question, same YES",
+      "polymarket_condition_id": "",
+      "kalshi_ticker": "",
+      "same_yes": true
+    }
+  ]
+}

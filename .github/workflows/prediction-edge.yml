@@ -1,0 +1,31 @@
+name: Prediction edge
+
+# Offline tests, plus an optional live-book scan. Nothing is scheduled and
+# nothing in this workflow can place an order.
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "test, or test then a public-book scan"
+        type: choice
+        options: [test, scan]
+        default: test
+
+jobs:
+  edge:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: 13-python-prediction-edge
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: 13-python-prediction-edge/requirements.txt
+      - run: pip install -r requirements.txt
+      - run: python -m pytest -q
+      - name: Scan public books
+        if: ${{ inputs.mode == 'scan' }}
+        run: python run.py scan
