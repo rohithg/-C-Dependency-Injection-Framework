@@ -60,3 +60,7 @@ Each function sizes to the touch only, and stops at `max_order_notional`. `laten
 pip install -r requirements.txt
 python -m pytest -q
 ```
+
+## Phone
+
+`phone/index.html` is the paper screen for a phone browser. It does not use Krypt Trader and it does not need a computer left on. The page reads Polymarket's 15-minute Up/Down books and Coinbase's 1-minute prices itself, and it reads the Millennium Prize asks the same way. A take is still one contract in the last minute, and only when the edge after the fee is 2¢ to 3¢. Nothing on the page sends an order.
