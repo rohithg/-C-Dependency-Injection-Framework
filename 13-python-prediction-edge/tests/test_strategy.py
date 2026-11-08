@@ -1,7 +1,7 @@
 from decimal import Decimal
 
-from edge.models import BasisLink, Ladder, StrikeMarket
-from edge.strategy import basis_opportunity, complete_set_buy, ladder_opportunities, maker_quote
+from edge.models import Ladder, StrikeMarket
+from edge.strategy import complete_set_buy, ladder_opportunities, maker_quote
 from support import cfg, market
 
 
@@ -76,17 +76,6 @@ def test_maker_joins_the_bid_and_will_not_quote_through_a_tight_book():
     assert maker_quote(tight, cfg()) is None
     ghost = market("ghost", [("0.80", "100")], [("0.80", "100")], [("0.20", "100")], [("0.20", "100")])
     assert maker_quote(ghost, cfg()) is None
-
-
-def test_basis_buys_yes_against_the_other_venues_no():
-    left = market("poly", [("0.40", "20")], [("0.70", "20")], title="poly")
-    right = market("kal", [("0.55", "20")], [("0.40", "20")], [("0.60", "20")], [("0.45", "20")],
-                   fee_model="kalshi", fee_rate="0.07", title="kalshi")
-    # right NO ask is 0.40, so YES-poly + NO-kalshi costs about 0.80 before fees.
-    opp = basis_opportunity(BasisLink("same event", left, right, same_yes=True), cfg(min_profit="0.05", min_basis_edge="0.03"))
-    assert opp is not None
-    assert opp.risk_free is False
-    assert {leg.token_id for leg in opp.legs} == {"poly:yes", "kal:no"}
 
 
 def _ladder(kind, rows):

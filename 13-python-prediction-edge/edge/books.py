@@ -1,9 +1,7 @@
 """Top-of-book helpers.
 
-A taker order is sized to the touch only. A limit sent at a deeper level's
-price would also lift everything in front of it, and those shares can
-disappear before the order arrives. Paying the touch, and no further, keeps
-the paper fill and the live limit the same number.
+A taker is sized to the touch only. A limit at a deeper price would also lift
+everything in front of it, and those shares can disappear before it arrives.
 """
 
 from __future__ import annotations
@@ -46,23 +44,3 @@ def sell_limit(bid: Decimal, haircut: Decimal, tick: Decimal) -> Decimal | None:
 
 def on_tick(price: Decimal, tick: Decimal) -> Decimal:
     return floor_to(price, tick if tick > 0 else Decimal("0.0001"))
-
-
-def consume_ask(book: Book, size: Decimal) -> None:
-    left = size
-    for level in book.asks:
-        if left <= 0:
-            return
-        take = min(level.size, left)
-        level.size -= take
-        left -= take
-
-
-def consume_bid(book: Book, size: Decimal) -> None:
-    left = size
-    for level in book.bids:
-        if left <= 0:
-            return
-        take = min(level.size, left)
-        level.size -= take
-        left -= take

@@ -1,8 +1,5 @@
-"""Fee-aware structural edge bot for Polymarket and Kalshi.
+"""When a prediction-market book is a package worth at least $1."""
 
-The strategies in this package do not forecast who wins. They buy packages
-whose worst-case payout is $1 when the market is offering that package for
-less than $1 after fees.
-"""
+from .strategy import complete_set_buy, complete_set_sell, ladder_opportunities, maker_quote
 
-__version__ = "0.1.0"
+__all__ = ["complete_set_buy", "complete_set_sell", "ladder_opportunities", "maker_quote"]

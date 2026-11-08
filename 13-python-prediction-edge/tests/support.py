@@ -1,42 +1,33 @@
-"""Small market builder for the offline tests."""
+"""Small market builder for the strategy tests."""
 
 from edge.config import Config
-from edge.replay import binary_from_dict
+from edge.models import BinaryMarket, Book, Level
 
 
 def cfg(**overrides) -> Config:
     raw = {
-        "bankroll": "1000",
-        "max_order_notional": "100",
-        "max_market_notional": "200",
-        "max_open_notional": "500",
-        "max_daily_loss": "25",
-        "max_leg_loss": "0.02",
-        "max_unpaired_notional": "20",
         "min_edge": "0.01",
         "min_profit": "0.05",
-        "min_basis_edge": "0.03",
+        "max_spread": "0.10",
         "latency_haircut": "0",
         "merge_gas_usd": "0",
         "quote_size": "10",
+        "max_order_notional": "100",
     }
     raw.update(overrides)
     return Config(**raw)
 
 
 def market(market_id, yes_asks, no_asks, yes_bids=(), no_bids=(), fee_rate="0", fee_model="polymarket",
-           title="", tick="0.01", min_size="1", taker_only=True, ts_ms=0):
-    return binary_from_dict({
-        "venue": "kalshi" if fee_model == "kalshi" else "polymarket",
-        "market_id": market_id,
-        "title": title or market_id,
-        "tick": tick,
-        "min_size": min_size,
-        "fee_model": fee_model,
-        "fee_rate": fee_rate,
-        "taker_only": taker_only,
-        "maker_rate": "0.0175" if fee_model == "kalshi" else "0",
-        "ts_ms": ts_ms,
-        "yes": {"token_id": f"{market_id}:yes", "bids": list(yes_bids), "asks": list(yes_asks)},
-        "no": {"token_id": f"{market_id}:no", "bids": list(no_bids), "asks": list(no_asks)},
-    })
+           title="", tick="0.01", min_size="1", taker_only=True):
+    venue = "kalshi" if fee_model == "kalshi" else "polymarket"
+    maker = "0.0175" if fee_model == "kalshi" else "0"
+
+    def book(outcome, bids, asks):
+        return Book(
+            venue, market_id, f"{market_id}:{outcome}", outcome,
+            [Level(p, s) for p, s in bids], [Level(p, s) for p, s in asks],
+            tick, min_size, fee_model, fee_rate, 1, 1, maker, taker_only, 0, title or market_id,
+        )
+
+    return BinaryMarket(venue, market_id, title or market_id, book("yes", yes_bids, yes_asks), book("no", no_bids, no_asks))

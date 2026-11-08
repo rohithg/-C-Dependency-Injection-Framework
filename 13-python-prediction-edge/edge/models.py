@@ -1,10 +1,10 @@
-"""Market and order types shared by the scanners, the paper account, and live submission."""
+"""Books and the trade a strategy function returns."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
-from .money import ZERO, D
+from .money import D
 
 
 @dataclass
@@ -82,16 +82,6 @@ class Ladder:
     strikes: list[StrikeMarket]
 
 
-@dataclass
-class BasisLink:
-    """An explicit, hand-checked pair. This is not risk-free: rules can differ."""
-
-    name: str
-    left: BinaryMarket
-    right: BinaryMarket
-    same_yes: bool = True
-
-
 @dataclass(frozen=True)
 class Leg:
     venue: str
@@ -109,11 +99,6 @@ class Leg:
         object.__setattr__(self, "size", D(self.size))
         object.__setattr__(self, "fee", D(self.fee))
 
-    @property
-    def notional(self):
-        return self.price * self.size
-
-
 @dataclass(frozen=True)
 class Opportunity:
     kind: str
@@ -125,42 +110,12 @@ class Opportunity:
     risk_free: bool
     market_ids: tuple[str, ...]
     note: str
-    event_id: str = ""
-    book_ts_ms: int = 0
     quotes: tuple[Leg, ...] = ()
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "size", D(self.size))
         object.__setattr__(self, "edge_per_share", D(self.edge_per_share))
         object.__setattr__(self, "net_profit", D(self.net_profit))
-
-    @property
-    def orders(self) -> tuple[Leg, ...]:
-        return self.quotes if self.kind == "maker" else self.legs
-
-    @property
-    def cash_needed(self):
-        if self.kind == "complete_set_sell":
-            return self.size
-        return sum((leg.notional + leg.fee for leg in self.orders), ZERO)
-
-
-@dataclass(frozen=True)
-class Watch:
-    venue: str
-    title: str
-    kind: str
-    edge_per_share: object
-    detail: str
-
-    def __post_init__(self) -> None:
-        object.__setattr__(self, "edge_per_share", D(self.edge_per_share))
-
-
-@dataclass
-class Plan:
-    opportunities: list[Opportunity] = field(default_factory=list)
-    watches: list[Watch] = field(default_factory=list)
 
 
 def _as_level(value) -> Level:
