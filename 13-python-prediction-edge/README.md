@@ -68,3 +68,5 @@ python -m pytest -q
 `paper/15m-week-poly.json` is that rule on one week of those windows, Nov 1–8, 2016 windows, 85 trades. The entry there is the last trade print. The phone uses the ask.
 
 `paper/2026-11-08-copy.json` copies one open position from each of the week's top Polymarket wallets, $25 at the ask. Wallets whose book is outside 15¢ to 85¢, under $500, or hedged on both sides are skipped. Kalshi's public leaderboard hides those books, so nothing was copied there.
+
+`paper/2026-11-08-50-to-500.json` spends $50 on Liverpool to win the 2026–27 Premier League, the cheap Yes that the month’s top wallet is holding. The ask is 6.1¢, so a win pays $797.21 and a loss pays nothing.
