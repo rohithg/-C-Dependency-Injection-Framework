@@ -2,20 +2,12 @@ import json
 from decimal import Decimal
 from pathlib import Path
 
-from edge.fees import polymarket_taker_fee
-
 TICKET = Path(__file__).parents[1] / "paper" / "2026-11-08-50-to-500.json"
 
 
-def test_fifty_dollars_pays_more_than_five_hundred_if_liverpool_wins():
+def test_the_liverpool_longshot_is_cancelled_and_the_cash_is_back():
     doc = json.loads(TICKET.read_text())
-    size = Decimal(doc["size"])
-    ask = Decimal(doc["ask"])
-    fee = polymarket_taker_fee(size, ask, Decimal(doc["fee_rate"]))
-    spent = size * ask + fee
-    assert fee == Decimal(doc["fee"])
-    assert spent == Decimal(doc["spent"])
-    assert spent <= Decimal("50")
-    assert size == Decimal(doc["payout_if_yes"])
-    assert size > Decimal("500")
-    assert Decimal(doc["starting_cash"]) - spent == Decimal(doc["cash"])
+    assert doc["status"] == "cancelled"
+    assert Decimal(doc["spent"]) == 0
+    assert Decimal(doc["cash"]) == Decimal(doc["starting_cash"])
+    assert Decimal(doc["payout_if_yes"]) == 0

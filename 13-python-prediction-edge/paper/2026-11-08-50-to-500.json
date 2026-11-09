@@ -1,5 +1,8 @@
 {
   "account": "paper",
+  "status": "cancelled",
+  "cancelled_at": "2026-11-08 4:41 PM PT",
+  "reason": "A 6.1 cent ask is the market's chance, not an edge. The $49.99971 is back in cash.",
   "opened_at": "2026-11-08 4:26 PM PT",
   "opened_at_utc": "2026-11-09T00:26:46Z",
   "kind": "copy",
@@ -23,10 +26,11 @@
   "size": "797.21",
   "fee_rate": "0.03",
   "fee": "1.36990",
-  "spent": "49.99971",
-  "payout_if_yes": "797.21",
+  "voided_spent": "49.99971",
+  "spent": "0",
+  "payout_if_yes": "0",
   "payout_if_no": "0",
   "starting_cash": "833.64091",
-  "cash": "783.64120",
-  "note": "Paper only. The 6.1 cent ask is the market's price, so the book is saying this loses most of the time. Their size is not copied. No order was sent."
+  "cash": "833.64091",
+  "note": "Cancelled. No order was sent."
 }
