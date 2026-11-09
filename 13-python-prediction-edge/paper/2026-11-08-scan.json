@@ -1,0 +1,34 @@
+{
+  "account": "paper",
+  "sampled_at": "2026-11-08 4:54 PM PT",
+  "sampled_at_utc": "2026-11-09T00:54:50Z",
+  "rule": "After fees, a package has to pay at least $1 in every outcome, by at least 1 cent a share and 5 cents in total. Size to the touch.",
+  "trades": [
+    "paper/2026-11-08-maduro-add.json"
+  ],
+  "tests": [
+    {
+      "name": "Kalshi strike ladders",
+      "open_events": 16000,
+      "ladders": 4607,
+      "pairs": 103814,
+      "asks_under_a_dollar": 13,
+      "cleared": 0,
+      "best": "Above 9% unemployment plus NO on above 10%, 0.15 cents a share, about 1 cent of profit on 8.74 contracts."
+    },
+    {
+      "name": "Polymarket complete sets",
+      "markets": 1163,
+      "cleared": 0,
+      "best": "The tightest YES plus NO ask is $1.001. Selling both bids is short by the same tenth of a cent."
+    },
+    {
+      "name": "Kalshi baskets with an Other outcome",
+      "events": 23,
+      "cleared": 0,
+      "rejected": "Text Arena first to 1550 looked 13 cents under $1 on 3 contracts. Other pays only if some unlisted model gets there. If nobody reaches 1550, every side pays $0."
+    }
+  ],
+  "already_held": "World Cup final is unchanged at 16 shares on the ask, which the account already holds twice. Maduro's smallest ask grew from 5 to 15.9, so the pass bought the other 10.9 shares.",
+  "note": "No other package cleared the rule. No order was sent."
+}

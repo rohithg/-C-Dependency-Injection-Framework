@@ -1,0 +1,107 @@
+{
+  "account": "paper",
+  "opened_at": "2026-11-08 4:41 PM PT",
+  "opened_at_utc": "2026-11-09T00:41:01Z",
+  "kind": "yes_basket",
+  "replaces": "paper/2026-11-08-50-to-500.json",
+  "budget": "50",
+  "rule": "Buy every outcome, including the catch-all, when the asks plus fees cost less than $1 by at least 1 cent a share and at least 5 cents in total. Size to the smallest ask.",
+  "skipped": [
+    "Millennium Prize is 0.42 cents a share after fees, under the 1 cent minimum"
+  ],
+  "starting_cash": "833.64091",
+  "spent": "19.57257",
+  "locked_profit": "1.42743",
+  "cash": "814.06834",
+  "baskets": [
+    {
+      "event": "World Cup 2030: Location of Final",
+      "event_slug": "world-cup-2030-location-of-final-20260805200159829",
+      "resolves": "2030-07-22T03:59:00Z",
+      "rules": "Exactly one pays $1: the city FIFA names as host of the 2030 final. Other covers any other city and a final that is still unannounced.",
+      "size": "16",
+      "spent": "14.75257",
+      "fees": "0.46457",
+      "payout_floor": "16",
+      "locked_profit": "1.24743",
+      "edge_per_share": "0.077964375",
+      "legs": [
+        {
+          "outcome": "Barcelona",
+          "price": "0.018",
+          "size": "16",
+          "fee": "0.01414"
+        },
+        {
+          "outcome": "Madrid",
+          "price": "0.189",
+          "size": "16",
+          "fee": "0.12262"
+        },
+        {
+          "outcome": "Portuguese city",
+          "price": "0.006",
+          "size": "16",
+          "fee": "0.00477"
+        },
+        {
+          "outcome": "Moroccan city",
+          "price": "0.19",
+          "size": "16",
+          "fee": "0.12312"
+        },
+        {
+          "outcome": "Other / Unconfirmed by 2028",
+          "price": "0.49",
+          "size": "16",
+          "fee": "0.19992"
+        }
+      ]
+    },
+    {
+      "event": "Maduro Prison Time?",
+      "event_slug": "maduro-prison-time-527",
+      "resolves": "2028-01-01T04:59:00Z",
+      "rules": "Exactly one pays $1: the first prison sentence on this indictment, in years. No prison time includes an acquittal, a mistrial, no jail, and no sentence by Dec 31, 2027. Life is the top bracket.",
+      "size": "5",
+      "spent": "4.820",
+      "fees": "0",
+      "payout_floor": "5",
+      "locked_profit": "0.180",
+      "edge_per_share": "0.036",
+      "legs": [
+        {
+          "outcome": "No prison time",
+          "price": "0.6",
+          "size": "5",
+          "fee": "0"
+        },
+        {
+          "outcome": "<20",
+          "price": "0.051",
+          "size": "5",
+          "fee": "0"
+        },
+        {
+          "outcome": "20\u201340",
+          "price": "0.039",
+          "size": "5",
+          "fee": "0"
+        },
+        {
+          "outcome": "40\u201360",
+          "price": "0.044",
+          "size": "5",
+          "fee": "0"
+        },
+        {
+          "outcome": "60+",
+          "price": "0.23",
+          "size": "5",
+          "fee": "0"
+        }
+      ]
+    }
+  ],
+  "note": "The Liverpool ticket is cancelled. This uses part of that $50. The rest stays cash. Profit is locked only while every share in a basket is held. No order was sent."
+}

@@ -1,0 +1,27 @@
+{
+  "account": "paper",
+  "opened_at": "2026-11-08 4:54 PM PT",
+  "opened_at_utc": "2026-11-09T00:54:50Z",
+  "kind": "yes_basket",
+  "event": "Maduro Prison Time?",
+  "event_slug": "maduro-prison-time-527",
+  "resolves": "2028-01-01T04:59:00Z",
+  "rules": "Exactly one pays $1: the first prison sentence on this indictment, in years. No prison time includes an acquittal, a mistrial, no jail, and no sentence by Dec 31, 2027. Life is the top bracket.",
+  "adds_to": "The 5 shares in paper/2026-11-08-edge.json. The 40-60 ask is 15.9, so 10.9 more shares finish that touch.",
+  "size": "10.9",
+  "spent": "10.5076",
+  "fees": "0",
+  "payout_floor": "10.9",
+  "locked_profit": "0.3924",
+  "edge_per_share": "0.036",
+  "starting_cash": "814.06834",
+  "cash": "803.56074",
+  "legs": [
+    {"outcome": "No prison time", "price": "0.6", "size": "10.9", "fee": "0"},
+    {"outcome": "<20", "price": "0.051", "size": "10.9", "fee": "0"},
+    {"outcome": "20–40", "price": "0.039", "size": "10.9", "fee": "0"},
+    {"outcome": "40–60", "price": "0.044", "size": "10.9", "fee": "0"},
+    {"outcome": "60+", "price": "0.23", "size": "10.9", "fee": "0"}
+  ],
+  "note": "Paper only. The fee on this event is zero. Profit is locked only while every share is held. No order was sent."
+}

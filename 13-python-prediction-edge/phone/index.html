@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Edge" />
+  <meta name="theme-color" content="#121410" />
+  <title>Edge</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #121410;
+      --card: #1c2118;
+      --line: #31382c;
+      --text: #f3f1ea;
+      --muted: #a7a89a;
+      --take: #d6f27a;
+      --loss: #ff8d7a;
+      --ink: #14160f;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: var(--bg); color: var(--text); }
+    body {
+      font: 16px/1.4 ui-sans-serif, system-ui, sans-serif;
+      padding: 20px 16px calc(28px + env(safe-area-inset-bottom));
+    }
+    main { max-width: 440px; margin: 0 auto; }
+    h1 { font-size: 32px; line-height: 1; margin: 0 0 8px; letter-spacing: -0.04em; }
+    h2 { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0 8px; color: var(--muted); }
+    p { margin: 0; }
+    .lede { color: var(--muted); margin-bottom: 18px; }
+    section {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+    button {
+      appearance: none;
+      width: 100%;
+      min-height: 52px;
+      margin: 12px 0;
+      border: 0;
+      border-radius: 14px;
+      background: var(--text);
+      color: var(--ink);
+      font: 600 17px/1 ui-sans-serif, system-ui, sans-serif;
+    }
+    button:disabled { opacity: 0.55; }
+    .row { padding: 12px 0; border-top: 1px solid var(--line); }
+    .top { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+    .asset { font-size: 20px; font-weight: 650; }
+    .take { color: var(--take); font-weight: 650; }
+    .skip { color: var(--muted); }
+    .loss { color: var(--loss); }
+    .big { font-size: 28px; letter-spacing: -0.03em; font-weight: 650; }
+    .meta, .note { color: var(--muted); font-size: 14px; margin-top: 4px; }
+    ul { list-style: none; padding: 0; margin: 10px 0 0; }
+    li { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-top: 1px solid var(--line); }
+    .foot { color: var(--muted); font-size: 13px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Edge</h1>
+    <p class="lede">Runs in this browser. Paper only, and it does not send orders.</p>
+
+    <section>
+      <h2>15-minute crypto</h2>
+      <p>Polymarket Up/Down for BTC, ETH, and SOL. One contract in the last minute, and only when the edge after the fee is 2¢ to 3¢.</p>
+      <button id="check" type="button">Check this minute</button>
+      <div id="cycles">
+        <p class="note">Checking the open windows.</p>
+      </div>
+      <div id="week">
+        <p class="meta">Polymarket week, Nov 1–8, ending 3:15 PM PT. Last print, one contract.</p>
+        <p class="big take">+$0.65</p>
+        <p class="meta">85 trades, 80 wins. BTC −$0.04, ETH +$0.80, SOL −$0.12.</p>
+      </div>
+    </section>
+
+    <section>
+      <h2>Locked package</h2>
+      <div id="ticket">
+        <p>Millennium Prize, opened Nov 8, 2:54 PM PT</p>
+        <p class="big">+$1.17 locked</p>
+        <p class="meta">$24.04 spent, $25.21 payout floor, held through 2027.</p>
+        <ul>
+          <li><span>Birch and Swinnerton-Dyer</span><span>7¢</span></li>
+          <li><span>Hodge Conjecture</span><span>20¢</span></li>
+          <li><span>P versus NP</span><span>2¢</span></li>
+          <li><span>Riemann Hypothesis</span><span>6¢</span></li>
+          <li><span>Yang-Mills</span><span>27¢</span></li>
+          <li><span>No solution by Dec 31, 2027</span><span>30¢</span></li>
+        </ul>
+      </div>
+      <button id="refresh" type="button">Refresh asks</button>
+      <div id="basket"></div>
+    </section>
+
+    <p class="foot">Add Edge to the home screen. The phone reads the public books on its own.</p>
+  </main>
+  <script src="edge.js"></script>
+  <script>
+    const ASSETS = [
+      ["BTC", "BTC-USD", "btc"],
+      ["ETH", "ETH-USD", "eth"],
+      ["SOL", "SOL-USD", "sol"],
+    ];
+    const BASKET = "which-millennium-prize-problem-will-ai-solve-next";
+    const checkBtn = document.getElementById("check");
+    const refreshBtn = document.getElementById("refresh");
+    const cyclesEl = document.getElementById("cycles");
+    const basketEl = document.getElementById("basket");
+
+    const text = (el, value) => { el.textContent = value == null ? "" : String(value); };
+    const cents = (ask) => ask == null ? "—" : Math.round(Number(ask) * 100) + "¢";
+    const money = (value, digits) => {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return "—";
+      return (n < 0 ? "−$" : "$") + Math.abs(n).toFixed(digits == null ? 2 : digits);
+    };
+    const pt = (date) => new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/Los_Angeles",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    }).format(date) + " PT";
+
+    function bestAsk(book) {
+      const minSize = Number(book.min_order_size || 1);
+      let best = null;
+      for (const level of book.asks || []) {
+        const price = Number(level.price);
+        const size = Number(level.size);
+        if (!(size >= minSize && price > 0 && price < 1)) continue;
+        if (best == null || price < best) best = price;
+      }
+      return best;
+    }
+
+    async function loadJson(url) {
+      const response = await fetch(url, { cache: "no-store" });
+      if (!response.ok) throw new Error(String(response.status));
+      return response.json();
+    }
+
+    function renderCycles(rows, checked) {
+      cyclesEl.replaceChildren();
+      const stamp = document.createElement("p");
+      stamp.className = "meta";
+      text(stamp, checked);
+      cyclesEl.append(stamp);
+      for (const cycle of rows) {
+        const block = document.createElement("div");
+        block.className = "row";
+        const top = document.createElement("div");
+        top.className = "top";
+        const name = document.createElement("div");
+        name.className = "asset";
+        text(name, cycle.asset);
+        const flag = document.createElement("div");
+        flag.className = cycle.take ? "take" : "skip";
+        text(flag, cycle.take ? "Take" : "Skip");
+        top.append(name, flag);
+        const note = document.createElement("p");
+        note.className = "note";
+        text(note, cycle.note);
+        block.append(top, note);
+        if (cycle.spot != null || cycle.strike != null || cycle.yesAsk != null || cycle.noAsk != null) {
+          const meta = document.createElement("p");
+          meta.className = "meta";
+          const spot = cycle.spot == null ? "—" : Number(cycle.spot).toLocaleString("en-US", { maximumFractionDigits: 2 });
+          const strike = cycle.strike == null ? "not in yet" : Number(cycle.strike).toLocaleString("en-US", { maximumFractionDigits: 2 });
+          text(meta, "Spot " + spot + " · open " + strike + " · up " + cents(cycle.yesAsk) + " · down " + cents(cycle.noAsk));
+          block.append(meta);
+        }
+        cyclesEl.append(block);
+      }
+    }
+
+    async function oneAsset(asset, product, slug, start) {
+      const eventUrl = "https://gamma-api.polymarket.com/events?slug=" + slug + "-updown-15m-" + start;
+      const end = Math.floor(Date.now() / 1000);
+      const candleUrl = "https://api.exchange.coinbase.com/products/" + product + "/candles?granularity=60&start=" + (start - 2400) + "&end=" + end;
+      const events = await loadJson(eventUrl);
+      const event = events && events[0];
+      const market = event && (event.markets || [])[0];
+      if (!market || market.closed) {
+        return { asset, take: false, note: "No open 15-minute market." };
+      }
+      const candles = await loadJson(candleUrl);
+      const rows = (Array.isArray(candles) ? candles : [])
+        .filter((row) => Array.isArray(row) && row.length >= 5)
+        .map((row) => ({ time: Number(row[0]), open: Number(row[3]), close: Number(row[4]) }))
+        .sort((a, b) => a.time - b.time);
+      const spot = rows.length ? rows[rows.length - 1].close : null;
+      const opened = rows.find((row) => row.time === start);
+      const strike = opened ? opened.open : null;
+      const ends = Date.parse(market.endDate);
+      const secondsLeft = Number.isFinite(ends) ? Math.round((ends - Date.now()) / 1000) : 0;
+      let yesAsk = null;
+      let noAsk = null;
+      const outcomes = JSON.parse(market.outcomes || "[]");
+      const tokens = JSON.parse(market.clobTokenIds || "[]");
+      if (outcomes.length === tokens.length && tokens.length) {
+        const books = await Promise.all(tokens.map((id) => loadJson("https://clob.polymarket.com/book?token_id=" + id)));
+        const asks = {};
+        outcomes.forEach((name, i) => { asks[String(name).toLowerCase()] = bestAsk(books[i] || {}); });
+        yesAsk = asks.up != null ? asks.up : null;
+        noAsk = asks.down != null ? asks.down : null;
+      }
+      const rate = market.feeSchedule && market.feeSchedule.rate != null ? Number(market.feeSchedule.rate) : 0.07;
+      const sigma = strike != null && spot != null ? Edge.sigma1m(rows.map((row) => row.close)) : null;
+      const decision = Edge.cycleDecision({
+        spot, strike, sigma, yesAsk, noAsk, rate, secondsLeft,
+      });
+      return Object.assign({ asset, spot, strike, yesAsk, noAsk }, decision);
+    }
+
+    let cycleBusy = false;
+
+    async function loadCycle() {
+      if (cycleBusy) return;
+      cycleBusy = true;
+      checkBtn.disabled = true;
+      text(checkBtn, "Checking…");
+      const start = Math.floor(Date.now() / 1000 / 900) * 900;
+      try {
+        const rows = await Promise.all(ASSETS.map(async (item) => {
+          try {
+            return await oneAsset(item[0], item[1], item[2], start);
+          } catch (err) {
+            return { asset: item[0], take: false, note: item[0] + " did not answer." };
+          }
+        }));
+        renderCycles(rows, pt(new Date()));
+      } catch (err) {
+        cyclesEl.replaceChildren();
+        const note = document.createElement("p");
+        note.className = "note";
+        text(note, "The 15-minute books did not answer.");
+        cyclesEl.append(note);
+      } finally {
+        cycleBusy = false;
+        checkBtn.disabled = false;
+        text(checkBtn, "Check this minute");
+      }
+    }
+
+    function renderBasket(markets) {
+      basketEl.replaceChildren();
+      const line = document.createElement("p");
+      line.className = "note";
+      let cost = 0;
+      let complete = markets.length > 0;
+      for (const market of markets) {
+        const ask = Number(market.bestAsk);
+        const rate = market.feeSchedule && market.feeSchedule.rate != null ? Number(market.feeSchedule.rate) : 0;
+        if (!(market.acceptingOrders && ask > 0 && ask < 1)) {
+          complete = false;
+          continue;
+        }
+        cost += ask + Edge.polyFee(ask, rate);
+      }
+      if (!complete) {
+        text(line, "A full set of asks is not on the book, so there is no new package.");
+      } else {
+        const edge = 1 - cost;
+        text(line, edge > 0
+          ? "Asks plus fees are " + money(cost, 4) + " a share. That is " + money(edge, 4) + " under $1."
+          : "Asks plus fees are " + money(cost, 4) + " a share, over $1.");
+      }
+      basketEl.append(line);
+    }
+
+    async function loadBasket() {
+      refreshBtn.disabled = true;
+      text(refreshBtn, "Refreshing…");
+      try {
+        const events = await loadJson("https://gamma-api.polymarket.com/events?slug=" + BASKET);
+        const event = events && events[0];
+        renderBasket((event && event.markets) || []);
+      } catch (err) {
+        basketEl.replaceChildren();
+        const note = document.createElement("p");
+        note.className = "note";
+        text(note, "The package book did not answer.");
+        basketEl.append(note);
+      } finally {
+        refreshBtn.disabled = false;
+        text(refreshBtn, "Refresh asks");
+      }
+    }
+
+    checkBtn.addEventListener("click", () => { loadCycle(); });
+    refreshBtn.addEventListener("click", () => { loadBasket(); });
+    loadCycle();
+    loadBasket();
+    setInterval(() => { if (!document.hidden) loadCycle(); }, 20000);
+  </script>
+</body>
+</html>
