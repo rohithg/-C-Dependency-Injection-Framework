@@ -1,0 +1,57 @@
+{
+  "sampled_at_utc": "2026-11-09T00:05:12Z",
+  "rule": "Buy one share of every YES when the last prints plus taker fees cost less than $1. Hold to resolution.",
+  "reports": [
+    {
+      "tag": "soccer",
+      "hours_before_end": 0,
+      "max_print_age_s": 3600,
+      "events": 70,
+      "quoted": 70,
+      "mean_cost": 1.02885,
+      "under_1": 0,
+      "pnl_at_print": 0,
+      "under_1_after_1c": 0,
+      "pnl_after_1c": 0,
+      "winners_not_one": 0,
+      "skips": {},
+      "trades": []
+    },
+    {
+      "tag": "midterms",
+      "hours_before_end": 24,
+      "max_print_age_s": 86400,
+      "events": 458,
+      "quoted": 23,
+      "mean_cost": 1.04411,
+      "under_1": 2,
+      "pnl_at_print": 0.03313,
+      "under_1_after_1c": 0,
+      "pnl_after_1c": 0,
+      "winners_not_one": 0,
+      "skips": {
+        "no_print": 435
+      },
+      "trades": [
+        {
+          "slug": "how-many-mexico-border-seats-will-dems-win-in-the-house",
+          "title": "How many Mexico border seats will Dems win in the house?",
+          "n": 3,
+          "cost": 0.99062,
+          "winners": 1,
+          "pnl": 0.00938,
+          "pnl_after_1c": null
+        },
+        {
+          "slug": "how-many-house-seats-will-the-democrats-win-in-texas",
+          "title": "How many House seats will the Democrats win in Texas?",
+          "n": 8,
+          "cost": 0.97625,
+          "winners": 1,
+          "pnl": 0.02375,
+          "pnl_after_1c": null
+        }
+      ]
+    }
+  ]
+}
