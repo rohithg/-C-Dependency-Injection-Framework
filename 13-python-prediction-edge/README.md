@@ -66,3 +66,5 @@ python -m pytest -q
 `phone/index.html` is the paper screen for a phone browser. It does not use Krypt Trader and it does not need a computer left on. The page reads Polymarket's 15-minute Up/Down books and Coinbase's 1-minute prices itself, and it reads the Millennium Prize asks the same way. A take is still one contract in the last minute, and only when the edge after the fee is 2¢ to 3¢. Nothing on the page sends an order.
 
 `paper/15m-week-poly.json` is that rule on one week of those windows, Nov 1–8, 2016 windows, 85 trades. The entry there is the last trade print. The phone uses the ask.
+
+`paper/2026-11-08-copy.json` copies one open position from each of the week's top Polymarket wallets, $25 at the ask. Wallets whose book is outside 15¢ to 85¢, under $500, or hedged on both sides are skipped. Kalshi's public leaderboard hides those books, so nothing was copied there.
