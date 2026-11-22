@@ -10,9 +10,13 @@ The two-page "GTA 6 Edit Page: AI Producer Setup Prompt" turned into something y
   it every day. Python 3.10+, stdlib only; `cut` needs ffmpeg.
 - `clip.py` + `clipper/`: a local, free clipping pipeline (find moments, cut, auto-frame,
   caption, clean audio) and Clip Studio, a review page for approving drafts. See below.
+- `desk.py`: runs the whole page unattended and for free: watches the streamers, clips,
+  approves within quality gates, posts to TikTok, YouTube, Instagram and X at your slots,
+  reads view numbers and sends you the nightly report. See "desk.py: fully automatic, free".
 
 Unofficial fan-page kit, not affiliated with Rockstar Games, Take-Two, OpusClip, Kai Cenat or
-IShowSpeed. Nothing here signs in, spends credits or posts.
+IShowSpeed. It only posts to accounts you connect yourself with `desk.py login`, and nothing
+in it costs money: no paid APIs, no credits.
 
 ## Start
 
@@ -20,7 +24,8 @@ IShowSpeed. Nothing here signs in, spends credits or posts.
 python3 page.py init ~/sixstarsdesk --name "Six Stars Desk" --handle sixstarsdesk \
   --platforms "TikTok, YouTube Shorts, Instagram Reels, X" --timezone America/Los_Angeles
 cd ~/sixstarsdesk
-# install AI Producer (SETUP_PROMPT.md section 6), then:
+# free, fully automatic: see "desk.py" below (desk.py login ..., desk.py doctor, desk.py cron)
+# or the prompt's original route (AI Producer uses paid OpusClip credits):
 claude          # paste SETUP_PROMPT.md and say: Follow this prompt.
 ```
 
@@ -93,65 +98,92 @@ login, or put the browser in `desk.json` as `cookies_from_browser`.
 Tests: `python3 -m unittest discover -s tests` (the end-to-end tests build a synthetic stream
 with a facecam and a loud reaction, and need espeak-ng).
 
-## desk.py: hands-off mode
+## desk.py: fully automatic, free
 
-`desk.py tick` does one pass of the daily schedule. Run it from cron every 15 minutes and
-the page runs itself, apart from the steps listed in the next section.
+`desk.py tick` does one pass of the daily schedule; cron runs it every 15 minutes. Each pass:
 
 1. Checks every channel in `desk.json` → `watch` (YouTube/Twitch/Kick channel pages, or a
-   local folder your OBS recordings land in) for VODs that have finished. Live and upcoming
-   streams are skipped, and so are files still being written. The first time it sees a
-   channel it takes only the newest VOD, so turning it on doesn't clip a backlog.
+   local folder your OBS recordings land in) for finished VODs. Live and upcoming streams and
+   files still being written are skipped. The first time it sees a channel it takes only the
+   newest VOD, so turning it on doesn't clip a backlog.
 2. Clips each new VOD (`clips_per_vod` drafts) with the pipeline above.
-3. At `countdown.at` (default 20:00) it builds a top-5 countdown from today's drafts if
-   there are at least `min_new_clips`.
-4. Auto-approve, when `auto_approve.enabled` is true and the date is past `after`, approves
-   drafts scoring `min_score` or more. Keep it off until you've approved a week of
-   drafts by hand and trust the picks; the prompt's "yes before anything goes out" rule
-   still applies until you turn it on yourself.
-5. Schedules approved clips on every platform at the next free slot in `slots` (staggered
-   20 min per platform) through [Upload-Post](https://www.upload-post.com). Each post
-   gets the caption from `posts/<slug>.md`, streamer hashtags, a first comment with the
-   source VOD and timestamp, and YouTube title/description. Each one is added to
-   `board.csv`, and its live URL is filled in once it's up.
-6. Reads 24h / 72h / 7d views (and likes/comments) for each posted URL with yt-dlp into
-   `board.csv`. Only the checkpoint that is due is filled; a missed one stays blank.
-7. Sends one push with what changed ("3 new drafts. Best: Kai vs 6 stars", "4 posts
-   scheduled") to your phone via [ntfy](https://ntfy.sh) and/or a Discord webhook.
+3. At `countdown.at` (default 20:00) it builds a top-5 countdown from today's drafts.
+4. **Auto-approves** (on by default) drafts that pass the quality gates: score ≥
+   `min_score`, 12 to 60 s (countdowns up to 180 s), loudness within 1.5 LU of -14, a hook and
+   a credit, no slur/spoiler skip. At most `max_per_day`, best first. Clips with slurs are
+   never even rendered.
+5. Books each approved clip into the next free slot per platform (`slots`, staggered 20 min)
+   in a local outbox, then **posts what's due** for free:
 
-A lock keeps two ticks from running at once, and a VOD that fails three times is reported
-and skipped.
+   | Platform | Route | Cost | Why this route |
+   |---|---|---|---|
+   | YouTube Shorts | YouTube Data API | free, 100 uploads/day | Uploads from unaudited apps are public since Nov 2026 |
+   | Instagram Reels | Instagram Graph API (Facebook Login) | free, 100 posts/day | The route that takes a local file; the Page token doesn't expire |
+   | TikTok | your logged-in browser (Playwright) | free | TikTok's API keeps posts private until an audit that personal tools don't qualify for |
+   | X | your logged-in browser (Playwright) | free | The X API has no free tier any more ($0.015 a post) |
+
+   Captions come from `posts/<slug>.md` with streamer hashtags. The source VOD and timestamp
+   go in the YouTube description and as the first comment on YouTube and Instagram. Campaign
+   clips get `#ad`, and on YouTube the paid-placement flag. Each post's live URL goes into
+   `board.csv`. A failed post is retried after 30 and 60 minutes, then reported. If the
+   computer was asleep at slot time, the post goes out on the next pass.
+6. Reads the 24h / 72h / 7d views: through the YouTube and Instagram APIs for posts it
+   made, and yt-dlp for the rest. Only the checkpoint that is due is filled.
+7. After `reports.at` (23:30) it adds the nightly best/worst, and on Sundays the weekly
+   medians, to the push it sends you (free [ntfy](https://ntfy.sh) app, or a Discord webhook).
+
+### One-time setup (about an hour)
 
 ```bash
-pip install -r requirements.txt
-python3 page.py init ~/sixstarsdesk --name "Six Stars Desk"   # also writes desk.json
-# edit ~/sixstarsdesk/desk.json: watch list, timezone, slots, publish.user, notify.ntfy_topic
-export UPLOAD_POST_API_KEY=...         # from app.upload-post.com; never put it in a file in the repo
-python3 desk.py tick ~/sixstarsdesk    # one pass, to check it works
-python3 desk.py cron ~/sixstarsdesk    # prints the crontab line and a macOS LaunchAgent
+pip install -r requirements.txt && python3 -m playwright install chromium
+python3 page.py init ~/sixstarsdesk --name "Six Stars Desk"   # writes desk.json too
+# edit ~/sixstarsdesk/desk.json: watch list, timezone, slots, notify.ntfy_topic,
+#   publish.browser.handles.tiktok
+python3 desk.py login youtube --client-secret ~/Downloads/client_secret_XXXX.json
+python3 desk.py login instagram --app-id 1234567890      # asks for the secret and token, hidden
+python3 desk.py login tiktok                             # a browser opens: log in, close it
+python3 desk.py login x
+python3 desk.py doctor ~/sixstarsdesk                    # every line should say ok
+python3 desk.py cron ~/sixstarsdesk                      # the crontab line / macOS LaunchAgent
 ```
+
+The Google Cloud steps for YouTube are at the top of `clipper/posters/youtube.py`, and the
+Meta app steps for Instagram at the top of `clipper/posters/instagram.py`. Tokens and browser
+sessions are kept in `~/.config/clipper` (mode 600), never in the page folder or the repo.
+Keep the computer awake (macOS: Settings → Battery/Energy → prevent automatic sleeping when
+plugged in). The machine has to be yours: YouTube blocks downloads from cloud servers.
+
+**Risks:**
+- Automating the TikTok and X web uploaders is against their terms. Those accounts can be
+  limited or banned, and the risk is yours.
+- If either site changes its upload page, override the selector in
+  `desk.json` → `publish.browser.selectors` (the defaults are in
+  `clipper/posters/browser.py`). The push tells you when posting starts failing.
+- To avoid the browser route on X entirely, use the paid API instead.
 
 | Command | What it does |
 |---|---|
 | `desk.py tick PAGE` / `run PAGE --every 15` | One pass / loop forever (if you'd rather not use cron) |
+| `desk.py doctor PAGE` | Checks ffmpeg, watch list, notifications, auto-approve and every platform login |
+| `desk.py login youtube\|instagram\|tiktok\|x` | Connect a platform once |
+| `desk.py outbox PAGE [--retry POST_ID]` | Posts waiting, posted, failed; retry a failed one |
 | `desk.py list PAGE` | Drafts best first, with status, score, length, hook and alternatives |
-| `desk.py approve PAGE kai_part1/m01 [--hook "..."] [--post]` | Approve (re-rendering text if the hook changed), and with `--post` schedule it everywhere |
-| `desk.py schedule PAGE ID [--platforms tiktok x] [--campaign "Brand"]` | Schedule an approved clip; `--campaign` adds `#ad` and the paid-partnership label |
+| `desk.py approve PAGE kai_part1/m01 [--hook "..."] [--post]` | Approve by hand (re-rendering text if the hook changed), `--post` books it |
+| `desk.py schedule PAGE ID [--platforms tiktok x] [--campaign "Brand"]` | Book an approved clip; `--campaign` adds `#ad` and the paid-placement flag |
 | `desk.py stats PAGE` | Fill due view checkpoints now |
 | `desk.py links PAGE --campaign "Brand" [--since 2026-11-20]` | Live post URLs to paste into the campaign dashboard |
 
-The studio's **Approve & post** button does the same as `approve --post`. Without an API key
-the clip is queued and goes out on the next tick that has one.
+Set `auto_approve.enabled` to false in `desk.json` to approve each clip yourself in the studio
+(**Approve & post**) or with `/desk-review`. The paid route is still supported: set
+`publish.provider` to `"upload-post"` and `UPLOAD_POST_API_KEY` to have Upload-Post schedule
+everything instead of the outbox.
 
-One-time Upload-Post setup: create a profile (its name goes in `publish.user`) and connect
-TikTok, YouTube, Instagram and X to it in their dashboard. Their free tier is small (check
-current limits); 3 to 4 clips a day on 4 platforms needs a paid plan.
+### Claude Code plugin (optional)
 
-### Claude Code plugin
-
-The repo is also a Claude Code plugin marketplace. Install it and Claude can drive the desk
-for you: set it up, run a tick, go through drafts with you (checking each frame sheet,
-suggesting hooks from what was said), and write the nightly or weekly report.
+Not needed for the automation above, which runs without Claude. If you use Claude Code,
+the repo is also a plugin marketplace. Claude can then set up the desk with you, run a tick,
+go through drafts (checking frame sheets, suggesting hooks from what was said) and write the
+nightly or weekly report.
 
 ```bash
 claude plugin marketplace add rohithg/-C-Dependency-Injection-Framework
@@ -159,26 +191,23 @@ claude plugin install gta6-edit-desk@rohithg-tools
 # or, in Claude Code: /plugin install gta6-edit-desk --marketplace rohithg/-C-Dependency-Injection-Framework
 ```
 
-Commands: `/desk-setup`, `/desk-tick`, `/desk-review`, `/desk-report nightly|weekly`. The
-skill never approves or posts without your "yes" unless you have turned on auto-approve.
+Commands: `/desk-setup`, `/desk-tick`, `/desk-review`, `/desk-report nightly|weekly`.
 
 ## What you still do by hand
 
-With `desk.py` on cron, finding moments, cutting, captions, approving (once you turn on
-auto-approve), scheduling, post links, view checkpoints and the countdown run without you.
-These stay with you, because they need your identity, your face or your judgement:
+With the defaults (free posting, auto-approve on) the daily loop needs nobody: find, clip,
+approve, post, read views, report. What's left either needs you or has no way in:
 
-| One-time (roughly an afternoon) | Daily |
+| Once | Ongoing |
 |---|---|
-| Create the 4 accounts (phone/email verification, names, bios, avatar you own) | Glance at the push and approve or skip the drafts (`/desk-review`, ~10 min), or spot-check if auto-approve is on |
-| Connect them to Upload-Post, put the API key in your shell profile, fill in `desk.json` | Record your on-camera reaction / explainer takes (~20 min) |
-| Sign up for Content Rewards (and any other campaign sites), payout and tax details | Paste `desk.py links --campaign X` into each campaign dashboard (no API for that) |
-| Read and pick campaign briefs; schedule campaign clips with `--campaign` | Reply to comments in the first hour (15 min every 2 to 3 hours) |
-| Install the cron line (or LaunchAgent) on a machine that stays on | Handle takedown requests the same day |
+| Create the 4 accounts (phone/email verification can't be automated, and shouldn't be) | Glance at the nightly push; turn off a streamer or format the weekly report says to cut |
+| The four `desk.py login` steps, plus the Google Cloud and Meta app setup | Paste `desk.py links --campaign X` into a campaign dashboard (Content Rewards has no API for submitting) |
+| Fill in `desk.json`, install the cron line, keep the computer on | Answer takedown requests (a legal reply has to come from you) |
+| | Log in again if a TikTok/X session expires (the push tells you) |
 
-At the prompt's pace (3 to 4 edits a day on 4 platforms), that's about **1 to 1.5 hours a
-day**, most of it comment replies and your own takes. Before the desk it was 2 to 4 hours,
-because posting ~400 uploads a month and reading every view count were manual.
+Comment replies and on-camera reaction takes from the original prompt are optional now; the
+automatic mode posts clips and countdowns only. Expect **about 10 minutes a day**, plus campaign
+submissions if you run campaigns.
 
 ## The $10k/month math
 
