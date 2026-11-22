@@ -2,6 +2,7 @@
 
 import csv
 import json
+import os
 import shutil
 import sys
 from datetime import date, datetime
@@ -14,8 +15,18 @@ import page as pagekit  # noqa: E402
 
 from .pipeline import finalize  # noqa: E402
 
-HASHTAGS = {"tiktok": "#gta6 #gta6clips #kaicenat", "youtube": "#gta6 #shorts",
+HASHTAGS = {"tiktok": "#gta6 #gta6clips", "youtube": "#gta6 #shorts",
             "instagram": "#gta6 #gta6clips", "x": ""}
+
+
+def hashtags(platform, credit):
+    """2 to 4 tags (SETUP_PROMPT section 7), one per credited streamer; none on X."""
+    base = HASHTAGS[platform]
+    if not base:
+        return ""
+    names = [c.split(" (")[0] for c in credit.split(" · ") if c]
+    tags = base.split() + ["#" + "".join(ch for ch in n.lower() if ch.isalnum()) for n in names]
+    return " ".join(list(dict.fromkeys(tags))[:4])
 
 
 def clip_path(page_dir, clip_id):
@@ -40,7 +51,7 @@ def clips(page_dir):
         meta["moment"] = {k: v for k, v in meta["moment"].items() if k != "words"}
         meta.update(id=cid, vod=cid.split("/")[0])
         out.append(meta)
-    out.sort(key=lambda m: ({"draft": 0, "approved": 1, "posted": 2}.get(m["status"], 3),
+    out.sort(key=lambda m: ({"draft": 0, "approved": 1, "scheduled": 2, "posted": 3}.get(m["status"], 4),
                             m.get("kind") != "countdown", -m["moment"].get("score", 0)))
     return out
 
@@ -60,9 +71,14 @@ def approve(page_dir, clip_id, slug):
         streamer = "countdown"
     else:
         streamer = src.get("streamer") or (meta["credit"].split(" (")[0] if meta["credit"] else vod)
-    name = pagekit.export_name(date.today().isoformat(), streamer, slug)
-    shutil.copy(clip_dir / "final.mp4", page_dir / "exports" / name)
     post_slug = pagekit.slugify(slug)
+    name = pagekit.export_name(date.today().isoformat(), streamer, post_slug)
+    n = 2
+    while (page_dir / "exports" / name).exists() and meta.get("export") != name:
+        post_slug = f"{pagekit.slugify(slug)}-{n}"
+        name = pagekit.export_name(date.today().isoformat(), streamer, post_slug)
+        n += 1
+    shutil.copy(clip_dir / "final.mp4", page_dir / "exports" / name)
     sources = meta.get("sources") or [{"id": clip_id, "credit": meta["credit"],
                                        "vod_in": meta["moment"]["vod_in"],
                                        "vod_out": meta["moment"]["vod_out"]}]
@@ -73,8 +89,8 @@ def approve(page_dir, clip_id, slug):
     for platform, label in (("tiktok", "TikTok"), ("youtube", "YouTube Shorts"),
                             ("instagram", "Instagram Reels"), ("x", "X")):
         lines += [f"## {label}", meta["hook"], meta["credit"]]
-        if HASHTAGS[platform]:
-            lines.append(HASHTAGS[platform])
+        if hashtags(platform, meta["credit"]):
+            lines.append(hashtags(platform, meta["credit"]))
         lines.append("")
     (page_dir / "posts" / f"{post_slug}.md").write_text("\n".join(lines))
     with open(page_dir / "provenance.csv", "a", newline="") as f:
@@ -85,6 +101,19 @@ def approve(page_dir, clip_id, slug):
                                     date.today().isoformat(), s["credit"], name])
     meta.update(status="approved", export=name, slug=post_slug)
     _save(clip_dir, meta)
+    return meta
+
+
+def queue_post(page_dir, clip_id):
+    """Schedule now when Upload-Post is configured, else leave it for the next desk tick."""
+    clip_dir = clip_path(page_dir, clip_id)
+    meta = json.loads((clip_dir / "meta.json").read_text())
+    meta["queue"] = True
+    _save(clip_dir, meta)
+    if os.environ.get("UPLOAD_POST_API_KEY"):
+        from .publish import schedule
+        schedule(page_dir, clip_id)
+        meta = json.loads((clip_dir / "meta.json").read_text())
     return meta
 
 
@@ -144,14 +173,15 @@ ${c.final?`<video controls preload=metadata poster="/file?p=${encodeURIComponent
 <label>${c.kind=='countdown'?'Title':'Hook (6 words max)'}<input class=h value="${(c.hook||'').replace(/"/g,'&quot;')}"></label>
 <div>${(c.hooks||[]).map(h=>`<span class="tag chip">${h}</span>`).join('')}</div>
 <label>Credit<input class=c value="${(c.credit||'').replace(/"/g,'&quot;')}"></label>
-<button class=rb>Re-render text</button><button class="go ap">Approve</button><button class=rj>Reject</button>
+<button class=rb>Re-render text</button><button class=ap>Approve</button><button class="go apq">Approve &amp; post</button><button class=rj>Reject</button>
 <div style=margin-top:8px><select class=pf><option>tiktok<option>youtube<option>instagram<option>x</select>
 <select class=fm><option>single<option>story<option>countdown<option>reaction<option>explainer<option>ranking</select>
 <button class=ps>Mark posted</button> ${(c.posts||[]).map(p=>`<span class=tag>${p.platform} ${p.post_id}</span>`).join('')}</div>`;
 const q=s=>d.querySelector(s);
 d.querySelectorAll('.chip').forEach(ch=>ch.onclick=()=>{q('.h').value=ch.textContent});
 q('.rb').onclick=()=>post('/api/finalize',{id:c.id,hook:q('.h').value,credit:q('.c').value});
-q('.ap').onclick=()=>{const s=prompt('Slug for the export name',q('.h').value);if(s)post('/api/approve',{id:c.id,slug:s})};
+const approve=queue=>post('/api/approve',{id:c.id,hook:q('.h').value,credit:q('.c').value,queue});
+q('.ap').onclick=()=>approve(false);q('.apq').onclick=()=>approve(true);
 q('.rj').onclick=()=>post('/api/status',{id:c.id,status:'rejected'});
 q('.ps').onclick=()=>post('/api/posted',{id:c.id,platform:q('.pf').value,format:q('.fm').value});
 return d}
@@ -240,7 +270,15 @@ def make_handler(page_dir):
                 if self.path == "/api/finalize":
                     self._json(finalize(path, hook=body.get("hook"), credit=body.get("credit")))
                 elif self.path == "/api/approve":
-                    self._json(approve(root, cid, body["slug"]))
+                    meta = json.loads((path / "meta.json").read_text())
+                    if meta["status"] not in ("approved", "scheduled"):
+                        hook, credit = body.get("hook", meta["hook"]), body.get("credit", meta["credit"])
+                        if (hook, credit) != (meta["hook"], meta["credit"]):
+                            finalize(path, hook=hook, credit=credit)
+                        meta = approve(root, cid, body.get("slug") or hook)
+                    if body.get("queue") and meta["status"] == "approved":
+                        meta = queue_post(root, cid)
+                    self._json(meta)
                 elif self.path == "/api/posted":
                     self._json({"post_id": mark_posted(root, cid, body["platform"],
                                                        body.get("format", "single"))})

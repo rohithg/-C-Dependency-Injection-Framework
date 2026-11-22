@@ -19,7 +19,7 @@ TEMPLATE = HERE / "template"
 BOARD_COLUMNS = [
     "post_id", "date", "platform", "format", "streamer", "vod_id", "in_out", "hook",
     "cold_open", "caption_look", "length_sec", "project_url", "views_24h", "views_72h",
-    "views_7d", "likes", "shares", "saves", "comments", "campaign", "test", "notes",
+    "views_7d", "likes", "shares", "saves", "comments", "campaign", "test", "notes", "post_url",
 ]
 CHECKPOINTS = {"24h": timedelta(hours=24), "72h": timedelta(hours=72), "7d": timedelta(days=7)}
 PLATFORMS = {"tiktok", "youtube", "instagram", "x"}
@@ -46,7 +46,7 @@ def board_path(page):
 
 def read_board(page):
     with open(board_path(page), newline="") as f:
-        return list(csv.DictReader(f))
+        return [{c: row.get(c) or "" for c in BOARD_COLUMNS} for row in csv.DictReader(f)]
 
 
 def write_board(page, rows):

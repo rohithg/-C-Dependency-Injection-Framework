@@ -1,1 +1,1 @@
-post_id,date,platform,format,streamer,vod_id,in_out,hook,cold_open,caption_look,length_sec,project_url,views_24h,views_72h,views_7d,likes,shares,saves,comments,campaign,test,notes
+post_id,date,platform,format,streamer,vod_id,in_out,hook,cold_open,caption_look,length_sec,project_url,views_24h,views_72h,views_7d,likes,shares,saves,comments,campaign,test,notes,post_url
