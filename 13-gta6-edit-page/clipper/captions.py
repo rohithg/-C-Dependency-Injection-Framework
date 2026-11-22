@@ -59,20 +59,22 @@ def caption_events(words, caption_y=None, highlight="#FFE500"):
     """One event per spoken word: the cue stays up, the current word is coloured and pops."""
     y = min(max(caption_y or int(H * 0.66), SAFE_TOP), SAFE_BOTTOM)
     hl = _bgr(highlight)
-    lines = []
+    events = []
     for cue in cues(words):
         shown = [_esc(mask(w["word"])) for w in cue]
         for i, w in enumerate(cue):
             end = cue[i + 1]["start"] if i + 1 < len(cue) else w["end"] + 0.25
-            if end <= w["start"]:
-                continue
             text = " ".join(
                 f"{{\\c{hl}\\fscx118\\fscy118\\t(0,120,\\fscx100\\fscy100)}}{s}"
                 f"{{\\c&H00FFFFFF&\\fscx100\\fscy100}}" if j == i else s
                 for j, s in enumerate(shown))
-            lines.append(f"Dialogue: 1,{_ts(w['start'])},{_ts(end)},Cap,,0,0,0,,"
-                         f"{{\\pos({W // 2},{y})}}{text}")
-    return lines
+            events.append([w["start"], end, text])
+    events.sort(key=lambda e: e[0])
+    # Fast talk gives overlapping word times; two cues on screen at once render as garbage.
+    for e, nxt in zip(events, events[1:]):
+        e[1] = min(e[1], nxt[0])
+    return [f"Dialogue: 1,{_ts(s)},{_ts(e)},Cap,,0,0,0,,{{\\pos({W // 2},{y})}}{text}"
+            for s, e, text in events if e > s]
 
 
 def text_event(start, end, style, text, y, layer=2, fade_in=0, fade_out=150):
