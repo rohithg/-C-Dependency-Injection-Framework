@@ -46,3 +46,7 @@ csc /out:DIFramework.exe DIContainer.cs
 - Generics vs reflection
 - C# type system
 - Memory management
+
+## Other projects in this repo
+
+- `13-gta6-edit-page/`: setup prompt, page template and bookkeeping CLI for a GTA 6 stream-edit page (Claude Code + AI Producer).
