@@ -8,7 +8,7 @@ import numpy as np
 from . import framing
 from . import words as W
 from .captions import build_ass
-from .media import ffmpeg, frame_sheet, loudness_curve, probe
+from .media import encoder_args, ffmpeg, frame_sheet, loudness_curve, probe
 
 COLD_OPEN = (0.6, 1.4)
 CLEAN = "highpass=f=70,afftdn=nf=-25"
@@ -123,8 +123,8 @@ def master(out_dir, inputs, vgraph, agraph, ass_text, name="final.mp4", tries=6)
 
     (out_dir / "captions.ass").write_text(ass_text, encoding="utf-8")
     ffmpeg(*ins, "-i", wav, "-filter_complex", f"{vgraph};[v]ass=captions.ass[vo]",
-           "-map", "[vo]", "-map", f"{len(inputs)}:a", "-r", 30, "-c:v", "libx264",
-           "-preset", "medium", "-crf", 18, "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k",
+           "-map", "[vo]", "-map", f"{len(inputs)}:a", "-r", 30, *encoder_args(final=True),
+           "-c:a", "aac", "-b:a", "192k",
            "-movflags", "+faststart", "-shortest", name, cwd=out_dir)
     wav.unlink(missing_ok=True)
     final = out_dir / name

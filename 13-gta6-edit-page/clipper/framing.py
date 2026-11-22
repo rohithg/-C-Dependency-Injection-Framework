@@ -13,7 +13,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from .media import probe
+from .media import encoder_args, probe
 
 W, H = 1080, 1920
 CAM_MAX = 768
@@ -197,8 +197,7 @@ def render_base(src, out, layout="auto", cam=None, peak=None, audio_filter="anul
     vf, cam_h = filter_for(layout, cam, sw, sh, peak)
     subprocess.run(["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-i", str(src),
                     "-filter_complex", f"{vf};[0:a]{audio_filter}[a]", "-map", "[v]", "-map", "[a]",
-                    "-c:v", "libx264", "-preset", "veryfast", "-crf", "16", "-pix_fmt", "yuv420p",
-                    "-c:a", "aac", "-b:a", "192k", str(out)], check=True)
+                    *encoder_args(final=False), "-c:a", "aac", "-b:a", "192k", str(out)], check=True)
     return {"layout": layout, "cam": list(cam) if cam else None, "seam": cam_h}
 
 
@@ -210,8 +209,8 @@ def _render_track(src, out, faces, info, peak, audio_filter):
         ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
          "-f", "rawvideo", "-pix_fmt", "bgr24", "-s", f"{W}x{H}", "-r", "30", "-i", "-",
          "-i", str(src), "-filter_complex", f"[1:a]{audio_filter}[a]", "-map", "0:v", "-map", "[a]",
-         "-c:v", "libx264", "-preset", "veryfast", "-crf", "16", "-pix_fmt", "yuv420p",
-         "-c:a", "aac", "-b:a", "192k", "-shortest", str(out)], stdin=subprocess.PIPE)
+         *encoder_args(final=False), "-c:a", "aac", "-b:a", "192k", "-shortest", str(out)],
+        stdin=subprocess.PIPE)
     cap = cv2.VideoCapture(str(src))
     src_fps = cap.get(cv2.CAP_PROP_FPS) or fps
     frame, src_idx = None, -1

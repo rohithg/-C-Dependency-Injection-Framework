@@ -1,6 +1,9 @@
 import json
+import os
 import shutil
 import subprocess
+import sys
+from functools import lru_cache
 
 import numpy as np
 
@@ -19,6 +22,35 @@ def run(cmd, cwd=None):
 
 def ffmpeg(*args, cwd=None):
     return run(["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", *map(str, args)], cwd=cwd)
+
+
+@lru_cache(maxsize=1)
+def _hw_encoder():
+    choice = os.environ.get("CLIPPER_ENCODER", "auto")
+    if choice != "auto":
+        return choice
+    try:
+        listed = subprocess.run(["ffmpeg", "-hide_banner", "-encoders"], capture_output=True,
+                                text=True).stdout
+    except OSError:
+        return "libx264"
+    if sys.platform == "darwin" and "h264_videotoolbox" in listed:
+        return "h264_videotoolbox"
+    if "h264_nvenc" in listed and shutil.which("nvidia-smi"):
+        return "h264_nvenc"
+    return "libx264"
+
+
+def encoder_args(final=True):
+    """H.264 settings: hardware encoder when present (several times faster), else x264.
+    Set CLIPPER_ENCODER=libx264 to force software."""
+    enc = _hw_encoder()
+    if enc == "h264_videotoolbox":
+        return ["-c:v", enc, "-b:v", "14M" if final else "20M", "-pix_fmt", "yuv420p"]
+    if enc == "h264_nvenc":
+        return ["-c:v", enc, "-preset", "p5", "-cq", "19" if final else "16", "-pix_fmt", "yuv420p"]
+    return ["-c:v", "libx264", "-preset", "medium" if final else "veryfast",
+            "-crf", "18" if final else "16", "-pix_fmt", "yuv420p"]
 
 
 def probe(path):
@@ -53,6 +85,7 @@ def loudness_curve(path, hop=0.5, rate=8000):
         frames = samples[: n * (block // 2)].reshape(n, -1) / 32768.0
         rms = np.sqrt(np.mean(frames ** 2, axis=1)) + 1e-9
         levels.extend(20 * np.log10(rms))
+    proc.stdout.close()
     proc.wait()
     return np.array(levels, dtype=np.float32)
 

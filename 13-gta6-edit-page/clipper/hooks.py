@@ -44,7 +44,7 @@ def best_quote(words, center, max_words=6):
         score = W.hype_score(run) * 10 - abs(run[0]["start"] - center)
         if score > best_score:
             best, best_score = run, score
-    text = " ".join(W.mask(w["word"]).strip(",.") for w in best)
+    text = " ".join(t for t in (W.mask(w["word"]).strip(",.-\u2014 ") for w in best) if t)
     return text[:1].upper() + text[1:] if text else ""
 
 

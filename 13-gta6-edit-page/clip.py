@@ -12,61 +12,17 @@
 import argparse
 import json
 import sys
-from datetime import date
 from pathlib import Path
 
 from clipper import moments as M
+from clipper import sources as S
 from clipper.media import require
+from clipper.sources import run_dir, source
 
-PLATFORM_NAMES = {"youtube": "YouTube", "twitch": "Twitch", "kick": "Kick", "twitter": "X"}
-
-
-def run_dir(page, vod):
-    path = Path(page) / "runs" / vod
-    path.mkdir(parents=True, exist_ok=True)
-    return path
-
-
-def fetch(page, url, section=None, streamer=None):
-    """Returns the vod id. A local file is registered in place instead of downloaded."""
-    local = Path(url)
-    if local.exists():
-        vod = local.stem
-        meta = {"url": str(local.resolve()), "path": str(local.resolve()), "id": vod,
-                "streamer": streamer or "", "platform": "", "offset": 0.0}
-    else:
-        from yt_dlp import YoutubeDL
-        from yt_dlp.utils import download_range_func
-
-        with YoutubeDL({"quiet": True, "no_warnings": True}) as ydl:
-            info = ydl.extract_info(url, download=False)
-        vod = info["id"]
-        out = run_dir(page, vod)
-        opts = {"format": "bv*[height<=1080]+ba/b[height<=1080]/b", "quiet": True,
-                "outtmpl": str(out / "source.%(ext)s"), "merge_output_format": "mp4"}
-        offset = 0.0
-        if section:
-            a, b = (M.parse_ts(x) for x in section.split("-"))
-            opts.update(download_ranges=download_range_func(None, [(a, b)]),
-                        force_keyframes_at_cuts=True)
-            offset = a
-        with YoutubeDL(opts) as ydl:
-            ydl.download([url])
-        path = next(out.glob("source.*"))
-        meta = {"url": info.get("webpage_url", url), "path": str(path), "id": vod,
-                "title": info.get("title", ""),
-                "streamer": streamer or info.get("uploader") or info.get("channel") or "",
-                "platform": PLATFORM_NAMES.get(info.get("extractor_key", "").lower(),
-                                               info.get("extractor_key", "")),
-                "offset": offset}
-    meta["fetched_on"] = date.today().isoformat()
-    (run_dir(page, vod) / "source.json").write_text(json.dumps(meta, indent=2))
-    print(f"{vod}: {meta['path']}")
+def fetch(page, url, section=None, streamer=None, audio_only=True):
+    vod = S.fetch(page, url, section, streamer, audio_only=audio_only)
+    print(f"{vod}: {S.source(page, vod)['path']}")
     return vod
-
-
-def source(page, vod):
-    return json.loads((Path(page) / "runs" / vod / "source.json").read_text())
 
 
 def scan(page, vod, top=10, timestamps=None, model="base.en", threshold=6.0, chat=False):
@@ -89,24 +45,25 @@ def scan(page, vod, top=10, timestamps=None, model="base.en", threshold=6.0, cha
 
 
 def render(page, vod, ids=None, top=5, layout="auto", facecam=None, credit=None,
-           model="base.en", cold_open=True, jumpcuts=True):
-    from clipper.pipeline import render_clip
+           model="base.en", cold_open=True, jumpcuts=True, jobs=None):
+    from clipper.jobs import load_moments, render_many
 
     src = source(page, vod)
-    found = json.loads((run_dir(page, vod) / "moments.json").read_text())
+    found = load_moments(page, vod)
     chosen = [m for m in found if (m["id"] in ids if ids else not m["skip"])][: (None if ids else top)]
     if credit is None:
         who = src.get("streamer") or vod
         credit = f"{who} ({src['platform']})" if src.get("platform") else who
     cam = tuple(int(v) for v in facecam.split(",")) if facecam else None
-    for m in chosen:
-        meta = render_clip(src["path"], m, run_dir(page, vod) / "clips" / m["id"], credit=credit,
-                           model=model, layout=layout, cam=cam, cold_open=cold_open,
-                           jumpcuts=jumpcuts)
+    metas = []
+    for mid, meta in render_many(page, vod, chosen, credit, model, layout, cam, cold_open,
+                                 jumpcuts, jobs):
         extra = (f" -{meta.get('dead_air_cut', 0)}s dead air, {meta.get('lufs')} LUFS"
                  if meta["status"] == "draft" else "")
-        print(f"{m['id']}: {meta['status']} {meta.get('layout', '')}{extra} "
+        print(f"{mid}: {meta['status']} {meta.get('layout', '')}{extra} "
               f"{meta.get('final', meta.get('skip'))}")
+        metas.append(meta)
+    return metas
 
 
 def main(argv=None):
@@ -123,12 +80,14 @@ def main(argv=None):
             s.add_argument("--credit", help='default: "<uploader> (<platform>)"')
             s.add_argument("--no-cold-open", action="store_true")
             s.add_argument("--no-jumpcuts", action="store_true", help="keep dead air")
+            s.add_argument("--jobs", type=int, help="clips rendered in parallel (default: cores/2, max 3)")
 
     s = sub.add_parser("fetch")
     s.add_argument("page")
     s.add_argument("url")
     s.add_argument("--section", help="HH:MM:SS-HH:MM:SS, download only this part")
     s.add_argument("--streamer")
+    s.add_argument("--video", action="store_true", help="download the whole video, not audio-first")
 
     s = sub.add_parser("scan")
     s.add_argument("page")
@@ -150,6 +109,7 @@ def main(argv=None):
     s.add_argument("url")
     s.add_argument("--section")
     s.add_argument("--streamer")
+    s.add_argument("--video", action="store_true", help="download the whole video, not audio-first")
     s.add_argument("--timestamps")
     s.add_argument("--threshold", type=float, default=6.0)
     s.add_argument("--chat", action="store_true", help="use the chat replay as a signal")
@@ -180,18 +140,18 @@ def main(argv=None):
         layout = "stack"
 
     if a.cmd == "fetch":
-        fetch(a.page, a.url, a.section, a.streamer)
+        fetch(a.page, a.url, a.section, a.streamer, not a.video)
     elif a.cmd == "scan":
         scan(a.page, a.vod, a.top, a.timestamps, a.model, a.threshold, a.chat)
     elif a.cmd == "render":
         render(a.page, a.vod, a.ids, a.top, layout, a.facecam, a.credit, a.model,
-               not a.no_cold_open, not a.no_jumpcuts)
+               not a.no_cold_open, not a.no_jumpcuts, a.jobs)
     elif a.cmd == "auto":
         streamer = a.streamer or (a.credit.split(" (")[0] if a.credit else None)
-        vod = fetch(a.page, a.url, a.section, streamer)
+        vod = fetch(a.page, a.url, a.section, streamer, not a.video)
         scan(a.page, vod, max(10, a.top * 2), a.timestamps, a.model, a.threshold, a.chat)
         render(a.page, vod, None, a.top, layout, a.facecam, a.credit, a.model,
-               not a.no_cold_open, not a.no_jumpcuts)
+               not a.no_cold_open, not a.no_jumpcuts, a.jobs)
         print(f"\nreview: python3 clip.py studio {a.page}")
     elif a.cmd == "finalize":
         from clipper.pipeline import finalize
