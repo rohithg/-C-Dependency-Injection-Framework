@@ -47,6 +47,15 @@ class UnitTest(unittest.TestCase):
         self.assertAlmostEqual(peaks[0][0], 56.5, delta=1.5)
         self.assertGreater(peaks[0][1], peaks[1][1])
 
+    def test_sound_after_a_muted_stretch_is_not_a_spike(self):
+        levels = np.full(1200, -30.0, dtype=np.float32)
+        levels[200:400] = -180  # Twitch muted copyrighted music
+        levels[800:806] = -10
+        peaks = moments.loud_peaks(levels)
+        self.assertEqual(len(peaks), 1)
+        self.assertAlmostEqual(peaks[0][0], 401.5, delta=1.5)
+        self.assertLess(peaks[0][1], 30)
+
     def test_snap_window_starts_on_a_sentence_and_clamps_length(self):
         ws = ([W("setup", 40.0 + i * 0.4) for i in range(5)] +
               [W("payoff", 48.0 + i * 0.4) for i in range(8)] + [W("after", 70.0)])
@@ -106,6 +115,16 @@ class UnitTest(unittest.TestCase):
             self.assertIsNone(moments._inside_word(ws, t), t)
         self.assertLessEqual(end - start, 60)
 
+    def test_captions_never_overlap_on_fast_talk(self):
+        ws = [W("old", 0.0, 0.2), W("bro.", 0.2, 0.5), W("It", 0.5, 0.9), W("has", 0.9, 1.3),
+              W("to", 1.06, 1.2), W("be", 1.2, 1.3), W("a", 1.3, 1.4), W("way", 1.4, 1.7)]
+        spans = []
+        for line in captions.caption_events(ws):
+            a, b = line.split(",")[1:3]
+            spans.append(tuple(sum(float(x) * 60 ** i for i, x in enumerate(reversed(t.split(":"))))
+                               for t in (a, b)))
+        self.assertTrue(all(b <= nxt_a + 1e-6 for (_, b), (nxt_a, _) in zip(spans, spans[1:])), spans)
+
     def test_layout_choice(self):
         steady_small = [(i * 0.25, (1600, 60, 100, 100)) for i in range(40)]
         moving_big = [(i * 0.25, (100 + i * 20, 300, 260, 260)) for i in range(40)]
@@ -138,6 +157,22 @@ class UnitTest(unittest.TestCase):
                          "First Failed Mission")
         quiet = hooks.suggest([W("hello", 1)], 1, "Kai Cenat")
         self.assertIn("Kai was not ready for this", quiet)
+
+    def test_quote_hook_is_a_whole_line_and_prefers_the_repeated_one(self):
+        def said(*lines, t=0.0):
+            out = []
+            for line in lines:
+                for word in line.split():
+                    out.append(W(word, t))
+                    t += 0.3
+                t += 0.6
+            return out
+        # The line said twice wins over a generic exclamation; nothing ends on "the".
+        ws = said("Oh my god.", "I don't got no silencer.", "What?", "Oh, no.",
+                  "I don't got no silencer.", "Type in the")
+        self.assertEqual(hooks.best_quote(ws, 3.0), "I don't got no silencer")
+        long = said("it has to be a way for me to get in here bro")
+        self.assertEqual(hooks.best_quote(long, 1.0), "Me to get in here bro")
 
     def test_dead_air_skips_quiet_gaps_but_not_the_peak_or_loud_action(self):
         hop = 0.1

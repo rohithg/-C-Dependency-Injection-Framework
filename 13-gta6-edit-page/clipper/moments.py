@@ -15,6 +15,8 @@ from . import words as W
 from .media import loudness_curve, probe
 
 HOP = 0.5
+SILENCE_DB = -70.0
+MUTE_MARGIN = 20.0  # seconds; a clip spans about 14 s before the peak and 8+ after
 
 
 def parse_ts(text):
@@ -43,13 +45,20 @@ def loud_peaks(levels, min_gap=30.0, threshold=6.0, baseline_window=120.0):
     """(time, excess_db) for spikes above a rolling-median baseline, at least min_gap apart."""
     if len(levels) == 0:
         return []
+    # Muted stretches (Twitch mutes copyrighted music) are digital silence. Measured against
+    # them, any sound is a "spike", so they're neutralised and nothing near them is picked.
+    silent = np.asarray(levels) < SILENCE_DB
+    if silent.all():
+        return []
+    near_silence = np.convolve(silent, np.ones(int(2 * MUTE_MARGIN / HOP) + 1), "same") > 0
+    levels = np.where(silent, np.median(levels[~silent]), levels)
     win = max(3, int(baseline_window / HOP) | 1)
     padded = np.pad(levels, win // 2, mode="edge")
     view = np.lib.stride_tricks.sliding_window_view(padded, win)
     step = max(1, win // 8)
     baseline = np.repeat(np.median(view[::step], axis=1), step)[: len(levels)]
     smooth = np.convolve(np.pad(levels, 2, mode="edge"), np.ones(5) / 5, mode="valid")
-    excess = smooth - baseline
+    excess = np.where(near_silence, -np.inf, smooth - baseline)
     order = np.argsort(-excess)
     picked = []
     gap = int(min_gap / HOP)
