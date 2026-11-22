@@ -7,12 +7,21 @@ HYPE_TOKENS = {"lul", "lmao", "lmfao", "omegalul", "kekw", "icant", "w", "ww", "
                "pog", "poggers", "😂", "💀", "🤣", "6 stars", "six stars", "busted", "wasted"}
 
 
-def download(url, max_messages=None):
+def download(url, max_messages=None, timeout=1800):
+    """Chat replay messages, or [] when it can't be read: chat is a bonus signal and must
+    never stall an unattended run (chat-downloader otherwise waits for Enter on errors)."""
     from chat_downloader import ChatDownloader
 
-    chat = ChatDownloader().get_chat(url, max_messages=max_messages)
-    return [(m["time_in_seconds"], m.get("message", ""), (m.get("author") or {}).get("id"))
-            for m in chat if m.get("time_in_seconds") is not None and m["time_in_seconds"] >= 0]
+    try:
+        chat = ChatDownloader().get_chat(url, max_messages=max_messages, max_attempts=3,
+                                         retry_timeout=5, interruptible_retry=False,
+                                         timeout=timeout, inactivity_timeout=120)
+        return [(m["time_in_seconds"], m.get("message", ""), (m.get("author") or {}).get("id"))
+                for m in chat
+                if m.get("time_in_seconds") is not None and m["time_in_seconds"] >= 0]
+    except Exception as e:  # noqa: BLE001
+        print(f"chat replay unavailable ({type(e).__name__}: {e}); continuing without it")
+        return []
 
 
 def spikes(messages, bin_s=10, window_s=300, threshold=2.5, min_gap=30):
