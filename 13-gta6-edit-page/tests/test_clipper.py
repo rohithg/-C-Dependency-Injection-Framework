@@ -161,12 +161,13 @@ class EndToEndTest(unittest.TestCase):
     def tearDownClass(cls):
         shutil.rmtree(cls.tmp)
 
-    def test_desk_tick_watch_folder_to_scheduled_posts(self):
+    def test_desk_tick_watch_folder_to_posted_for_free(self):
         import desk
         from datetime import datetime
         from zoneinfo import ZoneInfo
-        from test_desk import FakeUploadPost
+        from test_free import FakePoster
 
+        os.environ["CLIPPER_CONFIG"] = str(self.tmp / "config")
         pg = page.init_page(self.tmp / "desk_pg", {"name": "Six Stars Desk"})
         rec = self.tmp / "recordings"
         rec.mkdir()
@@ -174,27 +175,30 @@ class EndToEndTest(unittest.TestCase):
         os.utime(self.vod, (time.time() - 600, time.time() - 600))
         cfg = json.loads((pg / "desk.json").read_text())
         cfg.update(watch=[{"streamer": "Kai Cenat", "platform": "YouTube", "url": str(rec)}],
-                   clips_per_vod=2, model="tiny.en", jobs=2,
-                   auto_approve={"enabled": True, "after": "2026-01-01", "min_score": 0},
-                   countdown={"enabled": False}, platforms=["tiktok", "youtube"])
+                   clips_per_vod=2, model="tiny.en", jobs=2, countdown={"enabled": False},
+                   auto_approve={"enabled": True, "min_score": 0}, platforms=["tiktok", "youtube"])
         (pg / "desk.json").write_text(json.dumps(cfg))
-        fake, sent = FakeUploadPost(), []
-        now = datetime(2026, 11, 22, 9, 0, tzinfo=ZoneInfo("America/Los_Angeles"))
-        report = desk.tick(pg, now=now, client=fake, counts=lambda url: {"views": 1},
-                           sender=lambda d, title, msg: sent.append(msg))
+        fakes, sent = {p: FakePoster(p) for p in ("tiktok", "youtube")}, []
+        kw = dict(get_poster=fakes.__getitem__, counts=lambda url: {"views": 1},
+                  sender=lambda d, title, msg: sent.append(msg))
+        tz = ZoneInfo("America/Los_Angeles")
+        report = desk.tick(pg, now=datetime(2026, 11, 22, 9, 0, tzinfo=tz), **kw)
 
         self.assertEqual(len(report["drafts"]), 2)
         self.assertEqual(len(report["approved"]), 2)
-        self.assertEqual(len(fake.uploads), 4)
-        self.assertEqual(sorted(u["scheduled_date"][11:16] for u in fake.uploads),
+        self.assertEqual(sorted(d["when"][11:16] for d in report["scheduled"]),
                          ["12:00", "12:20", "17:00", "17:20"])
+        self.assertEqual(report["posted"], [])
         src = json.loads((pg / "runs/kai_part1/source.json").read_text())
         self.assertTrue(src["video"])
-        self.assertEqual({r["status"] for r in studio_clips(pg)}, {"scheduled"})
-        self.assertEqual(sum(1 for r in page.read_board(pg) if r["post_url"]), 4)
         self.assertIn("2 new drafts", sent[0])
-        again = desk.tick(pg, now=now, client=fake, counts=lambda url: None, sender=lambda *a: None)
-        self.assertEqual((again["drafts"], len(fake.uploads)), ([], 4))
+        self.assertIn("2 auto-approved", sent[0])
+
+        later = desk.tick(pg, now=datetime(2026, 11, 22, 18, 0, tzinfo=tz), lister=lambda url: [], **kw)
+        self.assertEqual(len(later["posted"]), 4)
+        self.assertEqual(len(fakes["tiktok"].posted), 2)
+        self.assertEqual(sum(1 for r in page.read_board(pg) if r["post_url"]), 4)
+        self.assertEqual({c["status"] for c in studio_clips(pg)}, {"scheduled"})
 
     def test_auto_then_studio(self):
         import clip

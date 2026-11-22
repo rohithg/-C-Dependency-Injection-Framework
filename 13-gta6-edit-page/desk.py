@@ -1,17 +1,20 @@
 """The desk runner: the daily schedule (SETUP_PROMPT section 9) without you at the keyboard.
 
-  tick      one pass: new VODs -> drafts, nightly countdown, auto-approve (if on), schedule,
-            post URLs, view checkpoints, then one notification with what changed
+  tick      one pass: new VODs -> drafts, nightly countdown, auto-approve, book slots, post
+            what's due, view checkpoints, nightly/weekly report, one notification
   run       tick every N minutes until stopped
   list      drafts and their status, best first
   approve   approve a draft (optionally with a new hook) and schedule it with --post
   schedule  post an approved clip to every platform at its next free slot
   stats     fill due 24h / 72h / 7d view checkpoints now
   links     live post URLs for a campaign, ready to paste into its dashboard
+  login     connect YouTube / Instagram (free APIs) or TikTok / X (saved browser session) once
+  outbox    posts waiting for their slot, posted, failed (--retry ID)
+  doctor    check that every part can run unattended
   cron      print a crontab line (and a macOS LaunchAgent) that runs `tick` every 15 minutes
 
-Settings live in PAGE/desk.json. Secrets come from the environment: UPLOAD_POST_API_KEY,
-DISCORD_WEBHOOK_URL (optional).
+Settings live in PAGE/desk.json. Platform logins live in ~/.config/clipper (desk.py login).
+Optional environment: DISCORD_WEBHOOK_URL, and UPLOAD_POST_API_KEY only for the paid provider.
 """
 
 import argparse
@@ -30,7 +33,7 @@ sys.path.insert(0, str(HERE))
 
 import clip  # noqa: E402
 import page as pagekit  # noqa: E402
-from clipper import notify, publish, sources, stats, studio  # noqa: E402
+from clipper import notify, outbox, posters, publish, sources, stats, studio  # noqa: E402
 
 
 def _state_path(page):
@@ -85,15 +88,40 @@ def process_vod(page, desk, w, v):
     return [m for m in metas if m["status"] == "draft"]
 
 
+def quality_problem(c, min_score):
+    """Why a draft can't go out unseen, or None. Slurs are already skipped at render time."""
+    if c.get("skip"):
+        return c["skip"]
+    if c.get("kind") != "countdown" and c["moment"].get("score", 0) < min_score:
+        return f"score {c['moment'].get('score', 0)} < {min_score}"
+    longest = 180 if c.get("kind") == "countdown" else 60
+    if not 12 <= (c.get("duration") or 0) <= longest:
+        return f"length {c.get('duration')}s"
+    if c.get("lufs") is not None and abs(c["lufs"] + 14) > 1.5:
+        return f"loudness {c['lufs']} LUFS"
+    if not c.get("hook") or not c.get("credit"):
+        return "no hook or credit"
+    return None
+
+
 def auto_approve(page, desk, today):
     cfg = desk.get("auto_approve", {})
-    if not cfg.get("enabled") or today < date.fromisoformat(cfg.get("after", "2999-01-01")):
+    if not cfg.get("enabled") or (cfg.get("after") and today < date.fromisoformat(cfg["after"])):
         return []
+    budget = cfg.get("max_per_day", 8) - sum(
+        1 for c in studio.clips(page) if c.get("approved_on") == today.isoformat())
+    drafts = sorted((c for c in studio.clips(page) if c["status"] == "draft"),
+                    key=lambda c: (c.get("kind") != "countdown", -c["moment"].get("score", 0), c["id"]))
     done = []
-    for c in studio.clips(page):
-        if c["status"] == "draft" and not c.get("skip") and c["moment"].get("score", 0) >= cfg.get("min_score", 60):
-            studio.approve(page, c["id"], c["hook"])
-            done.append(c["id"])
+    for c in drafts:
+        if budget <= 0:
+            break
+        if quality_problem(c, cfg.get("min_score", 60)):
+            continue
+        studio.approve(page, c["id"], c["hook"])
+        studio.set_fields(page, c["id"], approved_on=today.isoformat(), auto_approved=True)
+        done.append(c["id"])
+        budget -= 1
     return done
 
 
@@ -122,7 +150,36 @@ def _quoted(hook):
     return hook if hook.startswith("\u201c") else f"\u201c{hook}\u201d"
 
 
-def tick(page, now=None, lister=sources.latest_vods, client=None, counts=None, sender=notify.send):
+def maybe_reports(page, desk, state, now):
+    """The section 13 nightly (and Sunday weekly) report, pushed once a day after reports.at."""
+    cfg = desk.get("reports", {"at": "23:30"})
+    if not cfg:
+        return []
+    h, m = map(int, cfg.get("at", "23:30").split(":"))
+    today = now.date().isoformat()
+    sent = state.setdefault("reports", [])
+    if (now.hour, now.minute) < (h, m) or today in sent:
+        return []
+    rows = pagekit.read_board(page)
+    out = []
+    night = pagekit.nightly(rows)
+    if night:
+        (bv, b), (wv, w) = night["best"], night["worst"]
+        out.append(f"Nightly: best {b['post_id']} {b['platform']} \u201c{b['hook']}\u201d {bv:,} views; "
+                   f"worst {w['post_id']} {w['platform']} {wv:,}")
+    if now.strftime("%a").lower() == cfg.get("weekly_day", "sun")[:3].lower():
+        wk = pagekit.weekly(rows, now.date())
+        if wk.get("posts"):
+            keep = [f"{k}={label}" for k, groups in wk["by"].items() for label, med, n, up in groups[:1] if up]
+            out.append(f"Weekly: {wk['posts']} posts, median {int(wk['median']):,} views. "
+                       f"Best: {', '.join(keep)}")
+    sent.append(today)
+    del sent[:-30]
+    return out
+
+
+def tick(page, now=None, lister=sources.latest_vods, client=None, counts=None, sender=notify.send,
+         get_poster=None):
     """One pass. Returns None without doing anything if another tick still holds the lock
     (a long VOD can outlast the 15-minute cron interval)."""
     page = Path(page)
@@ -134,13 +191,13 @@ def tick(page, now=None, lister=sources.latest_vods, client=None, counts=None, s
         lock.close()
         return None
     try:
-        return _tick(page, now, lister, client, counts, sender)
+        return _tick(page, now, lister, client, counts, sender, get_poster)
     finally:
         fcntl.flock(lock, fcntl.LOCK_UN)
         lock.close()
 
 
-def _tick(page, now, lister, client, counts, sender):
+def _tick(page, now, lister, client, counts, sender, get_poster):
     desk = publish.load_desk(page)
     if desk.get("cookies_from_browser"):
         os.environ["CLIPPER_COOKIES_FROM_BROWSER"] = desk["cookies_from_browser"]
@@ -148,7 +205,8 @@ def _tick(page, now, lister, client, counts, sender):
     now = now or datetime.now(ZoneInfo(tz))
     state = load_state(page)
     report = {"drafts": [], "countdown": None, "approved": [], "scheduled": [], "urls": 0, "stats": [],
-              "failed": []}
+              "failed": [], "posted": [], "post_failed": [], "reports": []}
+    get_poster = get_poster or (lambda platform: posters.get_poster(platform, desk))
 
     for w, v in new_vods(page, desk, state, lister):
         try:
@@ -169,20 +227,25 @@ def _tick(page, now, lister, client, counts, sender):
         traceback.print_exc()
     report["approved"] = auto_approve(page, desk, now.date())
 
-    can_publish = bool(os.environ.get("UPLOAD_POST_API_KEY")) or client is not None
-    if can_publish:
+    free = publish.provider(desk) != "upload-post"
+    if free or os.environ.get("UPLOAD_POST_API_KEY") or client is not None:
         for c in studio.clips(page):
             if c["status"] == "approved" and (c["id"] in report["approved"] or c.get("queue")):
                 try:
                     report["scheduled"] += publish.schedule(page, c["id"], client=client, now=now)
                 except Exception as exc:
                     print(f"schedule {c['id']}: {exc}")
+    if free:
+        report["posted"], report["post_failed"] = outbox.flush(page, now, get_poster)
+    else:
         try:
             report["urls"] = publish.resolve_urls(page, client)
         except Exception as exc:
             print(f"resolve urls: {exc}")
     report["stats"] = stats.pull(page, now.replace(tzinfo=None), counts=counts,
-                                 cookies_from_browser=desk.get("cookies_from_browser"))
+                                 cookies_from_browser=desk.get("cookies_from_browser"),
+                                 get_poster=get_poster)
+    report["reports"] = maybe_reports(page, desk, state, now)
     save_state(page, state)
 
     lines = []
@@ -191,13 +254,21 @@ def _tick(page, now, lister, client, counts, sender):
         lines.append(f"{len(report['drafts'])} new drafts. Best: {_quoted(best['hook'])}")
     if report["countdown"]:
         lines.append(f"Countdown ready: {_quoted(report['countdown']['hook'])}")
+    if report["approved"]:
+        lines.append(f"{len(report['approved'])} auto-approved")
     if report["scheduled"]:
         lines.append(f"{len(report['scheduled'])} posts scheduled")
+    if report["posted"]:
+        lines.append("Posted: " + ", ".join(f"{e['platform']} {e['url'] or e['id']}" for e in report["posted"]))
+    if report["post_failed"]:
+        lines.append("Couldn't post (gave up after 3 tries): " + "; ".join(
+            f"{e['platform']} {e['id']}: {e.get('error', '')}" for e in report["post_failed"]))
     if report["stats"]:
         top = max(report["stats"], key=lambda s: s[2])
         lines.append(f"{len(report['stats'])} view checkpoints read. Top: {top[0]} {top[2]:,} at {top[1]}")
     if report["failed"]:
         lines.append(f"Gave up after {MAX_FAILURES} tries: " + "; ".join(report["failed"]))
+    lines += report["reports"]
     if lines:
         try:
             sender(desk, "GTA 6 edit desk", "\n".join(lines) + "\nReview: python3 clip.py studio")
@@ -217,16 +288,50 @@ def cron_lines(page):
     page = Path(page).resolve()
     py = sys.executable
     log = page / ".desk" / "desk.log"
-    cron = f"*/15 * * * * cd {HERE} && {py} desk.py tick {page} >> {log} 2>&1"
+    path = os.environ.get("PATH", "/usr/local/bin:/usr/bin:/bin")
+    cron = f"*/15 * * * * cd {HERE} && PATH={path} {py} desk.py tick {page} >> {log} 2>&1"
     plist = f"""<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
   <key>Label</key><string>com.gta6desk.tick</string>
   <key>ProgramArguments</key><array><string>{py}</string><string>{HERE / 'desk.py'}</string><string>tick</string><string>{page}</string></array>
-  <key>StartInterval</key><integer>900</integer>
+  <key>EnvironmentVariables</key><dict><key>PATH</key><string>{path}</string></dict>
+  <key>StartInterval</key><integer>900</integer><key>RunAtLoad</key><true/>
   <key>StandardOutPath</key><string>{log}</string><key>StandardErrorPath</key><string>{log}</string>
 </dict></plist>"""
     return cron, plist
+
+
+def doctor(page, get_poster=None):
+    """One line per check: is every part of the automation able to run unattended?"""
+    import shutil
+    desk = publish.load_desk(page)
+    out = [("ffmpeg", bool(shutil.which("ffmpeg")), "install ffmpeg")]
+    out.append(("watch list", bool(desk.get("watch")), "add channels to desk.json watch"))
+    notify_ok = bool(desk.get("notify", {}).get("ntfy_topic") or os.environ.get(
+        desk.get("notify", {}).get("discord_webhook_env", "DISCORD_WEBHOOK_URL")))
+    out.append(("notifications", notify_ok, "set notify.ntfy_topic in desk.json"))
+    out.append(("auto-approve", bool(desk.get("auto_approve", {}).get("enabled")),
+                "set auto_approve.enabled true (otherwise you approve each clip)"))
+    if publish.provider(desk) == "upload-post":
+        out.append(("Upload-Post key", bool(os.environ.get("UPLOAD_POST_API_KEY")), "export UPLOAD_POST_API_KEY"))
+        return out
+    routes = posters.routes(desk)
+    for platform in desk.get("platforms", ["tiktok", "youtube", "instagram", "x"]):
+        route = routes[platform]
+        if route == "browser":
+            prof = posters.config_dir() / "browser" / platform
+            ok = prof.exists() and any(prof.iterdir())
+            out.append((f"{platform} (browser)", ok, f"python3 desk.py login {platform}"))
+            continue
+        try:
+            poster = (get_poster or (lambda p: posters.get_poster(p, desk)))(platform)
+            if hasattr(poster, "token"):
+                poster.token()
+            out.append((f"{platform} (api)", True, ""))
+        except Exception as exc:
+            out.append((f"{platform} (api)", False, str(exc)[:160]))
+    return out
 
 
 def main(argv=None):
@@ -257,6 +362,17 @@ def main(argv=None):
     s.add_argument("--campaign", required=True)
     s.add_argument("--since", help="YYYY-MM-DD")
     s = sub.add_parser("cron")
+    s.add_argument("page")
+    s = sub.add_parser("login", help="connect a platform once (youtube, instagram, tiktok, x)")
+    s.add_argument("platform", choices=["youtube", "instagram", "tiktok", "x"])
+    s.add_argument("--client-secret", help="youtube: the Desktop-app OAuth JSON from Google Cloud")
+    s.add_argument("--app-id", help="instagram: your Meta app id")
+    s.add_argument("--page-name", help="instagram: which Facebook Page, if you have several")
+    s.add_argument("--channel", help="tiktok/x: use an installed browser, e.g. chrome")
+    s = sub.add_parser("outbox", help="posts waiting, posted and failed")
+    s.add_argument("page")
+    s.add_argument("--retry", metavar="POST_ID", help="try a failed post again on the next tick")
+    s = sub.add_parser("doctor", help="check that everything can run unattended")
     s.add_argument("page")
     a = p.parse_args(argv)
 
@@ -289,11 +405,47 @@ def main(argv=None):
             print("scheduled" if meta["status"] == "scheduled" else "queued for the next tick")
     elif a.cmd == "stats":
         desk = publish.load_desk(a.page)
-        for post_id, cp, views in stats.pull(a.page, cookies_from_browser=desk.get("cookies_from_browser")):
+        for post_id, cp, views in stats.pull(a.page, cookies_from_browser=desk.get("cookies_from_browser"),
+                                             get_poster=lambda pf: posters.get_poster(pf, desk)):
             print(f"{post_id} {cp} {views:,}")
     elif a.cmd == "links":
         for url in campaign_links(a.page, a.campaign, a.since):
             print(url)
+    elif a.cmd == "login":
+        if a.platform == "youtube":
+            from clipper.posters import youtube
+            if not a.client_secret:
+                p.error("youtube needs --client-secret (see clipper/posters/youtube.py)")
+            youtube.login(a.client_secret)
+            print("YouTube connected")
+        elif a.platform == "instagram":
+            import getpass
+            from clipper.posters import instagram
+            if not a.app_id:
+                p.error("instagram needs --app-id (see clipper/posters/instagram.py)")
+            who = instagram.login(a.app_id, getpass.getpass("App secret: "),
+                                  getpass.getpass("Access token from Graph API Explorer: "), page_name=a.page_name)
+            print(f"Instagram connected: @{who}")
+        else:
+            from clipper.posters import browser
+            browser.login(a.platform, channel=a.channel)
+            print(f"{a.platform} session saved")
+    elif a.cmd == "outbox":
+        entries = outbox.load(a.page)
+        if a.retry:
+            for e in entries:
+                if e["id"] == a.retry:
+                    e.update(state="pending", attempts=0, next_try=e["due"])
+            outbox.save(a.page, entries)
+        for e in entries:
+            print(f"{e['id']:<13} {e['platform']:<9} {e['state']:<8} {e['due'][:16]}  "
+                  f"{e.get('url') or e.get('error', '')}")
+    elif a.cmd == "doctor":
+        bad = 0
+        for name, ok, fix in doctor(a.page):
+            print(f"{'ok ' if ok else 'FIX'}  {name:<22} {'' if ok else fix}")
+            bad += not ok
+        return 1 if bad else 0
     elif a.cmd == "cron":
         cron, plist = cron_lines(a.page)
         print("crontab -e, then add:\n" + cron)

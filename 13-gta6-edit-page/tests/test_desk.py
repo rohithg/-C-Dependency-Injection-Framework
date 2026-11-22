@@ -51,10 +51,21 @@ def make_approved_clip(page_dir, vod="kai_part1", mid="m01", hook="Kai vs 6 star
     return f"{vod}/{mid}"
 
 
+def set_desk(page_dir, **changes):
+    cfg = json.loads((page_dir / "desk.json").read_text())
+    cfg.update(changes)
+    (page_dir / "desk.json").write_text(json.dumps(cfg))
+    return cfg
+
+
 class DeskUnitTest(unittest.TestCase):
+    """The paid Upload-Post provider, and provider-independent desk behaviour."""
+
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())
+        os.environ["CLIPPER_CONFIG"] = str(self.tmp / "config")
         self.page = page.init_page(self.tmp / "pg", {"name": "Six Stars Desk"})
+        set_desk(self.page, publish={"provider": "upload-post", "user": "sixstars"})
 
     def tearDown(self):
         shutil.rmtree(self.tmp)
@@ -167,7 +178,7 @@ class DeskUnitTest(unittest.TestCase):
         (self.page / "desk.json").write_text(json.dumps(cfg))
         sent = []
         for _ in range(3):
-            desk.tick(self.page, lister=lambda url: [{"id": "gone", "url": str(self.tmp / "missing.mp4")}],
+            desk.tick(self.page, now=datetime(2026, 11, 22, 9, 0, tzinfo=ZoneInfo(TZ)), lister=lambda url: [{"id": "gone", "url": str(self.tmp / "missing.mp4")}],
                       counts=lambda url: None, sender=lambda d, t, m: sent.append(m))
         self.assertEqual(desk.load_state(self.page)["seen"]["chan"], ["gone"])
         self.assertEqual(len(sent), 1)
