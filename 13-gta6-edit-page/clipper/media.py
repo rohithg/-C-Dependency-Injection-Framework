@@ -95,3 +95,24 @@ def frame_sheet(src, out, start=0.0, duration=None, tiles=6):
     step = max(duration / tiles, 0.1)
     ffmpeg("-ss", start, "-t", duration, "-i", src,
            "-vf", f"fps=1/{step:.3f},scale=360:-2,tile={tiles}x1", "-frames:v", 1, out)
+
+
+def footage_problem(path, black_share=0.25, frozen_share=0.5):
+    """'black' / 'frozen' when that much of the video is black or a still picture, else None.
+    Run on base.mp4 (before captions), where moving text can't hide a frozen picture."""
+    import re
+    duration = probe(path)["duration"] or 1
+    proc = subprocess.run(
+        ["ffmpeg", "-hide_banner", "-nostats", "-i", str(path), "-an", "-vf",
+         "scale=320:-2,blackdetect=d=0.5:pic_th=0.95,freezedetect=n=0.003:d=2", "-f", "null", "-"],
+        capture_output=True, text=True)
+    black = sum(map(float, re.findall(r"black_duration:([\d.]+)", proc.stderr)))
+    frozen = sum(map(float, re.findall(r"freeze_duration: ([\d.]+)", proc.stderr)))
+    starts = re.findall(r"freeze_start: ([\d.]+)", proc.stderr)
+    if len(starts) > len(re.findall(r"freeze_end", proc.stderr)):
+        frozen += duration - float(starts[-1])
+    if black / duration >= black_share:
+        return "black"
+    if frozen / duration >= frozen_share:
+        return "frozen"
+    return None

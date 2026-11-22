@@ -12,6 +12,7 @@ from pathlib import Path
 import numpy as np
 
 HERE = Path(__file__).resolve().parent
+os.environ["OLLAMA_HOST"] = "http://127.0.0.1:9"  # never reach a real local model in tests
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE))
 

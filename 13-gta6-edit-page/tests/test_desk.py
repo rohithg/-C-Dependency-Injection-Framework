@@ -10,6 +10,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 HERE = Path(__file__).resolve().parent
+os.environ["OLLAMA_HOST"] = "http://127.0.0.1:9"  # never reach a real local model in tests
 sys.path.insert(0, str(HERE.parent))
 
 import desk  # noqa: E402
