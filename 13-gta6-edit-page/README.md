@@ -8,6 +8,8 @@ The two-page "GTA 6 Edit Page: AI Producer Setup Prompt" turned into something y
   exports/, posts/).
 - `page.py`: the bookkeeping the prompt asks for, so Claude Code doesn't have to improvise
   it every day. Python 3.10+, stdlib only; `cut` needs ffmpeg.
+- `clip.py` + `clipper/`: a local, free clipping pipeline (find moments, cut, auto-frame,
+  caption, clean audio) and Clip Studio, a review page for approving drafts. See below.
 
 Unofficial fan-page kit, not affiliated with Rockstar Games, Take-Two, OpusClip, Kai Cenat or
 IShowSpeed. Nothing here signs in, spends credits or posts.
@@ -38,6 +40,42 @@ claude          # paste SETUP_PROMPT.md and say: Follow this prompt.
 | `cut SRC 10:12:05 10:12:40 OUT --facecam x,y,w,h [--bleep 3-3.6]` | Fallback cut: 1080x1920, facecam on top, gameplay below, H.264/AAC 30 fps, muted bleeps. |
 
 Tests: `python3 -m unittest discover -s tests`
+
+## clip.py: the local clipping pipeline
+
+Does the "find, cut, frame, caption, clean, prep" part locally and free, so the page doesn't
+depend on AI Producer's beta access or credits. AI Producer is still the better editor for
+motion graphics and reference styles; use either per edit.
+
+```bash
+pip install -r requirements.txt            # plus ffmpeg on PATH
+python3 clip.py auto ~/sixstarsdesk "https://www.youtube.com/watch?v=<VOD>" \
+  --section 10:00:00-10:30:00 --credit "Kai Cenat (YouTube)" --top 5 --chat
+python3 clip.py studio ~/sixstarsdesk      # http://127.0.0.1:8765
+```
+
+| Step | What it does | Open-source project |
+|---|---|---|
+| fetch | Downloads a VOD or just one section of an 11 h stream | yt-dlp, ffmpeg |
+| scan | Loudness spikes over the streamer's own baseline, streamed over the whole VOD | ffmpeg, NumPy |
+| scan | Chat replay bursts (messages and LUL/KEKW/💀 per 10 s), `--chat` | chat-downloader |
+| scan | Transcribes only the candidates; scores hype phrases ("six stars", "busted", "no way"); skips slurs | faster-whisper (Whisper, CTranslate2, Silero VAD) |
+| scan | Timestamps from VOD comments/chapters, `--timestamps file.txt` | (built in) |
+| render | Cut snapped to sentence edges, 20 to 60 s, cold open (payoff repeated in the first second) | ffmpeg |
+| render | Auto layout: finds the facecam and stacks it over gameplay, follows a moving face for IRL footage, or blurred-fill for gameplay only | OpenCV + YuNet face detector |
+| render | Punch-in zoom on the peak | ffmpeg zoompan |
+| render | Word-by-word captions (one highlight colour, profanity masked), hook card, credit line, all outside the top and bottom 10% | libass via ffmpeg |
+| render | Rumble cut, denoise, two-pass loudness to -14 LUFS, profanity beeped | ffmpeg afftdn + loudnorm |
+| render | 1080x1920 H.264/AAC 30 fps (TikTok, Shorts, Reels, X), frame sheet, poster | ffmpeg |
+| studio | Watch drafts, edit hook/credit (re-renders text only), approve, reject | (built in) |
+| studio | Approve writes `exports/date_streamer_slug.mp4`, `posts/<slug>.md`, a `provenance.csv` row; "Mark posted" adds the post to `board.csv` | (built in) |
+
+Facecam detection is automatic; if it ever picks the wrong box, pass `--facecam x,y,w,h`
+(measure it once per streamer and keep it in `watchlist.md`). `--model small.en` transcribes
+more accurately than the default `base.en` at about 3x the time.
+
+Tests: `python3 -m unittest discover -s tests` (the end-to-end test builds a synthetic stream
+with a facecam and a loud reaction, and needs espeak-ng).
 
 ## What you still do by hand
 
