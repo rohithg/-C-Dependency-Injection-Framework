@@ -1,6 +1,6 @@
 {
   "name": "gta6-edit-desk",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Runs a GTA 6 stream-edit page: finds moments in new VODs, renders 9:16 drafts with captions, Clip Studio review, scheduled posting via Upload-Post, view checkpoints and nightly/weekly reviews.",
   "author": {"name": "rohithg"}
 }

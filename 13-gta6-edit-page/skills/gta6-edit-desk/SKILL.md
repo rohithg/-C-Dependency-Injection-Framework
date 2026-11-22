@@ -15,6 +15,7 @@ approvals always apply.
 | Goal | Command |
 |---|---|
 | Everything due right now (new VODs, countdown, auto-approve, booking, posting, view numbers, reports, notification) | `python3 ${CLAUDE_PLUGIN_ROOT}/desk.py tick PAGE` |
+| Set everything up on a fresh computer (interactive; the user does the logins) | `python3 ${CLAUDE_PLUGIN_ROOT}/desk.py setup PAGE` |
 | Is everything able to run unattended? | `python3 ${CLAUDE_PLUGIN_ROOT}/desk.py doctor PAGE` |
 | Connect a platform (free): youtube, instagram, tiktok or x | `python3 ${CLAUDE_PLUGIN_ROOT}/desk.py login <platform>` (the user does the login) |
 | Posts waiting / posted / failed, retry one | `python3 ${CLAUDE_PLUGIN_ROOT}/desk.py outbox PAGE [--retry POST_ID]` |

@@ -122,6 +122,10 @@ with a facecam and a loud reaction, and need espeak-ng).
    | TikTok | your logged-in browser (Playwright) | free | TikTok's API keeps posts private until an audit that personal tools don't qualify for |
    | X | your logged-in browser (Playwright) | free | The X API has no free tier any more ($0.015 a post) |
 
+   `desk.py setup`'s default "quick" mode uses the browser route for YouTube and Instagram
+   too, so connecting them is just a login. The table shows the official routes, which are
+   the safer choice for those two.
+
    Captions come from `posts/<slug>.md` with streamer hashtags. The source VOD and timestamp
    go in the YouTube description and as the first comment on YouTube and Instagram. Campaign
    clips get `#ad`, and on YouTube the paid-placement flag. Each post's live URL goes into
@@ -132,39 +136,65 @@ with a facecam and a loud reaction, and need espeak-ng).
 7. After `reports.at` (23:30) it adds the nightly best/worst, and on Sundays the weekly
    medians, to the push it sends you (free [ntfy](https://ntfy.sh) app, or a Discord webhook).
 
-### One-time setup (about an hour)
+### One-time setup: one command
 
 ```bash
-pip install -r requirements.txt && python3 -m playwright install chromium
-python3 page.py init ~/sixstarsdesk --name "Six Stars Desk"   # writes desk.json too
-# edit ~/sixstarsdesk/desk.json: watch list, timezone, slots, notify.ntfy_topic,
-#   publish.browser.handles.tiktok
-python3 desk.py login youtube --client-secret ~/Downloads/client_secret_XXXX.json
-python3 desk.py login instagram --app-id 1234567890      # asks for the secret and token, hidden
-python3 desk.py login tiktok                             # a browser opens: log in, close it
-python3 desk.py login x
-python3 desk.py doctor ~/sixstarsdesk                    # every line should say ok
-python3 desk.py cron ~/sixstarsdesk                      # the crontab line / macOS LaunchAgent
+git clone https://github.com/rohithg/-C-Dependency-Injection-Framework && cd -C-Dependency-Injection-Framework/13-gta6-edit-page
+python3 desk.py setup          # press Enter at each question; --yes accepts everything
 ```
 
-The Google Cloud steps for YouTube are at the top of `clipper/posters/youtube.py`, and the
-Meta app steps for Instagram at the top of `clipper/posters/instagram.py`. Tokens and browser
-sessions are kept in `~/.config/clipper` (mode 600), never in the page folder or the repo.
-Keep the computer awake (macOS: Settings → Battery/Energy → prevent automatic sleeping when
-plugged in). The machine has to be yours: YouTube blocks downloads from cloud servers.
+`setup` does the following:
+
+1. Installs the Python packages, the browser engine and ffmpeg (Homebrew on a Mac, apt on
+   Linux).
+2. Creates `~/gta6-page`, detects your time zone and generates a private notification topic.
+3. Opens each platform's login in a browser window. You log in and close it, four times in
+   all, and that's the only typing. The default "quick" mode posts to all four platforms
+   through these saved logins, so there's no developer setup. Pick mode 2 for the official
+   YouTube and Instagram APIs instead (more setup, safer for those accounts). The Google
+   Cloud and Meta steps for that are at the top of `clipper/posters/youtube.py` and
+   `clipper/posters/instagram.py`.
+4. Offers to install the free local AI reviewer (Ollama with a 3 GB vision model).
+5. Installs the 15-minute schedule (a LaunchAgent on macOS, crontab on Linux) and sends a
+   test notification. Subscribe to the topic it prints in the free ntfy app.
+
+It's safe to run again: it skips what's done and replaces its own schedule. `desk.py doctor`
+shows anything still missing. Logins are kept in `~/.config/clipper` (mode 600), never in the
+page folder or the repo. Keep the computer awake (macOS: Settings → Battery → prevent automatic
+sleeping when plugged in). It has to be your own machine, because YouTube blocks downloads
+from cloud servers.
+
+### Why one AI reviewer and not an agent per task
+
+Agents on every step (finding, cutting, captioning, posting) would make the desk slower,
+cost money per run, and fail in new ways each time. Those steps are plain code here: same
+input, same output, free. A model only helps where a person used to make a judgment call, so
+there's exactly one:
+- Before auto-approving, `clipper/judge.py` shows a local vision model the frame sheet and
+  transcript. It rejects loading screens and spoilers, and picks the hook that reads best.
+- Its hook must be built from words actually said on stream, or the original hook is kept.
+- Black or frozen footage is caught earlier by ffmpeg (`blackdetect` / `freezedetect`),
+  which is more reliable than a model.
+- With `judge.enabled: "auto"`, approvals fall back to the quality gates when Ollama isn't
+  running. Set it to `true` to never auto-approve without the judge.
+
+Every Sunday the desk also tunes itself. Streamers whose clips beat the weekly median get one
+more clip per VOD (up to 6), and ones far below it get one fewer (down to 1). The push tells
+you what changed; turn it off with `reports.autotune: false`.
 
 **Risks:**
-- Automating the TikTok and X web uploaders is against their terms. Those accounts can be
-  limited or banned, and the risk is yours.
-- If either site changes its upload page, override the selector in
-  `desk.json` → `publish.browser.selectors` (the defaults are in
-  `clipper/posters/browser.py`). The push tells you when posting starts failing.
-- To avoid the browser route on X entirely, use the paid API instead.
+- Automating the web uploaders is against TikTok's and X's terms, and quick mode does the
+  same for YouTube and Instagram. Accounts can be limited or banned, and the risk is yours.
+  The official API mode removes that for YouTube and Instagram.
+- If a site changes its upload page, the push names the step that broke. Override that
+  site's steps in `desk.json` → `publish.browser.steps` (the defaults and the step format
+  are in `clipper/posters/browser.py`).
 
 | Command | What it does |
 |---|---|
 | `desk.py tick PAGE` / `run PAGE --every 15` | One pass / loop forever (if you'd rather not use cron) |
-| `desk.py doctor PAGE` | Checks ffmpeg, watch list, notifications, auto-approve and every platform login |
+| `desk.py setup [PAGE] [--yes]` | Everything from a fresh computer to a running desk |
+| `desk.py doctor PAGE` | Checks ffmpeg, watch list, notifications, auto-approve, the AI reviewer and every platform login |
 | `desk.py login youtube\|instagram\|tiktok\|x` | Connect a platform once |
 | `desk.py outbox PAGE [--retry POST_ID]` | Posts waiting, posted, failed; retry a failed one |
 | `desk.py list PAGE` | Drafts best first, with status, score, length, hook and alternatives |
@@ -195,19 +225,19 @@ Commands: `/desk-setup`, `/desk-tick`, `/desk-review`, `/desk-report nightly|wee
 
 ## What you still do by hand
 
-With the defaults (free posting, auto-approve on) the daily loop needs nobody: find, clip,
+With the defaults (free posting, auto-approve on, AI reviewer if installed) the daily loop needs nobody: find, clip,
 approve, post, read views, report. What's left either needs you or has no way in:
 
 | Once | Ongoing |
 |---|---|
 | Create the 4 accounts (phone/email verification can't be automated, and shouldn't be) | Glance at the nightly push; turn off a streamer or format the weekly report says to cut |
-| The four `desk.py login` steps, plus the Google Cloud and Meta app setup | Paste `desk.py links --campaign X` into a campaign dashboard (Content Rewards has no API for submitting) |
-| Fill in `desk.json`, install the cron line, keep the computer on | Answer takedown requests (a legal reply has to come from you) |
+| `python3 desk.py setup`: Enter a few times, log in to four sites | Paste `desk.py links --campaign X` into a campaign dashboard (Content Rewards has no API for submitting) |
+| Keep the computer on | Answer takedown requests (a legal reply has to come from you) |
 | | Log in again if a TikTok/X session expires (the push tells you) |
 
 Comment replies and on-camera reaction takes from the original prompt are optional now; the
-automatic mode posts clips and countdowns only. Expect **about 10 minutes a day**, plus campaign
-submissions if you run campaigns.
+automatic mode posts clips and countdowns only. Day to day you read one push a night. Nothing
+needs a click unless a login expires or you run a campaign.
 
 ## The $10k/month math
 
