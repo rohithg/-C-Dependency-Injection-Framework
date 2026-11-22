@@ -1,7 +1,8 @@
 """Fill the 24h / 72h / 7d view checkpoints in board.csv from the live posts.
 
-Reads public counts with yt-dlp (YouTube and TikTok work without logging in; Instagram and
-X usually need `cookies_from_browser` in desk.json). A number that can't be read stays blank.
+Posts that went out through a free API (YouTube, Instagram) are read through that API.
+Everything else is read with yt-dlp (YouTube and TikTok work without logging in; X usually
+needs `cookies_from_browser` in desk.json). A number that can't be read stays blank.
 """
 
 import sys
@@ -35,10 +36,38 @@ def current_checkpoint(row, now):
     return current
 
 
-def pull(page_dir, now=None, counts=None, cookies_from_browser=None):
+def auto_counts(page_dir, cookies_from_browser=None, get_poster=None):
+    """counts(url): the platform API when the post went out through one, else yt-dlp."""
+    from . import outbox
+
+    refs = outbox.refs(page_dir)
+    apis = {}
+
+    def counts(url):
+        platform, ref = refs.get(url, (None, None))
+        if platform and ref and get_poster:
+            if platform not in apis:
+                try:
+                    poster = get_poster(platform)
+                    apis[platform] = poster if hasattr(poster, "counts") else None
+                except Exception:
+                    apis[platform] = None
+            if apis[platform]:
+                try:
+                    got = apis[platform].counts(ref)
+                    if got.get("views") is not None:
+                        return got
+                except Exception:
+                    pass
+        return ytdlp_counts(url, cookies_from_browser)
+
+    return counts
+
+
+def pull(page_dir, now=None, counts=None, cookies_from_browser=None, get_poster=None):
     """Read every due, blank checkpoint. Returns [(post_id, checkpoint, views)]."""
     now = now or datetime.now()
-    counts = counts or (lambda url: ytdlp_counts(url, cookies_from_browser))
+    counts = counts or auto_counts(page_dir, cookies_from_browser, get_poster)
     rows = pagekit.read_board(page_dir)
     filled = []
     for row in rows:

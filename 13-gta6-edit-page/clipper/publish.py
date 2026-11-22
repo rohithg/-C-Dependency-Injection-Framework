@@ -1,8 +1,13 @@
-"""Schedule approved clips to TikTok, YouTube Shorts, Instagram Reels and X through Upload-Post
-(https://docs.upload-post.com), one API for all four, using each platform's official API.
+"""Schedule approved clips to TikTok, YouTube Shorts, Instagram Reels and X.
 
-The API key comes from the UPLOAD_POST_API_KEY environment variable; the connected profile
-name is `publish.user` in desk.json. Nothing here posts without an approved export.
+publish.provider in desk.json:
+  "free" (default)  posts wait in the local outbox and the desk posts them at their slot with
+                    the free posters in clipper/posters (official APIs where they're free,
+                    your logged-in browser where they aren't).
+  "upload-post"     the paid Upload-Post API (https://docs.upload-post.com) schedules them;
+                    key in UPLOAD_POST_API_KEY, profile name in publish.user.
+
+Nothing here posts without an approved export.
 """
 
 import json
@@ -99,8 +104,17 @@ class UploadPost:
         return r.json()
 
 
+def provider(desk):
+    return desk.get("publish", {}).get("provider", "free")
+
+
+def _hashtags(caption):
+    return [t.lstrip("#") for t in re.findall(r"#\w+", caption) if t.lower() not in ("#ad",)]
+
+
 def schedule(page_dir, clip_id, platforms=None, client=None, now=None, campaign=None, at=None):
-    """Upload the approved export once per platform, each at its own next free slot."""
+    """Book the approved export once per platform, each at its own next free slot."""
+    from . import outbox
     from .studio import _source, clip_path
 
     page_dir = Path(page_dir)
@@ -114,7 +128,9 @@ def schedule(page_dir, clip_id, platforms=None, client=None, now=None, campaign=
         raise ValueError("already scheduled")
     if meta.get("status") != "approved":
         raise ValueError("approve the clip first")
-    client = client or UploadPost()
+    free = provider(desk) != "upload-post"
+    if not free:
+        client = client or UploadPost()
     video = page_dir / "exports" / meta["export"]
     copy = post_copy(page_dir, meta["slug"])
     sources = {s["id"].split("/")[0]: _source(page_dir, s["id"].split("/")[0])
@@ -130,6 +146,24 @@ def schedule(page_dir, clip_id, platforms=None, client=None, now=None, campaign=
         caption = copy.get(platform) or f"{meta['hook']}\n{meta['credit']}"
         if campaign and not caption.startswith("#ad"):
             caption = "#ad " + caption
+        if platform == "x" and len(caption) > 280:
+            caption = caption[:279].rsplit(" ", 1)[0] + "\u2026"
+        m = meta["moment"]
+        row = {"date": when.strftime("%Y-%m-%dT%H:%M"), "platform": platform,
+               "format": "countdown" if meta.get("kind") == "countdown" else meta.get("format", "single"),
+               "streamer": meta["credit"].split(" (")[0], "vod_id": clip_id.split("/")[0],
+               "in_out": f"{m['vod_in']}-{m['vod_out']}" if m.get("vod_in") else "",
+               "hook": meta["hook"], "cold_open": "peak" if meta.get("cold_open") else "",
+               "length_sec": str(meta.get("duration", "")), "campaign": campaign}
+        if free:
+            post_id = pagekit.log_post(page_dir, {**row, "notes": "outbox"})
+            outbox.add(page_dir, {
+                "id": post_id, "clip": clip_id, "platform": platform, "due": when.isoformat(),
+                "video": str(video.relative_to(page_dir)), "caption": caption,
+                "title": meta["hook"], "description": f"{caption}\n\n{comment}",
+                "comment": comment, "campaign": campaign, "tags": _hashtags(caption)})
+            done.append({"platform": platform, "post_id": post_id, "when": when.isoformat(), "job": "outbox"})
+            continue
         fields = {"user": pub.get("user", ""), "platform[]": platform, "title": caption,
                   f"{platform}_first_comment": comment, "timezone": tz,
                   "scheduled_date": when.strftime("%Y-%m-%dT%H:%M:%S"),
@@ -141,15 +175,8 @@ def schedule(page_dir, clip_id, platforms=None, client=None, now=None, campaign=
         resp = client.upload(video, fields)
         job = resp.get("job_id") or resp.get("request_id") or ""
         url = ((resp.get("results") or {}).get(platform) or {}).get("url", "")
-        m = meta["moment"]
         post_id = pagekit.log_post(page_dir, {
-            "date": when.strftime("%Y-%m-%dT%H:%M"), "platform": platform,
-            "format": "countdown" if meta.get("kind") == "countdown" else meta.get("format", "single"),
-            "streamer": meta["credit"].split(" (")[0], "vod_id": clip_id.split("/")[0],
-            "in_out": f"{m['vod_in']}-{m['vod_out']}" if m.get("vod_in") else "",
-            "hook": meta["hook"], "cold_open": "peak" if meta.get("cold_open") else "",
-            "length_sec": str(meta.get("duration", "")), "campaign": campaign,
-            "notes": f"upload-post job {job}" if job else "upload-post", "post_url": url})
+            **row, "notes": f"upload-post job {job}" if job else "upload-post", "post_url": url})
         done.append({"platform": platform, "post_id": post_id, "when": when.isoformat(), "job": job})
     meta["status"] = "scheduled"
     meta.setdefault("posts", []).extend({"platform": d["platform"], "post_id": d["post_id"]} for d in done)

@@ -104,16 +104,23 @@ def approve(page_dir, clip_id, slug):
     return meta
 
 
-def queue_post(page_dir, clip_id):
-    """Schedule now when Upload-Post is configured, else leave it for the next desk tick."""
+def set_fields(page_dir, clip_id, **fields):
     clip_dir = clip_path(page_dir, clip_id)
     meta = json.loads((clip_dir / "meta.json").read_text())
-    meta["queue"] = True
+    meta.update(fields)
     _save(clip_dir, meta)
-    if os.environ.get("UPLOAD_POST_API_KEY"):
-        from .publish import schedule
+    return meta
+
+
+def queue_post(page_dir, clip_id):
+    """Book it into the slots now (free outbox, or Upload-Post when its key is set); otherwise
+    leave it queued for the next desk tick."""
+    from .publish import load_desk, provider, schedule
+
+    meta = set_fields(page_dir, clip_id, queue=True)
+    if provider(load_desk(page_dir)) != "upload-post" or os.environ.get("UPLOAD_POST_API_KEY"):
         schedule(page_dir, clip_id)
-        meta = json.loads((clip_dir / "meta.json").read_text())
+        meta = json.loads((clip_path(page_dir, clip_id) / "meta.json").read_text())
     return meta
 
 
