@@ -14,7 +14,7 @@ sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE))
 
 import page  # noqa: E402
-from clipper import captions, chat, framing, moments, pipeline, words  # noqa: E402
+from clipper import captions, chat, framing, hooks, moments, pipeline, words  # noqa: E402
 
 
 def W(word, start, end=None):
@@ -93,9 +93,39 @@ class UnitTest(unittest.TestCase):
 
     def test_audio_chain_with_bleeps_is_one_graph(self):
         chain = pipeline.audio_chain([(1.0, 1.4)], 10.0)
-        self.assertIn("loudnorm", chain)
+        self.assertIn("afftdn", chain)
         self.assertIn("sine=frequency=1000", chain)
         self.assertTrue(chain.endswith("duration=first"))
+
+    def test_hooks_name_what_was_heard_and_fit_six_words(self):
+        ws = [W(w, 50 + i * 0.3) for i, w in enumerate("no way bro six stars six stars chat".split())]
+        got = hooks.suggest(ws, 51, "Kai Cenat (YouTube)")
+        self.assertEqual(got[0], "Kai vs 6 stars")
+        self.assertTrue(all(len(h.split()) <= 6 for h in got))
+        self.assertTrue(any(h.startswith("\u201c") for h in got))
+        self.assertEqual(hooks.suggest([W("busted", 1)], 1, "IShowSpeed")[0], "Speed gets busted in GTA 6")
+        self.assertEqual(hooks.suggest(ws, 51, "Kai", label="First Failed Mission")[0],
+                         "First Failed Mission")
+        quiet = hooks.suggest([W("hello", 1)], 1, "Kai Cenat")
+        self.assertIn("Kai was not ready for this", quiet)
+
+    def test_dead_air_skips_quiet_gaps_but_not_the_peak_or_loud_action(self):
+        hop = 0.1
+        levels = np.full(300, -60.0)
+        ws = [W("a", 1.0, 2.0), W("b", 6.0, 7.0), W("c", 12.0, 13.0), W("d", 20.0, 21.0)]
+        for w in ws:
+            levels[int(w["start"] / hop): int(w["end"] / hop)] = -20.0
+        levels[140:170] = -15.0  # explosion, nobody talking
+        cuts = pipeline.dead_air(ws, 30.0, levels, hop, peak=19.5)
+        self.assertIn((2.15, 5.85), cuts)
+        self.assertFalse(any(a < 17 and b > 12.5 for a, b in cuts if a > 7))
+        self.assertFalse(any(a < 22.5 and b > 17.5 for a, b in cuts))
+        self.assertAlmostEqual(pipeline.remap(6.0, [(2.15, 5.85)]), 2.3)
+        self.assertAlmostEqual(pipeline.remap(3.0, [(2.15, 5.85)]), 2.15)
+
+    def test_caption_pop_on_active_word(self):
+        ass = captions.build_ass([W("six", 0), W("stars", 0.4)], 2.0)
+        self.assertEqual(ass.count("\\fscx118"), 2)
 
 
 def _have(*tools):
@@ -129,7 +159,7 @@ class EndToEndTest(unittest.TestCase):
         from clipper import studio
 
         clip.main(["auto", str(self.page), str(self.vod), "--credit", "Kai Cenat (YouTube)",
-                   "--top", "1", "--model", "tiny.en"])
+                   "--top", "2", "--model", "tiny.en"])
         found = json.loads((self.page / "runs/kai_part1/moments.json").read_text())
         top = found[0]
         self.assertLessEqual(top["start"], 55)
@@ -148,6 +178,9 @@ class EndToEndTest(unittest.TestCase):
         v = next(s for s in info if s["codec_type"] == "video")
         self.assertEqual((v["width"], v["height"], v["r_frame_rate"]), (1080, 1920, "30/1"))
         self.assertTrue((clip_dir / "sheet.jpg").exists())
+        self.assertLessEqual(abs(meta["lufs"] - (-14)), 1.0)
+        self.assertTrue(meta["hooks"])
+        self.assertTrue(all(len(h.split()) <= 6 for h in meta["hooks"]))
         self.assertIn("f***", (clip_dir / "captions.ass").read_text())
 
         meta = pipeline.finalize(clip_dir, hook="Kai hits six stars")
@@ -164,6 +197,15 @@ class EndToEndTest(unittest.TestCase):
         row = page.read_board(self.page)[0]
         self.assertEqual((row["post_id"], row["platform"], row["hook"]),
                          (post_id, "tiktok", "Kai hits six stars"))
+
+        from clipper import countdown
+        cd = countdown.build(self.page, countdown.pick(self.page, 5), slug="top")
+        self.assertEqual(len(cd["sources"]), 2)
+        self.assertLessEqual(abs(cd["lufs"] - (-14)), 1.0)
+        self.assertIn("countdown/top", [c["id"] for c in studio.clips(self.page)])
+        approved = studio.approve(self.page, "countdown/top", "top 2")
+        self.assertTrue((self.page / "exports" / approved["export"]).exists())
+        self.assertEqual(len(list(csv.reader(open(self.page / "provenance.csv")))), 4)
 
 
 if __name__ == "__main__":

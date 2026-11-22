@@ -5,6 +5,7 @@
   render    turn moments into 1080x1920 drafts with captions -> runs/<vod>/clips/<id>/
   auto      fetch + scan + render the top N
   finalize  re-burn the hook / credit on one draft
+  countdown join the best drafts into a "5 craziest moments" countdown
   studio    review page: watch, edit the hook, approve, mark posted
 """
 
@@ -77,7 +78,8 @@ def scan(page, vod, top=10, timestamps=None, model="base.en", threshold=6.0, cha
         spikes = C.spikes(C.download(src["url"]))
         print(f"chat: {len(spikes)} spikes")
     found = M.find_moments(src["path"], top=top, timestamps=stamps, model=model,
-                           threshold=threshold, offset=src.get("offset", 0.0), chat_spikes=spikes)
+                           threshold=threshold, offset=src.get("offset", 0.0), chat_spikes=spikes,
+                           streamer=src.get("streamer", ""))
     (run_dir(page, vod) / "moments.json").write_text(json.dumps(found, indent=2))
     for m in found:
         flag = f"  SKIP: {m['skip']}" if m["skip"] else ""
@@ -87,7 +89,7 @@ def scan(page, vod, top=10, timestamps=None, model="base.en", threshold=6.0, cha
 
 
 def render(page, vod, ids=None, top=5, layout="auto", facecam=None, credit=None,
-           model="base.en", cold_open=True):
+           model="base.en", cold_open=True, jumpcuts=True):
     from clipper.pipeline import render_clip
 
     src = source(page, vod)
@@ -99,8 +101,12 @@ def render(page, vod, ids=None, top=5, layout="auto", facecam=None, credit=None,
     cam = tuple(int(v) for v in facecam.split(",")) if facecam else None
     for m in chosen:
         meta = render_clip(src["path"], m, run_dir(page, vod) / "clips" / m["id"], credit=credit,
-                           model=model, layout=layout, cam=cam, cold_open=cold_open)
-        print(f"{m['id']}: {meta['status']} {meta.get('layout', '')} {meta.get('final', meta.get('skip'))}")
+                           model=model, layout=layout, cam=cam, cold_open=cold_open,
+                           jumpcuts=jumpcuts)
+        extra = (f" -{meta.get('dead_air_cut', 0)}s dead air, {meta.get('lufs')} LUFS"
+                 if meta["status"] == "draft" else "")
+        print(f"{m['id']}: {meta['status']} {meta.get('layout', '')}{extra} "
+              f"{meta.get('final', meta.get('skip'))}")
 
 
 def main(argv=None):
@@ -116,6 +122,7 @@ def main(argv=None):
             s.add_argument("--facecam", help="x,y,w,h of the facecam in the source (forces stack)")
             s.add_argument("--credit", help='default: "<uploader> (<platform>)"')
             s.add_argument("--no-cold-open", action="store_true")
+            s.add_argument("--no-jumpcuts", action="store_true", help="keep dead air")
 
     s = sub.add_parser("fetch")
     s.add_argument("page")
@@ -154,6 +161,13 @@ def main(argv=None):
     s.add_argument("--hook")
     s.add_argument("--credit")
 
+    s = sub.add_parser("countdown")
+    s.add_argument("page")
+    s.add_argument("--clips", nargs="*", help="<vod>/<id> best first; default: top drafts by score")
+    s.add_argument("-n", type=int, default=5)
+    s.add_argument("--title")
+    s.add_argument("--slug")
+
     s = sub.add_parser("studio")
     s.add_argument("page")
     s.add_argument("--port", type=int, default=8765)
@@ -171,17 +185,25 @@ def main(argv=None):
         scan(a.page, a.vod, a.top, a.timestamps, a.model, a.threshold, a.chat)
     elif a.cmd == "render":
         render(a.page, a.vod, a.ids, a.top, layout, a.facecam, a.credit, a.model,
-               not a.no_cold_open)
+               not a.no_cold_open, not a.no_jumpcuts)
     elif a.cmd == "auto":
-        vod = fetch(a.page, a.url, a.section, a.streamer)
+        streamer = a.streamer or (a.credit.split(" (")[0] if a.credit else None)
+        vod = fetch(a.page, a.url, a.section, streamer)
         scan(a.page, vod, max(10, a.top * 2), a.timestamps, a.model, a.threshold, a.chat)
-        render(a.page, vod, None, a.top, layout, a.facecam, a.credit, a.model, not a.no_cold_open)
+        render(a.page, vod, None, a.top, layout, a.facecam, a.credit, a.model,
+               not a.no_cold_open, not a.no_jumpcuts)
         print(f"\nreview: python3 clip.py studio {a.page}")
     elif a.cmd == "finalize":
         from clipper.pipeline import finalize
         vod, mid = a.clip.split("/")
         meta = finalize(Path(a.page) / "runs" / vod / "clips" / mid, a.hook, a.credit)
         print(meta["final"])
+    elif a.cmd == "countdown":
+        from clipper.countdown import build, pick
+        dirs = ([Path(a.page) / "runs" / c.split("/")[0] / "clips" / c.split("/")[1] for c in a.clips]
+                if a.clips else pick(a.page, a.n))
+        meta = build(a.page, dirs, a.title, a.slug)
+        print(f"{meta['final']}  {meta['duration']}s  {meta['lufs']} LUFS  \"{meta['hook']}\"")
     elif a.cmd == "studio":
         from clipper.studio import serve
         serve(a.page, a.port)

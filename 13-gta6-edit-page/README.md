@@ -51,6 +51,7 @@ motion graphics and reference styles; use either per edit.
 pip install -r requirements.txt            # plus ffmpeg on PATH
 python3 clip.py auto ~/sixstarsdesk "https://www.youtube.com/watch?v=<VOD>" \
   --section 10:00:00-10:30:00 --credit "Kai Cenat (YouTube)" --top 5 --chat
+python3 clip.py countdown ~/sixstarsdesk   # or the "Build top-5 countdown" button in the studio
 python3 clip.py studio ~/sixstarsdesk      # http://127.0.0.1:8765
 ```
 
@@ -61,17 +62,21 @@ python3 clip.py studio ~/sixstarsdesk      # http://127.0.0.1:8765
 | scan | Chat replay bursts (messages and LUL/KEKW/💀 per 10 s), `--chat` | chat-downloader |
 | scan | Transcribes only the candidates; scores hype phrases ("six stars", "busted", "no way"); skips slurs | faster-whisper (Whisper, CTranslate2, Silero VAD) |
 | scan | Timestamps from VOD comments/chapters, `--timestamps file.txt` | (built in) |
+| scan | Hook suggestions from the section 7 templates, built only from words heard on stream ("Kai vs 6 stars", a direct quote); pick one with a click in the studio | (built in) |
 | render | Cut snapped to sentence edges, 20 to 60 s, cold open (payoff repeated in the first second) | ffmpeg |
+| render | Dead air removed: quiet gaps with nobody talking are tightened to 0.3 s, never near the peak or over loud game action (`--no-jumpcuts` to keep) | ffmpeg, NumPy |
 | render | Auto layout: finds the facecam and stacks it over gameplay, follows a moving face for IRL footage, or blurred-fill for gameplay only | OpenCV + YuNet face detector |
 | render | Punch-in zoom on the peak | ffmpeg zoompan |
-| render | Word-by-word captions (one highlight colour, profanity masked), hook card, credit line, all outside the top and bottom 10% | libass via ffmpeg |
-| render | Rumble cut, denoise, two-pass loudness to -14 LUFS, profanity beeped | ffmpeg afftdn + loudnorm |
+| render | Word-by-word captions (one highlight colour, the active word pops, profanity masked), hook card, credit line, all outside the top and bottom 10% | libass via ffmpeg |
+| render | Rumble cut, denoise, profanity beeped; loudness measured and corrected until the export is within 0.5 LU of -14 LUFS, peaks limited to -1.5 dB | ffmpeg afftdn, ebur128, alimiter |
+| countdown | Best drafts played #5 to #1, about 11 s each around the peak: title card ("5 craziest GTA 6 stream moments (#1 is 6 stars)"), numbered headers, captions and a credit per segment; shows up in the studio to approve like any clip | ffmpeg, libass |
 | render | 1080x1920 H.264/AAC 30 fps (TikTok, Shorts, Reels, X), frame sheet, poster | ffmpeg |
 | studio | Watch drafts, edit hook/credit (re-renders text only), approve, reject | (built in) |
 | studio | Approve writes `exports/date_streamer_slug.mp4`, `posts/<slug>.md`, a `provenance.csv` row; "Mark posted" adds the post to `board.csv` | (built in) |
 
 Facecam detection is automatic; if it ever picks the wrong box, pass `--facecam x,y,w,h`
-(measure it once per streamer and keep it in `watchlist.md`). `--model small.en` transcribes
+(measure it once per streamer and keep it in `watchlist.md`), or `--layout track` for IRL
+footage where the face stays small and still for a while. `--model small.en` transcribes
 more accurately than the default `base.en` at about 3x the time.
 
 Tests: `python3 -m unittest discover -s tests` (the end-to-end test builds a synthetic stream
