@@ -79,6 +79,33 @@ class UnitTest(unittest.TestCase):
         self.assertEqual(len(found), 1)
         self.assertAlmostEqual(found[0][0], 392, delta=10)
 
+    def test_one_spammer_is_not_a_chat_spike(self):
+        msgs = [(t, "hi", f"u{t % 7}") for t in range(0, 900, 5)]
+        spam = [(400 + i * 0.1, "OMEGALUL", "spammer") for i in range(80)]
+        crowd = [(600 + i * 0.1, "OMEGALUL", f"c{i}") for i in range(80)]
+        self.assertEqual(chat.spikes(msgs + spam), [])
+        self.assertAlmostEqual(chat.spikes(msgs + crowd)[0][0], 592, delta=10)
+
+    def test_replay_peaks_take_the_tops_of_most_replayed(self):
+        heat = [[i * 10.0, i * 10.0 + 10, 0.2] for i in range(100)]
+        heat[0][2] = heat[99][2] = 1.0
+        heat[30][2], heat[31][2], heat[70][2] = 1.0, 0.9, 0.6
+        self.assertEqual(moments.replay_peaks(heat), [(305.0, 1.0), (705.0, 0.6)])
+        self.assertEqual(moments.replay_peaks([]), [])
+
+    def test_off_moment_phrases(self):
+        said = [W(w, i * 0.3) for i, w in enumerate("yo thank you for the five gifted bro".split())]
+        self.assertEqual(words.off_moment(said, 1.0), ["thank you for the", "gifted"])
+        hype = [W(w, i * 0.3) for i, w in enumerate("no way six stars on me".split())]
+        self.assertEqual(words.off_moment(hype, 1.0), [])
+
+    def test_cuts_never_land_mid_word(self):
+        ws = [{"word": f"w{i}", "start": i * 0.5, "end": i * 0.5 + 0.45} for i in range(200)]
+        start, end = moments.snap_window(ws, 50.2)
+        for t in (start, end):
+            self.assertIsNone(moments._inside_word(ws, t), t)
+        self.assertLessEqual(end - start, 60)
+
     def test_layout_choice(self):
         steady_small = [(i * 0.25, (1600, 60, 100, 100)) for i in range(40)]
         moving_big = [(i * 0.25, (100 + i * 20, 300, 260, 260)) for i in range(40)]

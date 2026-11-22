@@ -64,11 +64,12 @@ python3 clip.py studio ~/sixstarsdesk      # http://127.0.0.1:8765
 |---|---|---|
 | fetch | Downloads a VOD or just one section of an 11 h stream | yt-dlp, ffmpeg |
 | scan | Loudness spikes over the streamer's own baseline, streamed over the whole VOD | ffmpeg, NumPy |
-| scan | Chat replay bursts (messages and LUL/KEKW/💀 per 10 s), `--chat` | chat-downloader |
-| scan | Transcribes only the candidates; scores hype phrases ("six stars", "busted", "no way"); skips slurs | faster-whisper (Whisper, CTranslate2, Silero VAD) |
+| scan | Chat replay bursts (chatters and LUL/KEKW/💀 per 10 s; each chatter counts once, so one spammer can't fake a moment), `--chat` | chat-downloader |
+| scan | YouTube's "Most replayed" graph for the VOD, when it has one: the parts viewers rewind to | yt-dlp |
+| scan | Transcribes only the candidates; scores hype phrases ("six stars", "busted", "no way"); scores down sub/donation thank-yous and retold stories; skips slurs | faster-whisper (Whisper, CTranslate2, Silero VAD) |
 | scan | Timestamps from VOD comments/chapters, `--timestamps file.txt` | (built in) |
 | scan | Hook suggestions from the section 7 templates, built only from words heard on stream ("Kai vs 6 stars", a direct quote); pick one with a click in the studio | (built in) |
-| render | Cut snapped to sentence edges, 20 to 60 s, cold open (payoff repeated in the first second) | ffmpeg |
+| render | Cut snapped to sentence edges and never mid-word, 20 to 60 s, cold open (payoff repeated in the first second) | ffmpeg |
 | render | Dead air removed: quiet gaps with nobody talking are tightened to 0.3 s, never near the peak or over loud game action (`--no-jumpcuts` to keep) | ffmpeg, NumPy |
 | render | Auto layout: finds the facecam and stacks it over gameplay, follows a moving face for IRL footage, or blurred-fill for gameplay only | OpenCV + YuNet face detector |
 | render | Punch-in zoom on the peak | ffmpeg zoompan |

@@ -35,7 +35,7 @@ def scan(page, vod, top=10, timestamps=None, model="base.en", threshold=6.0, cha
         print(f"chat: {len(spikes)} spikes")
     found = M.find_moments(src["path"], top=top, timestamps=stamps, model=model,
                            threshold=threshold, offset=src.get("offset", 0.0), chat_spikes=spikes,
-                           streamer=src.get("streamer", ""))
+                           streamer=src.get("streamer", ""), heatmap=src.get("heatmap") or ())
     (run_dir(page, vod) / "moments.json").write_text(json.dumps(found, indent=2))
     for m in found:
         flag = f"  SKIP: {m['skip']}" if m["skip"] else ""

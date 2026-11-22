@@ -11,19 +11,30 @@ def download(url, max_messages=None):
     from chat_downloader import ChatDownloader
 
     chat = ChatDownloader().get_chat(url, max_messages=max_messages)
-    return [(m["time_in_seconds"], m.get("message", "")) for m in chat
-            if m.get("time_in_seconds") is not None and m["time_in_seconds"] >= 0]
+    return [(m["time_in_seconds"], m.get("message", ""), (m.get("author") or {}).get("id"))
+            for m in chat if m.get("time_in_seconds") is not None and m["time_in_seconds"] >= 0]
 
 
 def spikes(messages, bin_s=10, window_s=300, threshold=2.5, min_gap=30):
-    """[(time, z)] where messages per bin (hype tokens count double) jump over the local norm."""
+    """[(time, z)] where chatters per bin (hype tokens count double) jump over the local norm.
+
+    Messages are (time, text) or (time, text, author). With authors, each chatter counts once
+    per bin, so one person spamming can't fake a moment."""
     if not messages:
         return []
-    end = max(t for t, _ in messages)
+    end = max(m[0] for m in messages)
     counts = np.zeros(int(end // bin_s) + 1)
-    for t, text in messages:
-        low = text.lower()
-        counts[int(t // bin_s)] += 2 if any(tok in low for tok in HYPE_TOKENS) else 1
+    seen = {}
+    for t, text, *who in messages:
+        b = int(t // bin_s)
+        weight = 2 if any(tok in text.lower() for tok in HYPE_TOKENS) else 1
+        if who and who[0] is not None:
+            before = seen.get((b, who[0]), 0)
+            if weight <= before:
+                continue
+            seen[(b, who[0])] = weight
+            weight -= before
+        counts[b] += weight
     k = max(3, int(window_s / bin_s))
     pad = np.pad(counts, k // 2, mode="edge")
     view = np.lib.stride_tricks.sliding_window_view(pad, k)[: len(counts)]

@@ -83,7 +83,10 @@ def fetch(page, url, section=None, streamer=None, audio_only=True, platform=None
         "title": info.get("title", ""),
         "streamer": streamer or info.get("uploader") or info.get("channel") or "",
         "platform": platform or PLATFORM_NAMES.get(key, info.get("extractor_key", "")),
-        "offset": offset, "video": not audio_only})
+        "offset": offset, "video": not audio_only,
+        # YouTube's public "Most replayed" graph, in VOD seconds; absent on small videos.
+        "heatmap": [[h["start_time"], h["end_time"], h["value"]]
+                    for h in info.get("heatmap") or []]})
     return vod
 
 

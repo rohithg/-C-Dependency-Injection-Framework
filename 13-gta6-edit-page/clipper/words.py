@@ -12,6 +12,11 @@ HYPE = {
     "police": 2, "crash": 2, "gator": 3, "alligator": 3, "what the": 2, "help": 1, "why": 1,
 }
 
+# Loud but not a moment: thanking donors, reading sub alerts, retelling or planning.
+OFF_MOMENT = ["thank you for the", "thanks for the", "appreciate the", "gifted", "subscribing",
+              "for the subs", "for the bits", "donation", "be right back", "earlier today",
+              "yesterday", "last stream", "remember when", "what if", "we're gonna", "the plan is"]
+
 
 def norm(word):
     return re.sub(r"[^a-z0-9']", "", word.lower())
@@ -37,6 +42,16 @@ def hype_score(words, center=None, radius=10.0):
     text = " ".join(norm(w["word"]) for w in words
                     if center is None or abs(w["start"] - center) <= radius)
     return sum(weight * len(re.findall(rf"\b{re.escape(p)}\b", text)) for p, weight in HYPE.items())
+
+
+def off_moment(words, center, radius=10.0):
+    """The OFF_MOMENT phrases said within `radius` seconds of the peak."""
+    text = " ".join(norm(w["word"]) for w in words if abs(w["start"] - center) <= radius)
+    return [p for p in OFF_MOMENT if re.search(rf"\b{re.escape(norm_phrase(p))}\b", text)]
+
+
+def norm_phrase(phrase):
+    return " ".join(norm(w) for w in phrase.split())
 
 
 @lru_cache(maxsize=2)

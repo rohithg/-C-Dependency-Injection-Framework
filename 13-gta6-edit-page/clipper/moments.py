@@ -64,6 +64,29 @@ def loud_peaks(levels, min_gap=30.0, threshold=6.0, baseline_window=120.0):
     return picked
 
 
+def replay_peaks(heatmap, min_value=0.5, min_gap=30.0):
+    """(time, value) for the tops of YouTube's "Most replayed" graph ([start, end, value] rows,
+    value 0-1 with the busiest part at 1). Viewers rewinding is a direct audience signal.
+    The first and last 3% are ignored: everyone watches the start, and the end card."""
+    length = max((r[1] for r in heatmap or []), default=0)
+    rows = sorted((r for r in heatmap or [] if 0.03 * length <= r[0] and r[1] <= 0.97 * length),
+                  key=lambda r: -r[2])
+    top = rows[0][2] if rows and rows[0][2] > 0 else 1.0
+    picked = []
+    for start, end, value in rows:
+        value /= top
+        if value < min_value:
+            break
+        mid = (start + end) / 2
+        if all(abs(mid - t) >= min_gap for t, _ in picked):
+            picked.append((mid, float(value)))
+    return picked
+
+
+def _inside_word(words, t):
+    return next((w for w in words if w["start"] < t < w["end"]), None)
+
+
 def snap_window(words, peak, pre=14.0, post=8.0, min_len=20.0, max_len=60.0):
     """Cut from the sentence that sets the moment up to the end of the reaction."""
     start, end = peak - pre, peak + post
@@ -83,6 +106,12 @@ def snap_window(words, peak, pre=14.0, post=8.0, min_len=20.0, max_len=60.0):
         end = start + min_len
     if end - start > max_len:
         start = max(start, end - max_len)
+    w = _inside_word(words, start)
+    if w:
+        start = w["start"] if end - w["start"] <= max_len else w["end"]
+    w = _inside_word(words, end)
+    if w:
+        end = w["end"] if w["end"] - start <= max_len else w["start"]
     return max(0.0, start), end
 
 
@@ -95,26 +124,34 @@ def hook_guess(words, peak, label=""):
 
 
 def find_moments(src, top=10, timestamps=(), transcribe=True, model="base.en",
-                 candidates=3, threshold=6.0, offset=0.0, chat_spikes=(), streamer=""):
+                 candidates=3, threshold=6.0, offset=0.0, chat_spikes=(), streamer="",
+                 heatmap=()):
     """Ranked moments. `offset` is where `src` starts in the VOD (a downloaded section)."""
     duration = probe(src)["duration"]
     levels = loudness_curve(src, hop=HOP)
-    found = [{"peak": t, "loud_db": round(db, 1), "label": "", "chat_z": 0.0}
+    blank = {"loud_db": 0.0, "label": "", "chat_z": 0.0, "replay": 0.0}
+    found = [dict(blank, peak=t, loud_db=round(db, 1))
              for t, db in loud_peaks(levels, threshold=threshold)[: top * candidates]]
-    for t, z in chat_spikes:
-        t -= offset
-        if not 0 <= t <= duration:
-            continue
-        near = [f for f in found if abs(f["peak"] - t) <= 20]
-        if near:
-            near[0]["chat_z"] = max(near[0]["chat_z"], z)
-        else:
-            found.append({"peak": t, "loud_db": 0.0, "label": "", "chat_z": z})
+
+    def merge(signals, key, lead=0.0):
+        for t, value in signals:
+            t -= offset + lead
+            if not 0 <= t <= duration:
+                continue
+            near = [f for f in found if abs(f["peak"] - t) <= 20]
+            if near:
+                near[0][key] = max(near[0][key], value)
+            else:
+                found.append(dict(blank, peak=t, **{key: value}))
+
+    merge(chat_spikes, "chat_z")
+    # People rewind to the start of a moment; the peak is a few seconds in.
+    merge(replay_peaks(heatmap), "replay", lead=-4.0)
     for t, label in timestamps:
         t -= offset
         if 0 <= t <= duration:
             found = [f for f in found if abs(f["peak"] - t) > 20]
-            found.append({"peak": t + 6, "loud_db": 0.0, "label": label, "chat_z": 0.0})
+            found.append(dict(blank, peak=t + 6, label=label))
 
     moments = []
     for f in found:
@@ -131,9 +168,14 @@ def find_moments(src, top=10, timestamps=(), transcribe=True, model="base.en",
             reasons.append(f"timestamp: {f['label']}")
         if f["chat_z"]:
             reasons.append(f"chat spike z={f['chat_z']}")
+        if f["replay"]:
+            reasons.append(f"most replayed {f['replay']:.2f}")
         hype = W.hype_score(clip_words, center=peak)
         if hype:
             reasons.append(f"hype phrases {hype}")
+        off = W.off_moment(clip_words, peak)
+        if off:
+            reasons.append("sounds like " + ", ".join(f'"{p}"' for p in off))
         start, end = snap_window(clip_words, peak)
         end = min(end, duration)
         inside = [w for w in clip_words if start <= w["start"] < end]
@@ -141,7 +183,8 @@ def find_moments(src, top=10, timestamps=(), transcribe=True, model="base.en",
         moments.append({
             "peak": round(peak, 2), "start": round(start, 2), "end": round(end, 2),
             "vod_in": fmt_ts(start + offset), "vod_out": fmt_ts(end + offset),
-            "score": round(f["loud_db"] + 2.0 * hype + 4.0 * f["chat_z"] + (25 if f["label"] else 0), 1),
+            "score": round(f["loud_db"] + 2.0 * hype + 4.0 * f["chat_z"] + 10.0 * f["replay"]
+                           + (25 if f["label"] else 0) - min(12, 6 * len(off)), 1),
             "reasons": reasons, "hook": hooks[0], "hooks": hooks,
             "skip": "slur in transcript" if W.has_slur(inside) else "",
             "transcript": " ".join(W.mask(w["word"]) for w in inside),
