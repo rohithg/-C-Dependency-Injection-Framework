@@ -1,0 +1,19 @@
+{
+  "channel_name": "Little Lantern",
+  "tagline": "Calm learning stories for young children",
+  "timezone": "America/Los_Angeles",
+  "schedule_hour_local": 7,
+  "voice": "en-US-JennyNeural",
+  "voice_rate": "-12%",
+  "engine": "auto",
+  "width": 1280,
+  "height": 720,
+  "fps": 12,
+  "privacy": "private",
+  "upload_enabled": false,
+  "client_secrets": "secrets/client_secret.json",
+  "token_path": "secrets/youtube-token.json",
+  "playlist": "Little Lantern",
+  "output_dir": "output",
+  "port": 8766
+}
