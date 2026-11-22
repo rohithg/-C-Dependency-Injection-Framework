@@ -14,6 +14,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 HERE = Path(__file__).resolve().parent
+os.environ["OLLAMA_HOST"] = "http://127.0.0.1:9"  # never reach a real local model in tests
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE))
 
@@ -333,6 +334,27 @@ document.getElementById('go').onclick = () => fetch('/posted', {method: 'POST', 
 </script></body></html>"""
 
 
+MOCK_TIKTOK_CONTENT = """<html><body><a href="/@sixstars/video/7001">newest</a></body></html>"""
+
+MOCK_YT = """<html><body>
+<input type=file id=f>
+<div id=title-textarea><div id=textbox contenteditable=true>v.mp4</div></div>
+<div id=description-textarea><div id=textbox contenteditable=true></div></div>
+<div id=kids hidden><tp-yt-paper-radio-button name=VIDEO_MADE_FOR_KIDS_NOT_MFK onclick="window.kids=1">no</tp-yt-paper-radio-button></div>
+<button id=next-button onclick="window.next=(window.next||0)+1;
+  if (window.next==3) document.getElementById('vis').hidden=false">Next</button>
+<div id=vis hidden><tp-yt-paper-radio-button name=PUBLIC onclick="window.pub=1">Public</tp-yt-paper-radio-button>
+  <span class=video-url-fadeable><a href="https://youtube.com/shorts/SHORT1">link</a></span></div>
+<button id=done-button disabled onclick="fetch('/posted',{method:'POST',body:JSON.stringify({
+  title: document.querySelector('#title-textarea #textbox').innerText,
+  desc: document.querySelector('#description-textarea #textbox').innerText,
+  kids: window.kids, next: window.next, pub: window.pub})})">Done</button>
+<script>
+document.getElementById('f').onchange = () => { document.getElementById('kids').hidden = false;
+  setTimeout(() => document.getElementById('done-button').disabled = false, 300); };
+</script></body></html>"""
+
+
 class BrowserPosterTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -345,7 +367,8 @@ class BrowserPosterTest(unittest.TestCase):
 
         class Site(BaseHTTPRequestHandler):
             def do_GET(self):
-                body = {"/tiktokstudio/upload": MOCK_TIKTOK, "/compose/post": MOCK_X}.get(self.path, "<p>done</p>")
+                body = {"/tiktokstudio/upload": MOCK_TIKTOK, "/compose/post": MOCK_X, "/upload": MOCK_YT,
+                        "/tiktokstudio/content": MOCK_TIKTOK_CONTENT}.get(self.path, "<p>done</p>")
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html")
                 self.end_headers()
@@ -380,7 +403,7 @@ class BrowserPosterTest(unittest.TestCase):
         from clipper.posters.browser import BrowserPoster
         p = BrowserPoster("tiktok", {"base_url": self.base, "upload_timeout_s": 20})
         got = p.post(self.video, {"caption": "Kai vs 6 stars\nKai Cenat (YouTube) #gta6"})
-        self.assertEqual(got, {"url": "", "ref": ""})
+        self.assertEqual(got, {"url": f"{self.base}/@sixstars/video/7001", "ref": "7001"})
         self.assertEqual(self.captions[-1].replace("\r", ""), "Kai vs 6 stars\nKai Cenat (YouTube) #gta6")
 
     def test_x_returns_the_post_url_from_the_toast(self):
@@ -389,6 +412,43 @@ class BrowserPosterTest(unittest.TestCase):
         got = p.post(self.video, {"caption": "Kai vs 6 stars"})
         self.assertEqual(got, {"url": f"{self.base}/sixstars/status/1999", "ref": "1999"})
         self.assertEqual(self.captions[-1], "Kai vs 6 stars")
+
+
+    def test_youtube_studio_flow_needs_no_developer_app(self):
+        from clipper.posters.browser import SITES, BrowserPoster
+        steps = [[k, self.base + "/upload" if v == "https://www.youtube.com/upload" else v, *rest]
+                 for k, v, *rest in SITES["youtube"]["steps"]]
+        p = BrowserPoster("youtube", {"base_url": self.base, "upload_timeout_s": 20, "steps": {"youtube": steps}})
+        got = p.post(self.video, {"title": "Kai vs 6 stars", "description": "Source: Kai\n#gta6"})
+        self.assertEqual(got, {"url": "https://youtube.com/shorts/SHORT1", "ref": "SHORT1"})
+        sent = json.loads(self.captions[-1])
+        self.assertEqual((sent["title"], sent["kids"], sent["next"], sent["pub"]), ("Kai vs 6 stars", 1, 3, 1))
+        self.assertEqual(sent["desc"].replace("\r", ""), "Source: Kai\n#gta6")
+
+    def test_a_missing_element_names_the_step_that_broke(self):
+        from clipper.posters.browser import BrowserPoster
+        p = BrowserPoster("x", {"base_url": self.base, "steps": {"x": [["goto", "/compose/post"],
+                                                                      ["click", "#no-such-button"]]}})
+        import clipper.posters.browser as b
+        orig = b.BrowserPoster._run
+
+        def fast(self, page, step, entry, video):
+            page.set_default_timeout(1000)
+            if step[0] == "click":
+                page.locator(step[1]).first.click(timeout=1000)
+                return None
+            return orig(self, page, step, entry, video)
+        b.BrowserPoster._run = fast
+        try:
+            with self.assertRaisesRegex(RuntimeError, "x step click '#no-such-button' failed"):
+                p.post(self.video, {"caption": "x"})
+        finally:
+            b.BrowserPoster._run = orig
+
+    def test_handle_steps_are_skipped_without_a_handle(self):
+        from clipper.posters.browser import BrowserPoster
+        p = BrowserPoster("instagram", {"handles": {"instagram": "YOUR_INSTAGRAM_HANDLE"}})
+        self.assertIsNone(p._run(None, ["goto", "/{handle}/reels/"], {}, self.video))
 
 
 if __name__ == "__main__":
