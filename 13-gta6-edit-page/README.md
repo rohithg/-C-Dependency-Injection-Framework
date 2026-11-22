@@ -79,26 +79,106 @@ Facecam detection is automatic; if it ever picks the wrong box, pass `--facecam 
 footage where the face stays small and still for a while. `--model small.en` transcribes
 more accurately than the default `base.en` at about 3x the time.
 
-Tests: `python3 -m unittest discover -s tests` (the end-to-end test builds a synthetic stream
-with a facecam and a loud reaction, and needs espeak-ng).
+Speed: online VODs are fetched **audio-first** (an 11 h stream is ~250 MB of audio instead
+of 10+ GB of video), and video is downloaded only for the sections that become clips. Clips
+render in parallel (`--jobs`, default: half your cores, up to 3) and use the hardware H.264
+encoder when there is one (VideoToolbox on Macs, NVENC on NVIDIA) at a high bitrate,
+otherwise x264. `CLIPPER_ENCODER=libx264` forces software encoding. `--video` downloads the
+whole VOD instead.
+
+If YouTube answers "Sign in to confirm you're not a bot", set
+`CLIPPER_COOKIES_FROM_BROWSER=chrome` (or firefox, safari, edge) so yt-dlp uses your own
+login, or put the browser in `desk.json` as `cookies_from_browser`.
+
+Tests: `python3 -m unittest discover -s tests` (the end-to-end tests build a synthetic stream
+with a facecam and a loud reaction, and need espeak-ng).
+
+## desk.py: hands-off mode
+
+`desk.py tick` does one pass of the daily schedule. Run it from cron every 15 minutes and
+the page runs itself, apart from the steps listed in the next section.
+
+1. Checks every channel in `desk.json` → `watch` (YouTube/Twitch/Kick channel pages, or a
+   local folder your OBS recordings land in) for VODs that have finished. Live and upcoming
+   streams are skipped, and so are files still being written. The first time it sees a
+   channel it takes only the newest VOD, so turning it on doesn't clip a backlog.
+2. Clips each new VOD (`clips_per_vod` drafts) with the pipeline above.
+3. At `countdown.at` (default 20:00) it builds a top-5 countdown from today's drafts if
+   there are at least `min_new_clips`.
+4. Auto-approve, when `auto_approve.enabled` is true and the date is past `after`, approves
+   drafts scoring `min_score` or more. Keep it off until you've approved a week of
+   drafts by hand and trust the picks; the prompt's "yes before anything goes out" rule
+   still applies until you turn it on yourself.
+5. Schedules approved clips on every platform at the next free slot in `slots` (staggered
+   20 min per platform) through [Upload-Post](https://www.upload-post.com). Each post
+   gets the caption from `posts/<slug>.md`, streamer hashtags, a first comment with the
+   source VOD and timestamp, and YouTube title/description. Each one is added to
+   `board.csv`, and its live URL is filled in once it's up.
+6. Reads 24h / 72h / 7d views (and likes/comments) for each posted URL with yt-dlp into
+   `board.csv`. Only the checkpoint that is due is filled; a missed one stays blank.
+7. Sends one push with what changed ("3 new drafts. Best: Kai vs 6 stars", "4 posts
+   scheduled") to your phone via [ntfy](https://ntfy.sh) and/or a Discord webhook.
+
+A lock keeps two ticks from running at once, and a VOD that fails three times is reported
+and skipped.
+
+```bash
+pip install -r requirements.txt
+python3 page.py init ~/sixstarsdesk --name "Six Stars Desk"   # also writes desk.json
+# edit ~/sixstarsdesk/desk.json: watch list, timezone, slots, publish.user, notify.ntfy_topic
+export UPLOAD_POST_API_KEY=...         # from app.upload-post.com; never put it in a file in the repo
+python3 desk.py tick ~/sixstarsdesk    # one pass, to check it works
+python3 desk.py cron ~/sixstarsdesk    # prints the crontab line and a macOS LaunchAgent
+```
+
+| Command | What it does |
+|---|---|
+| `desk.py tick PAGE` / `run PAGE --every 15` | One pass / loop forever (if you'd rather not use cron) |
+| `desk.py list PAGE` | Drafts best first, with status, score, length, hook and alternatives |
+| `desk.py approve PAGE kai_part1/m01 [--hook "..."] [--post]` | Approve (re-rendering text if the hook changed), and with `--post` schedule it everywhere |
+| `desk.py schedule PAGE ID [--platforms tiktok x] [--campaign "Brand"]` | Schedule an approved clip; `--campaign` adds `#ad` and the paid-partnership label |
+| `desk.py stats PAGE` | Fill due view checkpoints now |
+| `desk.py links PAGE --campaign "Brand" [--since 2026-11-20]` | Live post URLs to paste into the campaign dashboard |
+
+The studio's **Approve & post** button does the same as `approve --post`. Without an API key
+the clip is queued and goes out on the next tick that has one.
+
+One-time Upload-Post setup: create a profile (its name goes in `publish.user`) and connect
+TikTok, YouTube, Instagram and X to it in their dashboard. Their free tier is small (check
+current limits); 3 to 4 clips a day on 4 platforms needs a paid plan.
+
+### Claude Code plugin
+
+The repo is also a Claude Code plugin marketplace. Install it and Claude can drive the desk
+for you: set it up, run a tick, go through drafts with you (checking each frame sheet,
+suggesting hooks from what was said), and write the nightly or weekly report.
+
+```bash
+claude plugin marketplace add rohithg/-C-Dependency-Injection-Framework
+claude plugin install gta6-edit-desk@rohithg-tools
+# or, in Claude Code: /plugin install gta6-edit-desk --marketplace rohithg/-C-Dependency-Injection-Framework
+```
+
+Commands: `/desk-setup`, `/desk-tick`, `/desk-review`, `/desk-report nightly|weekly`. The
+skill never approves or posts without your "yes" unless you have turned on auto-approve.
 
 ## What you still do by hand
 
-Claude Code + AI Producer handle finding moments, cutting, captions, SFX and exports. These
-stay with you, because they need your identity, your face or your money:
+With `desk.py` on cron, finding moments, cutting, captions, approving (once you turn on
+auto-approve), scheduling, post links, view checkpoints and the countdown run without you.
+These stay with you, because they need your identity, your face or your judgement:
 
 | One-time (roughly an afternoon) | Daily |
 |---|---|
-| Create the 4 accounts (phone/email verification, names, bios, avatar you own) | Say "yes" to every edit before export and before posting |
-| Install Claude Code and the AI Producer plugin, sign in to OpusClip in the browser | Post or schedule each export on each platform (AI Producer doesn't post) |
-| Sign up for Content Rewards (and any other campaign sites), payout and tax details | Record your on-camera reaction / explainer takes (~20 min) |
-| Read and pick campaign briefs | Paste each post link into the campaign dashboard before its deadline |
-| | Reply to comments in the first hour (15 min every 2 to 3 hours) |
-| | Read views at 24h / 72h / 7d off each app (`page.py due` tells you which) |
-| | Handle takedown requests the same day |
+| Create the 4 accounts (phone/email verification, names, bios, avatar you own) | Glance at the push and approve or skip the drafts (`/desk-review`, ~10 min), or spot-check if auto-approve is on |
+| Connect them to Upload-Post, put the API key in your shell profile, fill in `desk.json` | Record your on-camera reaction / explainer takes (~20 min) |
+| Sign up for Content Rewards (and any other campaign sites), payout and tax details | Paste `desk.py links --campaign X` into each campaign dashboard (no API for that) |
+| Read and pick campaign briefs; schedule campaign clips with `--campaign` | Reply to comments in the first hour (15 min every 2 to 3 hours) |
+| Install the cron line (or LaunchAgent) on a machine that stays on | Handle takedown requests the same day |
 
-At the prompt's pace (3 to 4 edits a day on 4 platforms, ~350 to 450 uploads a month), that's
-about **2 to 4 hours a day** of your own time once the system runs, more in week one.
+At the prompt's pace (3 to 4 edits a day on 4 platforms), that's about **1 to 1.5 hours a
+day**, most of it comment replies and your own takes. Before the desk it was 2 to 4 hours,
+because posting ~400 uploads a month and reading every view count were manual.
 
 ## The $10k/month math
 
