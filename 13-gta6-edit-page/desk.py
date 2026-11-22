@@ -10,6 +10,7 @@
   links     live post URLs for a campaign, ready to paste into its dashboard
   login     connect YouTube / Instagram (free APIs) or TikTok / X (saved browser session) once
   outbox    posts waiting for their slot, posted, failed (--retry ID)
+  setup     one command from a fresh computer to a running desk (--yes: all defaults)
   doctor    check that every part can run unattended
   cron      print a crontab line (and a macOS LaunchAgent) that runs `tick` every 15 minutes
 
@@ -77,7 +78,7 @@ def new_vods(page, desk, state, lister=sources.latest_vods):
 def process_vod(page, desk, w, v):
     credit = f"{w['streamer']} ({w['platform']})" if w.get("platform") else w["streamer"]
     vod = sources.fetch(page, v["url"], streamer=w["streamer"], platform=w.get("platform"))
-    n = desk.get("clips_per_vod", 4)
+    n = w.get("clips_per_vod") or desk.get("clips_per_vod", 4)
     online = not Path(v["url"]).exists()
     clip.scan(page, vod, top=max(10, n * 2), model=desk.get("model", "base.en"),
               chat=bool(desk.get("chat")) and online)
@@ -101,12 +102,48 @@ def quality_problem(c, min_score):
         return f"loudness {c['lufs']} LUFS"
     if not c.get("hook") or not c.get("credit"):
         return "no hook or credit"
+    if c.get("footage") not in (None, "ok"):
+        return f"footage {c['footage']}"
     return None
 
 
-def auto_approve(page, desk, today):
+def check_footage(page, c):
+    """Black or frozen picture, checked once per clip with ffmpeg and remembered in meta.json."""
+    from clipper.media import footage_problem
+    if c.get("footage"):
+        return c["footage"]
+    clip_dir = studio.clip_path(page, c["id"])
+    video = next((p for p in (clip_dir / "base.mp4", clip_dir / "final.mp4") if p.exists()), None)
+    try:
+        result = (footage_problem(video) if video else None) or "ok"
+    except Exception as exc:
+        print(f"footage check {c['id']}: {exc}")
+        return "ok"
+    studio.set_fields(page, c["id"], footage=result)
+    c["footage"] = result
+    return result
+
+
+def _judge_for(desk, opener=None):
+    """(review function, required?) or (None, required?)."""
+    from clipper import judge
+    cfg = desk.get("judge", {"enabled": "auto"})
+    mode, model = cfg.get("enabled", "auto"), cfg.get("model", judge.DEFAULT_MODEL)
+    if mode is False:
+        return None, False
+    kw = {"opener": opener} if opener else {}
+    if judge.available(model, **kw):
+        return (lambda clip_dir, meta: judge.review(clip_dir, meta, model, **kw)), mode is True
+    return None, mode is True
+
+
+def auto_approve(page, desk, today, judge_opener=None):
     cfg = desk.get("auto_approve", {})
     if not cfg.get("enabled") or (cfg.get("after") and today < date.fromisoformat(cfg["after"])):
+        return []
+    review, required = _judge_for(desk, judge_opener)
+    if required and not review:
+        print("judge required but Ollama/model not available; not auto-approving")
         return []
     budget = cfg.get("max_per_day", 8) - sum(
         1 for c in studio.clips(page) if c.get("approved_on") == today.isoformat())
@@ -116,10 +153,28 @@ def auto_approve(page, desk, today):
     for c in drafts:
         if budget <= 0:
             break
-        if quality_problem(c, cfg.get("min_score", 60)):
+        if c.get("judged") == "rejected" or quality_problem(c, cfg.get("min_score", 60)):
             continue
-        studio.approve(page, c["id"], c["hook"])
-        studio.set_fields(page, c["id"], approved_on=today.isoformat(), auto_approved=True)
+        if c.get("kind") != "countdown" and check_footage(page, c) != "ok":
+            continue
+        hook = c["hook"]
+        if review:
+            clip_dir = studio.clip_path(page, c["id"])
+            try:
+                verdict = review(clip_dir, c)
+            except Exception as exc:
+                print(f"judge {c['id']}: {exc}")
+                continue
+            if not verdict["ok"]:
+                studio.set_fields(page, c["id"], judged="rejected", judge_reason=verdict["reason"])
+                continue
+            if verdict["hook"] and verdict["hook"] != hook:
+                from clipper.pipeline import finalize
+                finalize(clip_dir, hook=verdict["hook"])
+                hook = verdict["hook"]
+        studio.approve(page, c["id"], hook)
+        studio.set_fields(page, c["id"], approved_on=today.isoformat(), auto_approved=True,
+                          judged="ok" if review else "")
         done.append(c["id"])
         budget -= 1
     return done
@@ -150,6 +205,28 @@ def _quoted(hook):
     return hook if hook.startswith("\u201c") else f"\u201c{hook}\u201d"
 
 
+def autotune(page, desk, rows, today, low=0.6, high=1.25, min_posts=4):
+    """Weekly: give streamers whose clips beat the median one more clip per VOD (up to 6),
+    and the ones far under it one fewer (down to 1). Returns what changed."""
+    wk = pagekit.weekly(rows, today)
+    if not wk.get("posts"):
+        return []
+    by = {label: (med, n) for label, med, n, _ in wk["by"].get("streamer", [])}
+    changes = []
+    for w in desk.get("watch", []):
+        med, n = by.get(w["streamer"], (None, 0))
+        if n < min_posts:
+            continue
+        cur = w.get("clips_per_vod") or desk.get("clips_per_vod", 4)
+        new = min(6, cur + 1) if med >= high * wk["median"] else max(1, cur - 1) if med <= low * wk["median"] else cur
+        if new != cur:
+            w["clips_per_vod"] = new
+            changes.append(f"{w['streamer']} {cur}\u2192{new} clips per VOD")
+    if changes:
+        (Path(page) / "desk.json").write_text(json.dumps(desk, indent=2) + "\n")
+    return changes
+
+
 def maybe_reports(page, desk, state, now):
     """The section 13 nightly (and Sunday weekly) report, pushed once a day after reports.at."""
     cfg = desk.get("reports", {"at": "23:30"})
@@ -173,6 +250,10 @@ def maybe_reports(page, desk, state, now):
             keep = [f"{k}={label}" for k, groups in wk["by"].items() for label, med, n, up in groups[:1] if up]
             out.append(f"Weekly: {wk['posts']} posts, median {int(wk['median']):,} views. "
                        f"Best: {', '.join(keep)}")
+            if cfg.get("autotune", True):
+                tuned = autotune(page, desk, rows, now.date())
+                if tuned:
+                    out.append("Tuned: " + "; ".join(tuned))
     sent.append(today)
     del sent[:-30]
     return out
@@ -313,6 +394,11 @@ def doctor(page, get_poster=None):
     out.append(("notifications", notify_ok, "set notify.ntfy_topic in desk.json"))
     out.append(("auto-approve", bool(desk.get("auto_approve", {}).get("enabled")),
                 "set auto_approve.enabled true (otherwise you approve each clip)"))
+    from clipper import judge
+    jcfg = desk.get("judge", {"enabled": "auto"})
+    if jcfg.get("enabled") is not False:
+        out.append(("AI reviewer (optional)", judge.available(jcfg.get("model", judge.DEFAULT_MODEL)),
+                    f"ollama pull {jcfg.get('model', judge.DEFAULT_MODEL)} (or python3 desk.py setup)"))
     if publish.provider(desk) == "upload-post":
         out.append(("Upload-Post key", bool(os.environ.get("UPLOAD_POST_API_KEY")), "export UPLOAD_POST_API_KEY"))
         return out
@@ -320,9 +406,8 @@ def doctor(page, get_poster=None):
     for platform in desk.get("platforms", ["tiktok", "youtube", "instagram", "x"]):
         route = routes[platform]
         if route == "browser":
-            prof = posters.config_dir() / "browser" / platform
-            ok = prof.exists() and any(prof.iterdir())
-            out.append((f"{platform} (browser)", ok, f"python3 desk.py login {platform}"))
+            from clipper.posters.browser import has_session
+            out.append((f"{platform} (browser)", has_session(platform), f"python3 desk.py login {platform}"))
             continue
         try:
             poster = (get_poster or (lambda p: posters.get_poster(p, desk)))(platform)
@@ -372,6 +457,9 @@ def main(argv=None):
     s = sub.add_parser("outbox", help="posts waiting, posted and failed")
     s.add_argument("page")
     s.add_argument("--retry", metavar="POST_ID", help="try a failed post again on the next tick")
+    s = sub.add_parser("setup", help="one command from a fresh computer to a running desk")
+    s.add_argument("page", nargs="?", help="page folder (default ~/gta6-page)")
+    s.add_argument("--yes", "-y", action="store_true", help="accept every default; only the logins need you")
     s = sub.add_parser("doctor", help="check that everything can run unattended")
     s.add_argument("page")
     a = p.parse_args(argv)
@@ -440,6 +528,13 @@ def main(argv=None):
         for e in entries:
             print(f"{e['id']:<13} {e['platform']:<9} {e['state']:<8} {e['due'][:16]}  "
                   f"{e.get('url') or e.get('error', '')}")
+    elif a.cmd == "setup":
+        from clipper.wizard import Wizard
+        w = Wizard(a.page, yes=a.yes)
+        w.go()
+        bad = [name for name, ok, _ in doctor(w.page) if not ok]
+        print("Everything is ready." if not bad else "Still to do: " + ", ".join(bad) +
+              f" (python3 desk.py doctor {w.page})")
     elif a.cmd == "doctor":
         bad = 0
         for name, ok, fix in doctor(a.page):

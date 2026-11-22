@@ -18,12 +18,13 @@
   "publish": {
     "provider": "free",
     "routes": {"youtube": "api", "instagram": "api", "tiktok": "browser", "x": "browser"},
-    "browser": {"headless": true, "channel": null, "handles": {"tiktok": "YOUR_TIKTOK_HANDLE"}},
+    "browser": {"headless": true, "channel": null, "handles": {"instagram": ""}},
     "user": "YOUR_UPLOAD_POST_PROFILE (only for provider upload-post)"
   },
   "auto_approve": {"enabled": true, "after": null, "min_score": 60, "max_per_day": 8},
   "countdown": {"enabled": true, "at": "20:00", "min_new_clips": 4},
-  "reports": {"at": "23:30", "weekly_day": "sun"},
+  "reports": {"at": "23:30", "weekly_day": "sun", "autotune": true},
+  "judge": {"enabled": "auto", "model": "qwen2.5vl:3b"},
   "notify": {"ntfy_topic": "", "discord_webhook_env": "DISCORD_WEBHOOK_URL"},
   "cookies_from_browser": null
 }
