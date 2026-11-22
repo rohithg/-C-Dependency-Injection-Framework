@@ -10,6 +10,7 @@ import re
 
 import numpy as np
 
+from . import hooks as Hk
 from . import words as W
 from .media import loudness_curve, probe
 
@@ -94,7 +95,7 @@ def hook_guess(words, peak, label=""):
 
 
 def find_moments(src, top=10, timestamps=(), transcribe=True, model="base.en",
-                 candidates=3, threshold=6.0, offset=0.0, chat_spikes=()):
+                 candidates=3, threshold=6.0, offset=0.0, chat_spikes=(), streamer=""):
     """Ranked moments. `offset` is where `src` starts in the VOD (a downloaded section)."""
     duration = probe(src)["duration"]
     levels = loudness_curve(src, hop=HOP)
@@ -136,13 +137,16 @@ def find_moments(src, top=10, timestamps=(), transcribe=True, model="base.en",
         start, end = snap_window(clip_words, peak)
         end = min(end, duration)
         inside = [w for w in clip_words if start <= w["start"] < end]
+        hooks = Hk.suggest(clip_words, peak, streamer, f["label"]) or [hook_guess(clip_words, peak)]
         moments.append({
             "peak": round(peak, 2), "start": round(start, 2), "end": round(end, 2),
             "vod_in": fmt_ts(start + offset), "vod_out": fmt_ts(end + offset),
             "score": round(f["loud_db"] + 2.0 * hype + 4.0 * f["chat_z"] + (25 if f["label"] else 0), 1),
-            "reasons": reasons, "hook": hook_guess(clip_words, peak, f["label"]),
+            "reasons": reasons, "hook": hooks[0], "hooks": hooks,
             "skip": "slur in transcript" if W.has_slur(inside) else "",
             "transcript": " ".join(W.mask(w["word"]) for w in inside),
+            # VOD-file seconds; render reuses these instead of transcribing again.
+            "words": inside if transcribe else None,
         })
     moments.sort(key=lambda m: (bool(m["skip"]), -m["score"]))
     for i, m in enumerate(moments[:top], 1):
