@@ -112,6 +112,52 @@ def _hashtags(caption):
     return [t.lstrip("#") for t in re.findall(r"#\w+", caption) if t.lower() not in ("#ad",)]
 
 
+NAMES = {"tiktok": "TikTok", "youtube": "YouTube", "instagram": "Instagram", "x": "X"}
+
+
+def brand_links(desk):
+    """Same handle on every platform, so a viewer on one can be sent to the other two."""
+    brand = desk.get("brand") or {}
+    handle = (brand.get("handle") or "").lstrip("@")
+    links = dict(brand.get("links") or {})
+    if handle:
+        links.setdefault("tiktok", f"https://www.tiktok.com/@{handle}")
+        links.setdefault("youtube", f"https://www.youtube.com/@{handle}")
+        links.setdefault("instagram", f"https://www.instagram.com/{handle}/")
+        links.setdefault("x", f"https://x.com/{handle}")
+    return handle, links
+
+
+def cross_line(desk, platform):
+    handle, links = brand_links(desk)
+    if not handle:
+        return ""
+    others = [p for p in ("tiktok", "youtube", "instagram") if p != platform]
+    return "More: " + " · ".join(f"{NAMES[p]} {links[p]}" for p in others)
+
+
+def with_cross(caption, desk, platform):
+    """Append where the other pages are. On X the line stays whole and the caption above it shrinks."""
+    line = cross_line(desk, platform)
+    body = caption.rstrip()
+    if line and body.endswith(line):
+        body = body[: -len(line)].rstrip()
+    elif line and line in body and platform != "x":
+        return caption
+    if platform == "x":
+        if line and 280 - len(line) - 1 < 40:
+            line = "More: @" + brand_links(desk)[0]
+        room = 280 - (len(line) + 1 if line else 0)
+        if len(body) > room:
+            cut = body[: max(room - 1, 0)].rsplit(" ", 1)[0].rstrip()
+            body = (cut or body[: max(room - 1, 0)]) + "\u2026"
+        out = body + ("\n" + line if line else "")
+        return out if len(out) <= 280 else out[:279].rsplit(" ", 1)[0] + "\u2026"
+    if not line:
+        return caption
+    return body + "\n" + line
+
+
 def schedule(page_dir, clip_id, platforms=None, client=None, now=None, campaign=None, at=None):
     """Book the approved export once per platform, each at its own next free slot."""
     from . import outbox
@@ -146,8 +192,7 @@ def schedule(page_dir, clip_id, platforms=None, client=None, now=None, campaign=
         caption = copy.get(platform) or f"{meta['hook']}\n{meta['credit']}"
         if campaign and not caption.startswith("#ad"):
             caption = "#ad " + caption
-        if platform == "x" and len(caption) > 280:
-            caption = caption[:279].rsplit(" ", 1)[0] + "\u2026"
+        caption = with_cross(caption, desk, platform)
         m = meta["moment"]
         row = {"date": when.strftime("%Y-%m-%dT%H:%M"), "platform": platform,
                "format": "countdown" if meta.get("kind") == "countdown" else meta.get("format", "single"),

@@ -91,6 +91,10 @@ def approve(page_dir, clip_id, slug):
         lines += [f"## {label}", meta["hook"], meta["credit"]]
         if hashtags(platform, meta["credit"]):
             lines.append(hashtags(platform, meta["credit"]))
+        from .publish import cross_line, load_desk
+        extra = cross_line(load_desk(page_dir), platform)
+        if extra:
+            lines.append(extra)
         lines.append("")
     (page_dir / "posts" / f"{post_slug}.md").write_text("\n".join(lines))
     with open(page_dir / "provenance.csv", "a", newline="") as f:

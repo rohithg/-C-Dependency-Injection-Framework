@@ -15,10 +15,19 @@
     "instagram": ["12:40", "17:40", "21:10"],
     "x":         ["13:00", "18:00", "21:30"]
   },
+  "brand": {
+    "name": "Six Stars GTA",
+    "handle": "sixstarsgta6",
+    "bios": {
+      "tiktok": "GTA 6 clips daily. YouTube + Instagram: @sixstarsgta6",
+      "youtube": "Daily GTA 6 clips. TikTok: tiktok.com/@sixstarsgta6  Instagram: instagram.com/sixstarsgta6",
+      "instagram": "GTA 6 clips daily. TikTok + YouTube: @sixstarsgta6"
+    }
+  },
   "publish": {
     "provider": "free",
     "routes": {"youtube": "api", "instagram": "api", "tiktok": "browser", "x": "browser"},
-    "browser": {"headless": true, "channel": null, "handles": {"instagram": ""}},
+    "browser": {"headless": true, "channel": null, "handles": {"instagram": "sixstarsgta6"}},
     "user": "YOUR_UPLOAD_POST_PROFILE (only for provider upload-post)"
   },
   "auto_approve": {"enabled": true, "after": null, "min_score": 20, "max_per_day": 8},

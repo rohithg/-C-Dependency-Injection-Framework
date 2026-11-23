@@ -129,6 +129,18 @@ class FreeDeskTest(unittest.TestCase):
         cap = outbox.load(self.page)[0]["caption"]
         self.assertTrue(cap.startswith("#ad "))
         self.assertLessEqual(len(cap), 280)
+        self.assertIn("youtube.com/@sixstarsgta6", cap)
+
+    def test_each_caption_sends_viewers_to_the_other_pages(self):
+        desk = {"brand": {"handle": "sixstarsgta6"}}
+        cap = publish.with_cross("Kai vs 6 stars", desk, "tiktok")
+        self.assertIn("https://www.youtube.com/@sixstarsgta6", cap)
+        self.assertIn("https://www.instagram.com/sixstarsgta6/", cap)
+        self.assertNotIn("tiktok.com", cap)
+        self.assertEqual(publish.with_cross(cap, desk, "tiktok"), cap)
+        squeezed = publish.with_cross("word " * 80, desk, "x")
+        self.assertLessEqual(len(squeezed), 280)
+        self.assertIn("youtube.com/@sixstarsgta6", squeezed)
 
     def test_failed_posts_back_off_then_give_up(self):
         cid = make_approved_clip(self.page)

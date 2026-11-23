@@ -127,7 +127,9 @@ with a facecam and a loud reaction, and need espeak-ng).
    too, so connecting them is just a login. The table shows the official routes, which are
    the safer choice for those two.
 
-   Captions come from `posts/<slug>.md` with streamer hashtags. The source VOD and timestamp
+   Captions come from `posts/<slug>.md` with streamer hashtags, and each one names the other
+   pages (`brand.handle`, the same @ on TikTok, YouTube and Instagram) so a viewer on one
+   can get to the other two. The source VOD and timestamp
    go in the YouTube description and as the first comment on YouTube and Instagram. Campaign
    clips get `#ad`, and on YouTube the paid-placement flag. Each post's live URL goes into
    `board.csv`. A failed post is retried after 30 and 60 minutes, then reported. If the
