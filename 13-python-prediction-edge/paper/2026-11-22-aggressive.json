@@ -1,0 +1,175 @@
+{
+  "account": "paper",
+  "opened_at": "2026-11-22 8:13 PM PT",
+  "opened_at_utc": "2026-11-23T04:13:52Z",
+  "kind": "aggressive",
+  "settled_since_nov_8": {
+    "mavericks_spread": {
+      "result": "won",
+      "payout": "51.02"
+    },
+    "bilibili": {
+      "result": "won",
+      "payout": "40.32"
+    },
+    "jazz_over_222_5": {
+      "result": "lost",
+      "payout": "0"
+    },
+    "buccaneers_under_46_5": {
+      "result": "lost",
+      "payout": "0"
+    },
+    "net": "-10.85534",
+    "cash_after": "894.90074"
+  },
+  "budget_each": "150",
+  "rule": "Five separate longshots, $150 each, copied from this week's profit leaders at the live ask. Each can pay about five times the stake, and each can go to zero. The baskets and the NVIDIA ticket stay open.",
+  "btc_usd": "61266.31",
+  "starting_cash": "894.90074",
+  "spent": "749.99202",
+  "cash": "144.90872",
+  "legs": [
+    {
+      "market": "Will Marco Rubio win the 2028 Republican presidential nomination?",
+      "slug": "will-marco-rubio-win-the-2028-republican-presidential-nomination",
+      "outcome": "Yes",
+      "end": "2028-11-08T04:59:00Z",
+      "source_name": "AnonymousUsername",
+      "source_rank": "week 5",
+      "source_avg_price": "0.065",
+      "source_value": "13075",
+      "fee_rate": "0.05",
+      "size": "754.80",
+      "spent": "149.99835",
+      "fees": "5.83155",
+      "payout_if_yes": "754.80",
+      "payout_if_no": "0",
+      "fills": [
+        {
+          "price": "0.191",
+          "size": "754.80",
+          "fee": "5.83155"
+        }
+      ]
+    },
+    {
+      "market": "Will Jon Ossoff win the 2028 Democratic presidential nomination?",
+      "slug": "will-jon-ossoff-win-the-2028-democratic-presidential-nomination-885",
+      "outcome": "Yes",
+      "end": "2028-11-08T04:59:00Z",
+      "source_name": "AnonymousUsername",
+      "source_rank": "week 5",
+      "source_avg_price": "0.008",
+      "source_value": "12706",
+      "fee_rate": "0.05",
+      "size": "677.54",
+      "spent": "149.99838",
+      "fees": "5.67860",
+      "payout_if_yes": "677.54",
+      "payout_if_no": "0",
+      "fills": [
+        {
+          "price": "0.211",
+          "size": "483.42",
+          "fee": "4.02396"
+        },
+        {
+          "price": "0.218",
+          "size": "194.12",
+          "fee": "1.65464"
+        }
+      ]
+    },
+    {
+      "market": "Will the San Francisco 49ers win the 2027 NFL league championship?",
+      "slug": "will-the-san-francisco-49ers-win-the-2027-nfl-league-championship",
+      "outcome": "Yes",
+      "end": "2027-04-01T03:59:00Z",
+      "source_name": "AnonymousUsername",
+      "source_rank": "week 5",
+      "source_avg_price": "0.051",
+      "source_value": "3522",
+      "fee_rate": "0.05",
+      "size": "697.27",
+      "spent": "149.99825",
+      "fees": "5.72106",
+      "payout_if_yes": "697.27",
+      "payout_if_no": "0",
+      "fills": [
+        {
+          "price": "0.204",
+          "size": "100",
+          "fee": "0.81192"
+        },
+        {
+          "price": "0.205",
+          "size": "175.56",
+          "fee": "1.43059"
+        },
+        {
+          "price": "0.208",
+          "size": "250",
+          "fee": "2.05920"
+        },
+        {
+          "price": "0.209",
+          "size": "171.71",
+          "fee": "1.41935"
+        }
+      ]
+    },
+    {
+      "market": "Will Bitcoin dip to $55,000 in November?",
+      "slug": "will-bitcoin-dip-to-55k-in-november-2026",
+      "outcome": "Yes",
+      "end": "2026-12-01T05:00:00Z",
+      "source_name": "hqb.prediction",
+      "source_rank": "week 15",
+      "source_avg_price": "0.091",
+      "source_value": "20469",
+      "fee_rate": "0.01",
+      "size": "744.29",
+      "spent": "149.99856",
+      "fees": "1.19056",
+      "payout_if_yes": "744.29",
+      "payout_if_no": "0",
+      "fills": [
+        {
+          "price": "0.199",
+          "size": "50",
+          "fee": "0.07970"
+        },
+        {
+          "price": "0.2",
+          "size": "694.29",
+          "fee": "1.11086"
+        }
+      ]
+    },
+    {
+      "market": "Will Rene Haas be the next CEO of NVIDIA?",
+      "slug": "will-rene-haas-be-the-next-ceo-of-nvidia",
+      "outcome": "Yes",
+      "end": "2029-01-01T04:59:00Z",
+      "source_name": "DrSlips",
+      "source_rank": "week 2",
+      "source_avg_price": "0.009",
+      "source_value": "4849",
+      "fee_rate": "0.01",
+      "size": "779.03",
+      "spent": "149.99848",
+      "fees": "1.20375",
+      "payout_if_yes": "779.03",
+      "payout_if_no": "0",
+      "fills": [
+        {
+          "price": "0.191",
+          "size": "779.03",
+          "fee": "1.20375"
+        }
+      ]
+    }
+  ],
+  "note": "Paper only. No order was sent. These are the market's prices, not a locked payout."
+}

@@ -72,3 +72,5 @@ python -m pytest -q
 `paper/2026-11-08-50-to-500.json` was a $50 Liverpool longshot and is cancelled. `paper/2026-11-08-edge.json` puts $19.57 of that $50 into the two baskets still at least 1¢ under $1 after fees: another 16 shares of the 2030 World Cup final, and 5 shares of the Maduro sentence brackets. Together they lock $1.43. The rest of the $50 stays cash.
 
 `paper/2026-11-08-scan.json` is the next pass: 103,814 Kalshi ladder pairs and 1,163 Polymarket YES+NO books, none of them 1¢ under $1 after fees. Maduro's smallest ask had grown to 15.9, so `paper/2026-11-08-maduro-add.json` buys the other 10.9 shares and locks another $0.39.
+
+`paper/2026-11-22-aggressive.json` books the four finished copies, then spends $150 on each of five longshots the week's leaders are already ahead on: Rubio's nomination, Ossoff's nomination, the 49ers, Bitcoin at $55,000 in November, and Rene Haas as NVIDIA's next CEO. A win on one pays about $700. Cash left is $144.91.
