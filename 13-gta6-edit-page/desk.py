@@ -66,6 +66,9 @@ def new_vods(page, desk, state, lister=sources.latest_vods):
         except Exception as exc:
             print(f"watch {w.get('streamer')}: {exc}")
             continue
+        needle = (w.get("match") or "").lower()
+        if needle:
+            vods = [v for v in vods if needle in (v.get("title") or "").lower()]
         seen = state["seen"].setdefault(key, None)
         fresh = [v for v in vods if v["id"] not in (seen or [])]
         if seen is None:

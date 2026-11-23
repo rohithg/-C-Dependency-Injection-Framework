@@ -196,6 +196,14 @@ class DeskUnitTest(unittest.TestCase):
         got = desk.new_vods(self.page, cfg, state, lister=lambda url: listing)
         self.assertEqual([v["id"] for _, v in got], ["v4"])
 
+    def test_watch_match_skips_other_games(self):
+        state = {"seen": {}, "countdowns": []}
+        cfg = {"watch": [{"streamer": "Kai Cenat", "url": "chan", "match": "gta 6"}]}
+        listing = [{"id": "old", "title": "PLAYING EVERY GTA UNTIL I BEAT IT: GTA 4", "url": "u"},
+                   {"id": "new", "title": "EXPLORING GTA 6", "url": "u2"}]
+        got = desk.new_vods(self.page, cfg, state, lister=lambda url: listing)
+        self.assertEqual([v["id"] for _, v in got], ["new"])
+        self.assertNotIn("old", state["seen"]["chan"])
     def test_local_folder_watch_waits_for_recordings_to_settle(self):
         rec = self.tmp / "recordings"
         rec.mkdir()
