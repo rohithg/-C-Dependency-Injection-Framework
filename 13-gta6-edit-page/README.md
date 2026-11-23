@@ -110,7 +110,7 @@ with a facecam and a loud reaction, and need espeak-ng).
 2. Clips each new VOD (`clips_per_vod` drafts) with the pipeline above.
 3. At `countdown.at` (default 20:00) it builds a top-5 countdown from today's drafts.
 4. **Auto-approves** (on by default) drafts that pass the quality gates: score ≥
-   `min_score`, 12 to 60 s (countdowns up to 180 s), loudness within 1.5 LU of -14, a hook and
+   `min_score` (20; a real stream's loudest moments land around 20 to 35), 12 to 60 s (countdowns up to 180 s), loudness within 1.5 LU of -14, a hook and
    a credit, no slur/spoiler skip. At most `max_per_day`, best first. Clips with slurs are
    never even rendered.
 5. Books each approved clip into the next free slot per platform (`slots`, staggered 20 min)

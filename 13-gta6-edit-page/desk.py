@@ -153,7 +153,7 @@ def auto_approve(page, desk, today, judge_opener=None):
     for c in drafts:
         if budget <= 0:
             break
-        if c.get("judged") == "rejected" or quality_problem(c, cfg.get("min_score", 60)):
+        if c.get("judged") == "rejected" or quality_problem(c, cfg.get("min_score", 20)):
             continue
         if c.get("kind") != "countdown" and check_footage(page, c) != "ok":
             continue
