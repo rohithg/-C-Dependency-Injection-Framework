@@ -1,0 +1,51 @@
+{
+  "account": "paper",
+  "opened_at": "2026-11-08 3:41 PM PT",
+  "opened_at_utc": "2026-11-08T23:41:50Z",
+  "event": "World Cup 2030: Location of Final",
+  "event_slug": "world-cup-2030-location-of-final-20260805200159829",
+  "resolves": "2030-07-22T03:59:00Z",
+  "rules": "Exactly one city pays $1: the city FIFA names as host of the 2030 World Cup final. Other covers any city that is not Barcelona, Madrid, a Portuguese city, or a Moroccan city.",
+  "kind": "yes_basket",
+  "starting_cash": "975.96145",
+  "cash": "961.09342",
+  "spent": "14.86803",
+  "fees": "0.46803",
+  "size": "16",
+  "payout_floor": "16",
+  "locked_profit": "1.13197",
+  "edge_per_share": "0.070748125",
+  "legs": [
+    {
+      "outcome": "Barcelona",
+      "price": "0.018",
+      "size": "16",
+      "fee": "0.01414"
+    },
+    {
+      "outcome": "Madrid",
+      "price": "0.191",
+      "size": "16",
+      "fee": "0.12362"
+    },
+    {
+      "outcome": "Portuguese city",
+      "price": "0.006",
+      "size": "16",
+      "fee": "0.00477"
+    },
+    {
+      "outcome": "Moroccan city",
+      "price": "0.195",
+      "size": "16",
+      "fee": "0.12558"
+    },
+    {
+      "outcome": "Other / Unconfirmed by 2028",
+      "price": "0.49",
+      "size": "16",
+      "fee": "0.19992"
+    }
+  ],
+  "note": "Paper fill at the ask on every outcome, sized to the smallest ask (Barcelona, 16 shares). Profit is locked only while all of these shares are held. Same paper account as the Millennium Prize ticket."
+}

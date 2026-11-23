@@ -1,0 +1,113 @@
+{
+  "account": "paper",
+  "opened_at": "2026-11-08 4:15 PM PT",
+  "opened_at_utc": "2026-11-09T00:15:22Z",
+  "kind": "copy",
+  "board": "Polymarket week, profit, top 8 at the open time",
+  "rule": "One open position from each wallet in the top 8. A wallet is skipped when every large position is outside 15c to 85c, under $500, hedged by the other side, or the ask is more than 5c off the mark. Each copy is $25 at the ask, not their size. Kalshi's top 100 by projected profit hide their books, except rank 78 BWmarkets. That market is offered at $1, so it was not copied.",
+  "skipped": [
+    {
+      "rank": 1,
+      "reason": "open marks are outside 15c to 85c"
+    },
+    {
+      "rank": 5,
+      "reason": "no open position of $500 or more inside the price band"
+    },
+    {
+      "rank": 6,
+      "reason": "no open position of $500 or more inside the price band"
+    }
+  ],
+  "starting_cash": "961.09342",
+  "cash": "833.64091",
+  "spent": "127.45251",
+  "legs": [
+    {
+      "source_rank": 2,
+      "source_name": "e46m3",
+      "source_week_pnl": "1004314.00",
+      "source_value": "1950",
+      "source_avg_price": "0.3974",
+      "event": "largest-company-end-of-december-2026",
+      "market": "Will NVIDIA be the largest company in the world by market cap on December 31?",
+      "slug": "will-nvidia-be-the-largest-company-in-the-world-by-market-cap-on-december-31-244",
+      "outcome": "No",
+      "end": "2027-01-01",
+      "ask": "0.74",
+      "size": "33.78",
+      "fee_rate": "0.04",
+      "fee": "0.25997",
+      "spent": "25.25717"
+    },
+    {
+      "source_rank": 3,
+      "source_name": "RJW1",
+      "source_week_pnl": "985484.35",
+      "source_value": "146618",
+      "source_avg_price": "0.4999",
+      "event": "nba-bkn-dal-2026-11-08",
+      "market": "Spread: Mavericks (-7.5)",
+      "slug": "nba-bkn-dal-2026-11-08-spread-home-7pt5",
+      "outcome": "Mavericks",
+      "end": "2026-11-09",
+      "ask": "0.49",
+      "size": "51.02",
+      "fee_rate": "0.05",
+      "fee": "0.63749",
+      "spent": "25.63729"
+    },
+    {
+      "source_rank": 4,
+      "source_name": "0x2c335066FE58fe9237c3d3Dc7b275C2a034a0563-1759935795465",
+      "source_week_pnl": "775155.63",
+      "source_value": "236266",
+      "source_avg_price": "0.635",
+      "event": "lol-blg-t1-2026-11-08",
+      "market": "LoL: Bilibili Gaming vs T1 (BO5) - Worlds Playoffs",
+      "slug": "lol-blg-t1-2026-11-08",
+      "outcome": "Bilibili Gaming",
+      "end": "2026-11-09",
+      "ask": "0.62",
+      "size": "40.32",
+      "fee_rate": "0.05",
+      "fee": "0.47497",
+      "spent": "25.47337"
+    },
+    {
+      "source_rank": 7,
+      "source_name": "S-Works",
+      "source_week_pnl": "625891.17",
+      "source_value": "51000",
+      "source_avg_price": "0.47",
+      "event": "nba-uta-min-2026-11-08",
+      "market": "Jazz vs. Timberwolves: O/U 222.5",
+      "slug": "nba-uta-min-2026-11-08-total-222pt5",
+      "outcome": "Over",
+      "end": "2026-11-09",
+      "ask": "0.44",
+      "size": "56.81",
+      "fee_rate": "0.05",
+      "fee": "0.69990",
+      "spent": "25.69630"
+    },
+    {
+      "source_rank": 8,
+      "source_name": "justwins",
+      "source_week_pnl": "571960.39",
+      "source_value": "1037",
+      "source_avg_price": "0.4699",
+      "event": "nfl-tb-chi-2026-11-09",
+      "market": "Buccaneers vs. Bears: O/U 46.5",
+      "slug": "nfl-tb-chi-2026-11-09-total-46pt5",
+      "outcome": "Under",
+      "end": "2026-11-09",
+      "ask": "0.48",
+      "size": "52.08",
+      "fee_rate": "0.03",
+      "fee": "0.38998",
+      "spent": "25.38838"
+    }
+  ],
+  "note": "Paper only. No order was sent."
+}

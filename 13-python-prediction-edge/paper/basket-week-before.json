@@ -1,0 +1,40 @@
+{
+  "tag": "midterms",
+  "hours_before_end": 168,
+  "max_print_age_s": 604800,
+  "events": 458,
+  "quoted": 23,
+  "mean_cost": 1.02967,
+  "under_1": 2,
+  "pnl_at_print": 0.01407,
+  "under_1_after_1c": 0,
+  "pnl_after_1c": 0,
+  "winners_not_one": 0,
+  "skips": {
+    "no_print": 435
+  },
+  "trades": [
+    {
+      "slug": "how-many-house-seats-will-the-democrats-win-in-alabama",
+      "title": "How many House seats will the Democrats win in Alabama?",
+      "n": 4,
+      "cost": 0.99336,
+      "winners": 1,
+      "pnl": 0.00664,
+      "pnl_after_1c": null
+    },
+    {
+      "slug": "how-many-house-seats-will-the-democrats-win-in-ohio",
+      "title": "How many House seats will the Democrats win in Ohio?",
+      "n": 7,
+      "cost": 0.99257,
+      "winners": 1,
+      "pnl": 0.00743,
+      "pnl_after_1c": null
+    }
+  ],
+  "edge_at_least_3c": {
+    "trades": 0,
+    "pnl": 0
+  }
+}

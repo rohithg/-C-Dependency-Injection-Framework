@@ -1,0 +1,892 @@
+{
+  "sampled_at_utc": "2026-11-08T23:35:59Z",
+  "week_start_utc": "2026-11-01T23:15:00Z",
+  "week_end_utc": "2026-11-08T23:15:00Z",
+  "windows": 2016,
+  "scored": 1089,
+  "skips": {
+    "no_score": 867,
+    "book_error": 13,
+    "no_print": 47
+  },
+  "books": "Polymarket 15-minute Up/Down. Entry is the last trade print at or before the final minute, within 60 seconds.",
+  "spot": "Coinbase 1-minute open at the window start, and the close at the start of the final minute.",
+  "rule": "Buy one contract when the settlement model's fee-adjusted edge on that print is from 2 to 3 cents. Hold to the window result.",
+  "fill": "The entry is the last trade print. The live screen uses the ask, which can be worse. One tick (0.1¢) worse leaves 79 of these 85 inside the band and +$0.42. One full cent worse leaves 3 trades and +$0.12, because the rest fall below 2¢.",
+  "fee": "Polymarket crypto taker fee, 0.07 times price times one minus price, half-up to 0.00001.",
+  "rule_2_to_3c": {
+    "trades": 85,
+    "wins": 80,
+    "losses": 5,
+    "pnl_1_contract": 0.64578,
+    "by_asset": {
+      "BTC": {
+        "trades": 35,
+        "wins": 32,
+        "pnl": -0.03512
+      },
+      "ETH": {
+        "trades": 28,
+        "wins": 28,
+        "pnl": 0.80127
+      },
+      "SOL": {
+        "trades": 22,
+        "wins": 20,
+        "pnl": -0.12037
+      }
+    }
+  },
+  "trades": [
+    {
+      "asset": "BTC",
+      "start": 1793574900,
+      "side": "down",
+      "price": 0.975,
+      "edge_cents": 2.31,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "ETH",
+      "start": 1793584800,
+      "side": "up",
+      "price": 0.975,
+      "edge_cents": 2.33,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "SOL",
+      "start": 1793591100,
+      "side": "up",
+      "price": 0.455,
+      "edge_cents": 2.76,
+      "fee": 0.01736,
+      "won": false,
+      "pnl": -0.47236
+    },
+    {
+      "asset": "BTC",
+      "start": 1793594700,
+      "side": "down",
+      "price": 0.975,
+      "edge_cents": 2.32,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "ETH",
+      "start": 1793600100,
+      "side": "down",
+      "price": 0.973,
+      "edge_cents": 2.52,
+      "fee": 0.00184,
+      "won": true,
+      "pnl": 0.02516
+    },
+    {
+      "asset": "BTC",
+      "start": 1793601000,
+      "side": "down",
+      "price": 0.975,
+      "edge_cents": 2.32,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "BTC",
+      "start": 1793604600,
+      "side": "down",
+      "price": 0.975,
+      "edge_cents": 2.33,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "ETH",
+      "start": 1793610000,
+      "side": "up",
+      "price": 0.97,
+      "edge_cents": 2.22,
+      "fee": 0.00204,
+      "won": true,
+      "pnl": 0.02796
+    },
+    {
+      "asset": "BTC",
+      "start": 1793611800,
+      "side": "down",
+      "price": 0.972,
+      "edge_cents": 2.35,
+      "fee": 0.00191,
+      "won": true,
+      "pnl": 0.02609
+    },
+    {
+      "asset": "BTC",
+      "start": 1793613600,
+      "side": "down",
+      "price": 0.975,
+      "edge_cents": 2.33,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "ETH",
+      "start": 1793615400,
+      "side": "down",
+      "price": 0.975,
+      "edge_cents": 2.09,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "BTC",
+      "start": 1793624400,
+      "side": "down",
+      "price": 0.975,
+      "edge_cents": 2.33,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "SOL",
+      "start": 1793628900,
+      "side": "down",
+      "price": 0.97,
+      "edge_cents": 2.38,
+      "fee": 0.00204,
+      "won": true,
+      "pnl": 0.02796
+    },
+    {
+      "asset": "BTC",
+      "start": 1793630700,
+      "side": "up",
+      "price": 0.085,
+      "edge_cents": 2.63,
+      "fee": 0.00544,
+      "won": false,
+      "pnl": -0.09044
+    },
+    {
+      "asset": "BTC",
+      "start": 1793641500,
+      "side": "up",
+      "price": 0.975,
+      "edge_cents": 2.33,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "ETH",
+      "start": 1793650500,
+      "side": "up",
+      "price": 0.944,
+      "edge_cents": 2.98,
+      "fee": 0.0037,
+      "won": true,
+      "pnl": 0.0523
+    },
+    {
+      "asset": "SOL",
+      "start": 1793658600,
+      "side": "up",
+      "price": 0.97,
+      "edge_cents": 2.79,
+      "fee": 0.00204,
+      "won": true,
+      "pnl": 0.02796
+    },
+    {
+      "asset": "SOL",
+      "start": 1793667600,
+      "side": "up",
+      "price": 0.965,
+      "edge_cents": 2.8,
+      "fee": 0.00236,
+      "won": true,
+      "pnl": 0.03264
+    },
+    {
+      "asset": "ETH",
+      "start": 1793668500,
+      "side": "up",
+      "price": 0.9695,
+      "edge_cents": 2.7,
+      "fee": 0.00207,
+      "won": true,
+      "pnl": 0.02843
+    },
+    {
+      "asset": "SOL",
+      "start": 1793670300,
+      "side": "up",
+      "price": 0.9705,
+      "edge_cents": 2.7,
+      "fee": 0.002,
+      "won": true,
+      "pnl": 0.0275
+    },
+    {
+      "asset": "SOL",
+      "start": 1793672100,
+      "side": "up",
+      "price": 0.945,
+      "edge_cents": 2.42,
+      "fee": 0.00364,
+      "won": true,
+      "pnl": 0.05136
+    },
+    {
+      "asset": "BTC",
+      "start": 1793673000,
+      "side": "down",
+      "price": 0.975,
+      "edge_cents": 2.25,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "BTC",
+      "start": 1793692800,
+      "side": "down",
+      "price": 0.955,
+      "edge_cents": 2.76,
+      "fee": 0.00301,
+      "won": true,
+      "pnl": 0.04199
+    },
+    {
+      "asset": "SOL",
+      "start": 1793701800,
+      "side": "down",
+      "price": 0.95,
+      "edge_cents": 2.87,
+      "fee": 0.00333,
+      "won": true,
+      "pnl": 0.04667
+    },
+    {
+      "asset": "ETH",
+      "start": 1793710800,
+      "side": "down",
+      "price": 0.97,
+      "edge_cents": 2.78,
+      "fee": 0.00204,
+      "won": true,
+      "pnl": 0.02796
+    },
+    {
+      "asset": "ETH",
+      "start": 1793711700,
+      "side": "up",
+      "price": 0.97,
+      "edge_cents": 2.8,
+      "fee": 0.00204,
+      "won": true,
+      "pnl": 0.02796
+    },
+    {
+      "asset": "BTC",
+      "start": 1793725200,
+      "side": "up",
+      "price": 0.765,
+      "edge_cents": 2.7,
+      "fee": 0.01258,
+      "won": true,
+      "pnl": 0.22242
+    },
+    {
+      "asset": "BTC",
+      "start": 1793729700,
+      "side": "down",
+      "price": 0.955,
+      "edge_cents": 2.99,
+      "fee": 0.00301,
+      "won": true,
+      "pnl": 0.04199
+    },
+    {
+      "asset": "SOL",
+      "start": 1793739600,
+      "side": "up",
+      "price": 0.975,
+      "edge_cents": 2.15,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "ETH",
+      "start": 1793746800,
+      "side": "down",
+      "price": 0.9665,
+      "edge_cents": 2.15,
+      "fee": 0.00227,
+      "won": true,
+      "pnl": 0.03123
+    },
+    {
+      "asset": "SOL",
+      "start": 1793756700,
+      "side": "up",
+      "price": 0.9765,
+      "edge_cents": 2.18,
+      "fee": 0.00161,
+      "won": true,
+      "pnl": 0.02189
+    },
+    {
+      "asset": "ETH",
+      "start": 1793772000,
+      "side": "down",
+      "price": 0.975,
+      "edge_cents": 2.33,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "ETH",
+      "start": 1793776500,
+      "side": "up",
+      "price": 0.975,
+      "edge_cents": 2.08,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "BTC",
+      "start": 1793787300,
+      "side": "up",
+      "price": 0.975,
+      "edge_cents": 2.32,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "BTC",
+      "start": 1793789100,
+      "side": "up",
+      "price": 0.975,
+      "edge_cents": 2.33,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "SOL",
+      "start": 1793789100,
+      "side": "up",
+      "price": 0.975,
+      "edge_cents": 2.33,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "SOL",
+      "start": 1793798100,
+      "side": "up",
+      "price": 0.975,
+      "edge_cents": 2.33,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "SOL",
+      "start": 1793807100,
+      "side": "up",
+      "price": 0.19,
+      "edge_cents": 2.26,
+      "fee": 0.01077,
+      "won": false,
+      "pnl": -0.20077
+    },
+    {
+      "asset": "SOL",
+      "start": 1793810700,
+      "side": "down",
+      "price": 0.975,
+      "edge_cents": 2.33,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "SOL",
+      "start": 1793816100,
+      "side": "down",
+      "price": 0.975,
+      "edge_cents": 2.32,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "BTC",
+      "start": 1793828700,
+      "side": "up",
+      "price": 0.975,
+      "edge_cents": 2.33,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "BTC",
+      "start": 1793848500,
+      "side": "up",
+      "price": 0.975,
+      "edge_cents": 2.32,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "ETH",
+      "start": 1793852100,
+      "side": "up",
+      "price": 0.975,
+      "edge_cents": 2.09,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "ETH",
+      "start": 1793854800,
+      "side": "up",
+      "price": 0.965,
+      "edge_cents": 2.83,
+      "fee": 0.00236,
+      "won": true,
+      "pnl": 0.03264
+    },
+    {
+      "asset": "ETH",
+      "start": 1793857500,
+      "side": "down",
+      "price": 0.974,
+      "edge_cents": 2.42,
+      "fee": 0.00177,
+      "won": true,
+      "pnl": 0.02423
+    },
+    {
+      "asset": "BTC",
+      "start": 1793859300,
+      "side": "up",
+      "price": 0.975,
+      "edge_cents": 2.33,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "BTC",
+      "start": 1793862900,
+      "side": "down",
+      "price": 0.975,
+      "edge_cents": 2.33,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "BTC",
+      "start": 1793868300,
+      "side": "down",
+      "price": 0.975,
+      "edge_cents": 2.33,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "ETH",
+      "start": 1793872800,
+      "side": "down",
+      "price": 0.975,
+      "edge_cents": 2.3,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "ETH",
+      "start": 1793876400,
+      "side": "up",
+      "price": 0.965,
+      "edge_cents": 2.04,
+      "fee": 0.00236,
+      "won": true,
+      "pnl": 0.03264
+    },
+    {
+      "asset": "BTC",
+      "start": 1793883600,
+      "side": "down",
+      "price": 0.805,
+      "edge_cents": 2.18,
+      "fee": 0.01099,
+      "won": false,
+      "pnl": -0.81599
+    },
+    {
+      "asset": "SOL",
+      "start": 1793887200,
+      "side": "down",
+      "price": 0.975,
+      "edge_cents": 2.33,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "ETH",
+      "start": 1793889000,
+      "side": "down",
+      "price": 0.9735,
+      "edge_cents": 2.47,
+      "fee": 0.00181,
+      "won": true,
+      "pnl": 0.02469
+    },
+    {
+      "asset": "BTC",
+      "start": 1793893500,
+      "side": "down",
+      "price": 0.9785,
+      "edge_cents": 2.0,
+      "fee": 0.00147,
+      "won": true,
+      "pnl": 0.02003
+    },
+    {
+      "asset": "ETH",
+      "start": 1793917800,
+      "side": "down",
+      "price": 0.965,
+      "edge_cents": 2.3,
+      "fee": 0.00236,
+      "won": true,
+      "pnl": 0.03264
+    },
+    {
+      "asset": "BTC",
+      "start": 1793937600,
+      "side": "down",
+      "price": 0.975,
+      "edge_cents": 2.33,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "SOL",
+      "start": 1793959200,
+      "side": "up",
+      "price": 0.975,
+      "edge_cents": 2.29,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "BTC",
+      "start": 1793979900,
+      "side": "up",
+      "price": 0.975,
+      "edge_cents": 2.24,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "ETH",
+      "start": 1793979900,
+      "side": "up",
+      "price": 0.975,
+      "edge_cents": 2.22,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "SOL",
+      "start": 1793985300,
+      "side": "down",
+      "price": 0.975,
+      "edge_cents": 2.33,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "SOL",
+      "start": 1794009600,
+      "side": "up",
+      "price": 0.97,
+      "edge_cents": 2.78,
+      "fee": 0.00204,
+      "won": true,
+      "pnl": 0.02796
+    },
+    {
+      "asset": "ETH",
+      "start": 1794024900,
+      "side": "up",
+      "price": 0.945,
+      "edge_cents": 2.96,
+      "fee": 0.00364,
+      "won": true,
+      "pnl": 0.05136
+    },
+    {
+      "asset": "BTC",
+      "start": 1794025800,
+      "side": "up",
+      "price": 0.925,
+      "edge_cents": 2.52,
+      "fee": 0.00486,
+      "won": true,
+      "pnl": 0.07014
+    },
+    {
+      "asset": "ETH",
+      "start": 1794029400,
+      "side": "down",
+      "price": 0.975,
+      "edge_cents": 2.27,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "ETH",
+      "start": 1794033000,
+      "side": "up",
+      "price": 0.97,
+      "edge_cents": 2.57,
+      "fee": 0.00204,
+      "won": true,
+      "pnl": 0.02796
+    },
+    {
+      "asset": "BTC",
+      "start": 1794040200,
+      "side": "down",
+      "price": 0.425,
+      "edge_cents": 2.11,
+      "fee": 0.01711,
+      "won": false,
+      "pnl": -0.44211
+    },
+    {
+      "asset": "ETH",
+      "start": 1794048300,
+      "side": "up",
+      "price": 0.975,
+      "edge_cents": 2.33,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "SOL",
+      "start": 1794049200,
+      "side": "down",
+      "price": 0.975,
+      "edge_cents": 2.33,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "BTC",
+      "start": 1794052800,
+      "side": "up",
+      "price": 0.945,
+      "edge_cents": 2.46,
+      "fee": 0.00364,
+      "won": true,
+      "pnl": 0.05136
+    },
+    {
+      "asset": "ETH",
+      "start": 1794052800,
+      "side": "down",
+      "price": 0.975,
+      "edge_cents": 2.33,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "BTC",
+      "start": 1794053700,
+      "side": "up",
+      "price": 0.705,
+      "edge_cents": 2.75,
+      "fee": 0.01456,
+      "won": true,
+      "pnl": 0.28044
+    },
+    {
+      "asset": "BTC",
+      "start": 1794056400,
+      "side": "down",
+      "price": 0.975,
+      "edge_cents": 2.33,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "SOL",
+      "start": 1794068100,
+      "side": "up",
+      "price": 0.97,
+      "edge_cents": 2.06,
+      "fee": 0.00204,
+      "won": true,
+      "pnl": 0.02796
+    },
+    {
+      "asset": "BTC",
+      "start": 1794083400,
+      "side": "down",
+      "price": 0.975,
+      "edge_cents": 2.33,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "BTC",
+      "start": 1794087000,
+      "side": "up",
+      "price": 0.975,
+      "edge_cents": 2.32,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "BTC",
+      "start": 1794098700,
+      "side": "up",
+      "price": 0.975,
+      "edge_cents": 2.33,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "BTC",
+      "start": 1794102300,
+      "side": "down",
+      "price": 0.975,
+      "edge_cents": 2.33,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "ETH",
+      "start": 1794109500,
+      "side": "down",
+      "price": 0.975,
+      "edge_cents": 2.33,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "ETH",
+      "start": 1794120300,
+      "side": "up",
+      "price": 0.975,
+      "edge_cents": 2.33,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "BTC",
+      "start": 1794123000,
+      "side": "up",
+      "price": 0.975,
+      "edge_cents": 2.33,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "SOL",
+      "start": 1794146400,
+      "side": "up",
+      "price": 0.975,
+      "edge_cents": 2.33,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "SOL",
+      "start": 1794159900,
+      "side": "up",
+      "price": 0.97,
+      "edge_cents": 2.8,
+      "fee": 0.00204,
+      "won": true,
+      "pnl": 0.02796
+    },
+    {
+      "asset": "ETH",
+      "start": 1794168900,
+      "side": "up",
+      "price": 0.965,
+      "edge_cents": 2.3,
+      "fee": 0.00236,
+      "won": true,
+      "pnl": 0.03264
+    },
+    {
+      "asset": "BTC",
+      "start": 1794172500,
+      "side": "down",
+      "price": 0.975,
+      "edge_cents": 2.27,
+      "fee": 0.00171,
+      "won": true,
+      "pnl": 0.02329
+    },
+    {
+      "asset": "ETH",
+      "start": 1794177000,
+      "side": "down",
+      "price": 0.955,
+      "edge_cents": 2.11,
+      "fee": 0.00301,
+      "won": true,
+      "pnl": 0.04199
+    }
+  ]
+}
