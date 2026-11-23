@@ -55,15 +55,43 @@ def render(page, vod, ids=None, top=5, layout="auto", facecam=None, credit=None,
         who = src.get("streamer") or vod
         credit = f"{who} ({src['platform']})" if src.get("platform") else who
     cam = tuple(int(v) for v in facecam.split(",")) if facecam else None
-    metas = []
-    for mid, meta in render_many(page, vod, chosen, credit, model, layout, cam, cold_open,
-                                 jumpcuts, jobs):
-        extra = (f" -{meta.get('dead_air_cut', 0)}s dead air, {meta.get('lufs')} LUFS"
-                 if meta["status"] == "draft" else "")
-        print(f"{mid}: {meta['status']} {meta.get('layout', '')}{extra} "
-              f"{meta.get('final', meta.get('skip'))}")
-        metas.append(meta)
-    return metas
+
+    def run(moments, cam):
+        out = {}
+        for mid, meta in render_many(page, vod, moments, credit, model, layout, cam, cold_open,
+                                     jumpcuts, jobs):
+            extra = (f" -{meta.get('dead_air_cut', 0)}s dead air, {meta.get('lufs')} LUFS"
+                     if meta["status"] == "draft" else "")
+            print(f"{mid}: {meta['status']} {meta.get('layout', '')}{extra} "
+                  f"{meta.get('final', meta.get('skip'))}")
+            out[mid] = meta
+        return out
+
+    metas = run(chosen, cam)
+    redo = shared_facecam(metas) if layout == "auto" and cam is None else None
+    if redo:
+        cam, mids = redo
+        print(f"facecam {','.join(map(str, cam))} from the other clips; re-rendering "
+              + " ".join(mids))
+        metas.update(run([m for m in chosen if m["id"] in mids], cam))
+    return list(metas.values())
+
+
+def shared_facecam(metas):
+    """A webcam sits in one place all stream, but on some moments detection misses it and the
+    layout falls back to tracking a face, often a game character's. When most clips found the
+    cam, returns (median box, ids of the clips that should be re-rendered with it)."""
+    drafts = {mid: m for mid, m in metas.items() if m.get("status") == "draft"}
+    stacked = [m["cam"] for m in drafts.values() if m.get("layout") == "stack" and m.get("cam")]
+    others = [mid for mid, m in drafts.items() if m.get("layout") != "stack"]
+    if not others or len(stacked) < 2 or len(stacked) < len(others):
+        return None
+    cam = []
+    for i in range(4):
+        vals = sorted(box[i] for box in stacked)
+        mid = len(vals) // 2
+        cam.append(vals[mid] if len(vals) % 2 else round((vals[mid - 1] + vals[mid]) / 2))
+    return tuple(cam), others
 
 
 def main(argv=None):

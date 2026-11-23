@@ -16,6 +16,7 @@ os.environ["OLLAMA_HOST"] = "http://127.0.0.1:9"  # never reach a real local mod
 sys.path.insert(0, str(HERE.parent))
 sys.path.insert(0, str(HERE))
 
+import clip  # noqa: E402
 import page  # noqa: E402
 from clipper import captions, chat, framing, hooks, moments, pipeline, words  # noqa: E402
 
@@ -124,6 +125,17 @@ class UnitTest(unittest.TestCase):
             spans.append(tuple(sum(float(x) * 60 ** i for i, x in enumerate(reversed(t.split(":"))))
                                for t in (a, b)))
         self.assertTrue(all(b <= nxt_a + 1e-6 for (_, b), (nxt_a, _) in zip(spans, spans[1:])), spans)
+
+    def test_a_missed_facecam_is_borrowed_from_the_other_clips(self):
+        metas = {
+            "m01": {"status": "draft", "layout": "stack", "cam": [100, 400, 160, 200]},
+            "m02": {"status": "draft", "layout": "stack", "cam": [120, 440, 180, 220]},
+            "m03": {"status": "draft", "layout": "track", "cam": None},
+        }
+        cam, redo = clip.shared_facecam(metas)
+        self.assertEqual(cam, (110, 420, 170, 210))
+        self.assertEqual(redo, ["m03"])
+        self.assertIsNone(clip.shared_facecam({"m01": metas["m03"]}))
 
     def test_layout_choice(self):
         steady_small = [(i * 0.25, (1600, 60, 100, 100)) for i in range(40)]
