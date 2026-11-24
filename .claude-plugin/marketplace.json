@@ -1,0 +1,14 @@
+{
+  "name": "rohithg-tools",
+  "description": "Claude Code plugins from rohithg's projects repo.",
+  "owner": {
+    "name": "rohithg"
+  },
+  "plugins": [
+    {
+      "name": "gta6-edit-desk",
+      "source": "./13-gta6-edit-page",
+      "description": "GTA 6 stream-edit desk: auto-clips new VODs, Clip Studio review, scheduled posting, view tracking and the learning loop."
+    }
+  ]
+}

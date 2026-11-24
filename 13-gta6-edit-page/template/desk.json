@@ -1,0 +1,39 @@
+{
+  "timezone": "America/Los_Angeles",
+  "watch": [
+    {"streamer": "Kai Cenat", "platform": "YouTube", "url": "https://www.youtube.com/@KaiCenatLive/streams", "facecam": null},
+    {"streamer": "IShowSpeed", "platform": "YouTube", "url": "https://www.youtube.com/@IShowSpeed/streams", "facecam": null}
+  ],
+  "clips_per_vod": 4,
+  "model": "base.en",
+  "chat": true,
+  "jobs": null,
+  "platforms": ["tiktok", "youtube", "instagram", "x"],
+  "slots": {
+    "tiktok":    ["12:00", "17:00", "20:30"],
+    "youtube":   ["12:20", "17:20", "20:50"],
+    "instagram": ["12:40", "17:40", "21:10"],
+    "x":         ["13:00", "18:00", "21:30"]
+  },
+  "brand": {
+    "name": "Six Stars GTA",
+    "handle": "sixstarsgta6tv",
+    "bios": {
+      "tiktok": "GTA 6 clips daily. YouTube + Instagram: @sixstarsgta6tv",
+      "youtube": "Daily GTA 6 clips. TikTok: tiktok.com/@sixstarsgta6tv  Instagram: instagram.com/sixstarsgta6tv",
+      "instagram": "GTA 6 clips daily. TikTok + YouTube: @sixstarsgta6tv"
+    }
+  },
+  "publish": {
+    "provider": "free",
+    "routes": {"youtube": "api", "instagram": "api", "tiktok": "browser", "x": "browser"},
+    "browser": {"headless": true, "channel": null, "handles": {"instagram": "sixstarsgta6tv"}},
+    "user": "YOUR_UPLOAD_POST_PROFILE (only for provider upload-post)"
+  },
+  "auto_approve": {"enabled": true, "after": null, "min_score": 20, "max_per_day": 8},
+  "countdown": {"enabled": true, "at": "20:00", "min_new_clips": 4},
+  "reports": {"at": "23:30", "weekly_day": "sun", "autotune": true},
+  "judge": {"enabled": "auto", "model": "qwen2.5vl:3b"},
+  "notify": {"ntfy_topic": "", "discord_webhook_env": "DISCORD_WEBHOOK_URL"},
+  "cookies_from_browser": null
+}

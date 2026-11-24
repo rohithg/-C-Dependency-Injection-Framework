@@ -1,0 +1,12 @@
+# page.py needs nothing beyond Python 3.10+. These are for clip.py.
+# System tools: ffmpeg (with libass), and espeak-ng only for the end-to-end test.
+numpy>=1.26
+opencv-python-headless>=4.8
+faster-whisper>=1.0
+yt-dlp>=2025.1.1
+chat-downloader>=0.2.8
+
+# desk.py posting: YouTube/Instagram APIs (requests), TikTok/X browser sessions (playwright;
+# then run `python3 -m playwright install chromium` once)
+requests>=2.31
+playwright>=1.45
