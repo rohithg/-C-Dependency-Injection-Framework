@@ -17,17 +17,17 @@
   },
   "brand": {
     "name": "Six Stars GTA",
-    "handle": "sixstarsgta6",
+    "handle": "sixstarsgta6tv",
     "bios": {
-      "tiktok": "GTA 6 clips daily. YouTube + Instagram: @sixstarsgta6",
-      "youtube": "Daily GTA 6 clips. TikTok: tiktok.com/@sixstarsgta6  Instagram: instagram.com/sixstarsgta6",
-      "instagram": "GTA 6 clips daily. TikTok + YouTube: @sixstarsgta6"
+      "tiktok": "GTA 6 clips daily. YouTube + Instagram: @sixstarsgta6tv",
+      "youtube": "Daily GTA 6 clips. TikTok: tiktok.com/@sixstarsgta6tv  Instagram: instagram.com/sixstarsgta6tv",
+      "instagram": "GTA 6 clips daily. TikTok + YouTube: @sixstarsgta6tv"
     }
   },
   "publish": {
     "provider": "free",
     "routes": {"youtube": "api", "instagram": "api", "tiktok": "browser", "x": "browser"},
-    "browser": {"headless": true, "channel": null, "handles": {"instagram": "sixstarsgta6"}},
+    "browser": {"headless": true, "channel": null, "handles": {"instagram": "sixstarsgta6tv"}},
     "user": "YOUR_UPLOAD_POST_PROFILE (only for provider upload-post)"
   },
   "auto_approve": {"enabled": true, "after": null, "min_score": 20, "max_per_day": 8},
